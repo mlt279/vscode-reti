@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { waitForMS } from './countdown';
-import { computeCode, opType, registerCode, ReTI } from './retiStructure';
+import { computeCode, opType, registerCode, ReTI, ReTIState } from './retiStructure';
 import { generateBitMask, immediateAsTwoc, immediateUnsigned } from './retiUtility';
 import { assembleLine } from './assembler';
 
@@ -52,11 +52,12 @@ export class Emulator{
     }
 
     // 
-    public async start(){
+    public start(): ReTIState {
         this.run = true;
         while (this.run) {
             this.step();
         }
+        return {this.reti.getState();}
     }
 
     public stop() {

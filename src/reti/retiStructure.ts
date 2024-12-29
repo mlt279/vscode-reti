@@ -1,6 +1,13 @@
+import { Interface } from "readline";
 import { generateBitMask, immediateAsTwoc, immediateUnsigned } from "./retiUtility";
 
 const chunkSize = 2**16;
+
+export interface ReTIState {
+    registers: number[];
+    data: Map<number, number>;
+    endCondition: string;
+}
 
 export enum opType {
     COMPUTE = 0b00,
@@ -143,10 +150,10 @@ export class ReTI {
     public dumpState(): string {
         let state = "";
         state += "Registers:\n";
-        state += `PC: ${this.registers[registerCode.PC]}\n`;
-        state += `IN1: ${this.registers[registerCode.IN1]}\n`;
-        state += `IN2: ${this.registers[registerCode.IN2]}\n`;
-        state += `ACC: ${this.registers[registerCode.ACC]}\n`;
+        state += `PC: ${this.getRegister(registerCode.PC)}\n`;
+        state += `IN1: ${this.getRegister(registerCode.IN1)}\n`;
+        state += `IN2: ${this.getRegister(registerCode.IN2)}\n`;
+        state += `ACC: ${this.getRegister(registerCode.ACC)}\n`;
 
         state += "Data:\n";
         for (let [address, data] of this.memory) {
@@ -169,5 +176,25 @@ export class ReTI {
     private getRealAdress(chunkKey: number, arrayIndex: number): number {
         return (chunkKey - 1) * chunkSize + arrayIndex + this.shadow.codeSize;
 
+    }
+
+    public getNoneZeroData(): Map<number, number> {
+        let current_adress = 0;
+        let noneZero= new Map<number, number>;
+        this.memory.forEach(element => {
+            for (let i = 0; i < element.length; i++) {
+                current_adress += 1;
+                if (element[i] !== 0) {
+                    noneZero.set(current_adress, element[i]);
+                }
+            }
+            });
+        });
+        return noneZero;
+    }
+
+    public exportState(): ReTIState {
+        let nonZeroData = this.memory.values();
+        return {registers: this.registers, data: this.getNoneZeroData(), endCondition: ""};
     }
 }
