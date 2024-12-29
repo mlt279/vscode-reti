@@ -180,7 +180,7 @@ export class ReTI {
 
     public getNoneZeroData(): Map<number, number> {
         let current_adress = 0;
-        let noneZero= new Map<number, number>;
+        let noneZero = new Map<number, number>();
         this.memory.forEach(element => {
             for (let i = 0; i < element.length; i++) {
                 current_adress += 1;
@@ -188,13 +188,11 @@ export class ReTI {
                     noneZero.set(current_adress, element[i]);
                 }
             }
-            });
         });
         return noneZero;
     }
 
     public exportState(): ReTIState {
-        let nonZeroData = this.memory.values();
-        return {registers: this.registers, data: this.getNoneZeroData(), endCondition: ""};
+        return { registers: this.registers, data: this.getNoneZeroData(), endCondition: "" };
     }
 }

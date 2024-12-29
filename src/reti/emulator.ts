@@ -57,7 +57,7 @@ export class Emulator{
         while (this.run) {
             this.step();
         }
-        return {this.reti.getState();}
+        return this.reti.exportState();
     }
 
     public stop() {

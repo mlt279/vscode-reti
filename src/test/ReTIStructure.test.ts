@@ -50,4 +50,17 @@ suite ('ReTIStructure Test Suite', async () => {
         expectedData = 1;
         assert.strictEqual(reti.getRegister(registerCode.ACC), expectedData);
     });
+
+    test("Test get non zero data" , async () => {
+        reti = new ReTI([generateBitMask(32), 0b1111_1100 | generateBitMask(24)], [0]);
+
+        reti.setData(42, 42);
+        reti.setData(1, 22);
+        let expectedData: Map<number, number> = new Map<number, number>();
+        expectedData.set(0, generateBitMask(32));
+        expectedData.set(1, 0b1111_1100 | generateBitMask(24));
+        expectedData.set(2, 22);
+        expectedData.set(42, 42);
+        let data = reti.getNoneZeroData();
+    });
 });
