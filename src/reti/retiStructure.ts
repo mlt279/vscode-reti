@@ -156,13 +156,11 @@ export class ReTI {
         state += `ACC: ${this.getRegister(registerCode.ACC)}\n`;
 
         state += "Data:\n";
-        for (let [address, data] of this.memory) {
+        for (let [address, data] of this.getNoneZeroData()) {
             if (address === 0) {
                 continue;
             }
-            for (let i = 0; i < data.length; i++) {
-                state += `${this.getRealAdress(address, i)}: ${data[i]}\n`;
-            }
+            state += `${address}: ${data}\n`;
         }
 
         state += "Code:\n";
@@ -179,13 +177,13 @@ export class ReTI {
     }
 
     public getNoneZeroData(): Map<number, number> {
-        let current_adress = 0;
+        let current_address = 0;
         let noneZero = new Map<number, number>();
-        this.memory.forEach(element => {
+        this.memory.forEach((element, chunkKey) => {
             for (let i = 0; i < element.length; i++) {
-                current_adress += 1;
+                current_address = this.getRealAdress(chunkKey, i);
                 if (element[i] !== 0) {
-                    noneZero.set(current_adress, element[i]);
+                    noneZero.set(current_address, element[i]);
                 }
             }
         });
