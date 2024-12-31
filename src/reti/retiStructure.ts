@@ -1,5 +1,6 @@
 import { Interface } from "readline";
-import { generateBitMask, immediateAsTwoc, immediateUnsigned } from "../util/retiUtility";
+import { binToHex, generateBitMask, immediateAsTwoc, immediateUnsigned } from "../util/retiUtility";
+import { get } from "http";
 
 const chunkSize = 2**16;
 
@@ -155,17 +156,19 @@ export class ReTI {
         state += `IN2: ${this.getRegister(registerCode.IN2)}\n`;
         state += `ACC: ${this.getRegister(registerCode.ACC)}\n`;
 
-        state += "Data:\n";
-        for (let [address, data] of this.getNoneZeroData()) {
-            if (address === 0) {
-                continue;
-            }
-            state += `${address}: ${data}\n`;
+
+        state += "\nCode:\n";
+
+        for (let i = 0; i < this.shadow.codeSize; i++) {
+            state += `${i}: ${binToHex(this.getCode(i))}\n`;
         }
 
-        state += "Code:\n";
-        for (let i = 0; i < this.shadow.codeSize; i++) {
-            state += `${i}: ${this.getCode(i)}\n`;
+        state += "\nData:\n";
+        for (let [address, data] of this.getNoneZeroData()) {
+            if (address < this.shadow.codeSize) {
+                continue;
+            }
+            state += `${address}: ${binToHex(data)}\n`;
         }
 
         return state;
@@ -173,7 +176,6 @@ export class ReTI {
 
     private getRealAdress(chunkKey: number, arrayIndex: number): number {
         return (chunkKey - 1) * chunkSize + arrayIndex + this.shadow.codeSize;
-
     }
 
     public getNoneZeroData(): Map<number, number> {
@@ -181,7 +183,7 @@ export class ReTI {
         let noneZero = new Map<number, number>();
         this.memory.forEach((element, chunkKey) => {
             for (let i = 0; i < element.length; i++) {
-                current_address = this.getRealAdress(chunkKey, i);
+                current_address = chunkKey === 0 ? i : this.getRealAdress(chunkKey, i);
                 if (element[i] !== 0) {
                     noneZero.set(current_address, element[i]);
                 }

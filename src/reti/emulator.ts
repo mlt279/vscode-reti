@@ -30,7 +30,7 @@ export async function emulate(code: string[][]) {
 
     while (emulator.getCurrentInstruction() !== 0) {
         emulator.step();
-        vscode.window.showInformationMessage(emulator.dumpState());
+        await vscode.window.showInformationMessage(emulator.exportState());
         await waitForMS(100);
     }
 }
@@ -203,7 +203,7 @@ export class Emulator{
         }
     }
 
-    public dumpState(): string {
+    public exportState(): string {
         return this.reti.dumpState();
     }
 

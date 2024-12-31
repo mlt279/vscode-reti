@@ -2,12 +2,12 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import { countdown } from './util/countdown';
-import { emulate } from './reti/emulator.ts';
-import { parse } from './util/parser.ts';
-import { showQuizPanel } from './ui/quizPanel.ts';
-import { randomInstruction, randomReti } from './util/randomReti.ts';
-import { decodeInstruction } from './reti/disassembler.ts';
-import { binToHex, hexToBin } from './util/retiUtility.ts';
+import { emulate } from './reti/emulator';
+import { parse } from './util/parser';
+import { showQuizPanel } from './ui/quizPanel';
+import { randomInstruction, randomReti } from './util/randomReti';
+import { decodeInstruction } from './reti/disassembler';
+import { binToHex, hexToBin } from './util/retiUtility';
 
 
 // This method is called when your extension is activated
