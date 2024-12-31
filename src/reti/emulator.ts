@@ -64,7 +64,7 @@ export class Emulator{
     }
 
     // 
-    public async start(token: vscode.CancellationToken): Promise<ReTIState> {
+    public async start(token: vscode.CancellationToken) {
         this.run = true;
     }
 

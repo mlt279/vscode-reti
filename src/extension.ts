@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 import {countdown, waitForMS} from './util/countdown';
 import { emulate } from './reti/emulator';
 import { parse } from './util/parser';
-import { showQuizPanel } from './reti/quizPanel';
+import { showQuizPanel } from './ui/quizPanel';
 import { randomInstruction, randomReti } from './util/randomReti';
 import { decodeInstruction } from './reti/disassembler';
 import { binToHex, hexToBin } from './util/retiUtility';

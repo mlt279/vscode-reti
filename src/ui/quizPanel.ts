@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { randomInstruction } from '../util/randomReti';
 import { decode } from 'punycode';
-import { decodeInstruction } from './disassembler';
+import { decodeInstruction } from '../reti/disassembler';
 import { binToHex, hexToBin } from '../util/retiUtility';
 
 export function showQuizPanel(context: vscode.ExtensionContext) {
