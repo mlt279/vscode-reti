@@ -1,5 +1,5 @@
 import { Interface } from "readline";
-import { generateBitMask, immediateAsTwoc, immediateUnsigned } from "./retiUtility";
+import { generateBitMask, immediateAsTwoc, immediateUnsigned } from "../util/retiUtility";
 
 const chunkSize = 2**16;
 
@@ -57,7 +57,7 @@ export class ReTI {
         this.memory.set(0, code);
         this.shadow.memory[0] = true;
         if (data.length <= chunkSize) {
-            this.memory.set(1, data.fill(0, data.length, chunkSize));
+            this.memory.set(1, [...data, ...new Array(chunkSize - data.length).fill(0)]);
             this.shadow.memory.push(true);
         }
         else {

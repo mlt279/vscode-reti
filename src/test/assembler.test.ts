@@ -1,10 +1,10 @@
 // #region imports
 import * as assert from 'assert';
 import * as vscode from 'vscode';
-import { randomInstruction } from '../reti/randomReti';
+import { randomInstruction } from '../util/randomReti';
 import { decodeInstruction } from '../reti/disassembler';
 import { assembleLine } from '../reti/assembler';
-import { binToHex, hexToBin } from '../reti/retiUtility';
+import { binToHex, hexToBin } from '../util/retiUtility';
 
 //#endregion
 

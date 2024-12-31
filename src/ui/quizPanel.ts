@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
-import { randomInstruction } from './randomReti';
+import { randomInstruction } from '../util/randomReti';
 import { decode } from 'punycode';
 import { decodeInstruction } from './disassembler';
-import { binToHex, hexToBin } from './retiUtility';
+import { binToHex, hexToBin } from '../util/retiUtility';
 
 export function showQuizPanel(context: vscode.ExtensionContext) {
     const panel = vscode.window.createWebviewPanel(

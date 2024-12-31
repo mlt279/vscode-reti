@@ -1,6 +1,6 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
-import { binToHex, generateBitMask, hexToBin } from '../reti/retiUtility';
+import { binToHex, generateBitMask, hexToBin } from '../util/retiUtility';
 import { get } from 'http';
 
 suite('retiUtility Test Suite', async () => {

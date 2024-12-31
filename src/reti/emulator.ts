@@ -1,15 +1,18 @@
 import * as vscode from 'vscode';
-import { waitForMS } from './countdown';
+import { waitForMS } from '../util/countdown';
 import { computeCode, opType, registerCode, ReTI, ReTIState } from './retiStructure';
-import { generateBitMask, immediateAsTwoc, immediateUnsigned } from './retiUtility';
+import { generateBitMask, immediateAsTwoc, immediateUnsigned } from '../util/retiUtility';
 import { assembleLine } from './assembler';
+import { resolve } from 'path';
 
 export async function emulate(code: string[][]) {
-
+    // To be replaced with actual data.
     let data: number[] = [];
     for (let i = 0; i < 128; i++) {
         data.push(i);
     }
+
+    // Parsing the instruction file.
     let instructions: number[] = [];
     for (let i = 0; i < code.length; i++) {
         let errCode = 0;
@@ -39,25 +42,30 @@ export class Emulator{
 
     constructor(code: number[], data: number[]) {
         this.initial_data = data;
-        this.reti = new ReTI(code, data);
+        this.reti = new ReTI(code, [...data]);
+    }
+
+    public async emulate(token: vscode.CancellationToken): Promise<ReTIState> {
+        while (!token.isCancellationRequested) {
+            await new Promise((resolve) => setImmediate(resolve));
+            this.step();
+        }
+        return this.reti.exportState();
     }
 
     // Resets ReTI to starting state.
     // Registers = 0, data = starting_data
     public reset() {
-        this.reti.setMemory(this.initial_data);
+        this.stop();
+        this.reti.setMemory([...this.initial_data]);
         for (let i = 0; i < 4; i++){
             this.reti.setRegister(i, 0);
         }
     }
 
     // 
-    public start(): ReTIState {
+    public async start(token: vscode.CancellationToken): Promise<ReTIState> {
         this.run = true;
-        while (this.run) {
-            this.step();
-        }
-        return this.reti.exportState();
     }
 
     public stop() {

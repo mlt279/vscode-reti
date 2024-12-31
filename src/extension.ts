@@ -1,13 +1,13 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import {countdown, waitForMS} from './reti/countdown';
+import {countdown, waitForMS} from './util/countdown';
 import { emulate } from './reti/emulator';
-import { parse } from './reti/parser';
+import { parse } from './util/parser';
 import { showQuizPanel } from './reti/quizPanel';
-import { randomInstruction, randomReti } from './reti/randomReti';
+import { randomInstruction, randomReti } from './util/randomReti';
 import { decodeInstruction } from './reti/disassembler';
-import { binToHex, hexToBin } from './reti/retiUtility';
+import { binToHex, hexToBin } from './util/retiUtility';
 
 
 // This method is called when your extension is activated

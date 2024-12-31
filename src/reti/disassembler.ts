@@ -1,5 +1,5 @@
 import { opType, computeCode } from "./retiStructure";
-import { generateBitMask } from "./retiUtility";
+import { generateBitMask } from "../util/retiUtility";
 
 const Registers: { [key: number]: string } = {
     0b00: "PC",

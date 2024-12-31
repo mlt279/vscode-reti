@@ -3,7 +3,7 @@ import * as assert from 'assert';
 import * as vscode from 'vscode';
 import { decodeInstruction } from '../reti/disassembler';
 import { opType } from '../reti/retiStructure';
-import { generateBitMask } from '../reti/retiUtility';
+import { generateBitMask } from '../util/retiUtility';
 //#endregion
 
 suite('Disassembler Test Suite', () => {

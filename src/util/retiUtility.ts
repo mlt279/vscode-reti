@@ -28,7 +28,7 @@ export function hexToBin(hex: string): string {
     return parseInt(hex, 16).toString(2).padStart(32, '0');
 }
 
-// 
+// Makes sure the immediate is handled as a Twoc by extending the signed bit to 32 bits if negative.
 export function immediateAsTwoc(immediate: number): number {
     if ((immediate & (1 << 23)) !== 0) {
         return immediate | 0xff000000;
@@ -36,7 +36,7 @@ export function immediateAsTwoc(immediate: number): number {
     return immediate;
 }
 
-//
+// Ensures the immediate is handled as an unsigned number.
 export function immediateUnsigned(immediate: number): number {
     return immediate >>> 0;
 }

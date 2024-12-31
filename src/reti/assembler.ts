@@ -1,5 +1,5 @@
 import { computeCode, opType, registerCode } from './retiStructure';
-import { generateBitMask } from './retiUtility';
+import { generateBitMask } from '../util/retiUtility';
 
 // Assemble a line of ReTI code. Returns an integer to indicate success, the resulting binInstruction,
 // as well as a string containing possible error messages or explanation for assembly.
