@@ -14,24 +14,20 @@ import { binToHex, hexToBin } from './util/retiUtility';
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "reti-tools" is now active!');
-
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with registerCommand
 	// The commandId parameter must match the command field in package.json
-	const HelloWorldCommand = vscode.commands.registerCommand('reti-tools.helloWorld', () => {
+	const HelloWorldCommand = vscode.commands.registerCommand('reti.helloWorld', () => {
 		// The code you place here will be executed every time your command is executed
 		// Display a message box to the user
 		vscode.window.showInformationMessage('Hello World from RETI Tools!');
 	});
 
-	const CountdownCommand = vscode.commands.registerCommand('reti-tools.countdown', () => {
+	const CountdownCommand = vscode.commands.registerCommand('reti.countdown', () => {
 		countdown("Ending countdown", 10);
 	});
 
-	const EmulateCommand = vscode.commands.registerCommand('reti-tools.emulate', async () => {
+	const EmulateCommand = vscode.commands.registerCommand('reti.emulate', async () => {
 		const editor = vscode.window.activeTextEditor;
 		if (editor) {
 			const code = parse(editor.document);
@@ -39,11 +35,11 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	});
 
-	const QuizCommand = vscode.commands.registerCommand('reti-tools.quiz', () => { 
+	const QuizCommand = vscode.commands.registerCommand('reti.quiz', () => { 
 		showQuizPanel(context); 
 	});
 
-	const RandomCommand = vscode.commands.registerCommand('reti-tools.generate', async () => {
+	const RandomCommand = vscode.commands.registerCommand('reti.generate', async () => {
 		const val = await vscode.window.showInputBox({ prompt: "Enter desired length of random code (Max 4096). If left empty, a random length will be chosen." });
 
 		let code : number[] = [];

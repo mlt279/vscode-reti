@@ -1,6 +1,6 @@
 {
-  "name": "reti-tools",
-  "displayName": "RETI Tools",
+  "name": "reti",
+  "displayName": "ReTI Tools",
   "description": "",
   "version": "0.0.1",
   "engines": {
@@ -9,29 +9,59 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onLanguage:reti"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "reti-tools.helloWorld",
+        "command": "reti.helloWorld",
         "title": "Hello World"
       },
       {
-        "command": "reti-tools.countdown",
-        "title": "Countdown"
+        "command": "reti.emulate",
+        "title": "Emulate",
+          "icon": "$(run)"
       },
       {
-        "command": "reti-tools.emulate",
-        "title": "Emulate"
-      },
-      {
-        "command": "reti-tools.quiz",
+        "command": "reti.quiz",
         "title": "Start ReTI Quiz"
       },
       {
-        "command": "reti-tools.generate",
+        "command": "reti.generate",
         "title": "Generate Random ReTI-Code"
+      }
+    ],
+    "languages": [
+      {
+        "id": "reti",
+        "aliases": [
+          "ReTI",
+          "RETI",
+          "reti"
+        ],
+        "extensions": [
+          ".reti"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "reti.emulate",
+          "when": "editorLangId == 'reti'",
+          "group": "navigation",
+          "tooltip": "Emulate ReTI Code, Ctrl+Alt+E"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "reti.emulate",
+        "key": "ctrl+alt+e",
+        "when": "editorLangId == 'reti'"
       }
     ]
   },
