@@ -3,7 +3,6 @@ import { waitForMS } from '../util/countdown';
 import { computeCode, opType, registerCode, ReTI, ReTIState } from './retiStructure';
 import { generateBitMask, immediateAsTwoc, immediateUnsigned } from '../util/retiUtility';
 import { assembleLine } from './assembler';
-import { resolve } from 'path';
 
 export async function emulate(code: string[][]) {
     // To be replaced with actual data.
