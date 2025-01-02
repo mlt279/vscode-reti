@@ -4,18 +4,13 @@ This is the README for your extension "reti-tools". After writing up a brief des
 
 
 ## Features
----
 
 ### Emulator
----
 
 ### ReTI-Quiz
----
 
 ## ReTI
----
 ### Commands
----
 #### LOAD
 **Encoding:**
 - `[31, 30] := 0b01`
@@ -118,12 +113,10 @@ This is the README for your extension "reti-tools". After writing up a brief des
 
 
 ## Requirements
----
 
 If you have any requirements or dependencies, add a section describing those and how to install and configure them.
 
 ## Extension Settings
----
 
 Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
 
@@ -135,12 +128,10 @@ This extension contributes the following settings:
 * `myExtension.thing`: Set to `blah` to do something.
 
 ## Known Issues
----
 
 Calling out known issues can help limit users opening duplicate issues against your extension.
 
 ## Release Notes
----
 
 Users appreciate release notes as you update your extension.
 
