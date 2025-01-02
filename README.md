@@ -2,6 +2,125 @@
 
 This is the README for your extension "reti-tools". After writing up a brief description, we recommend including the following sections.
 
+### ReTI-Architecture
+## LOAD
+
+**Encoding:**
+- `[31, 30] := 0b01`
+- `[29, 28] := Mode`
+- `[27,26] := *`
+- `[25, 24] := D`
+- `[24, ..., 0] := i`
+
+**Mode:**
+- `Mode = 0b00: LOAD D i`  
+  `D := M<i>`
+- `Mode = 0b01: LOADIN1 D i`  
+  `D := M<i + <IN1>>`
+- `Mode = 0b10: LOADIN2 D i`  
+  `D := M<i + <IN2>>`
+- `Mode = 0b11: LOADI D i`  
+  `D := i`
+
+---
+
+## STORE
+
+**Encoding:**
+- `[31, 30] := 0b10`
+- `[29, 28] := Mode`
+- `[27,26] := S`
+- `[25, 24] := D`
+- `[24, ..., 0] := i`
+
+**Mode:**
+- `Mode = 0b00: STORE i`  
+  `M<i> := ACC`
+- `Mode = 0b01: STOREIN1 i`  
+  `M<<IN1>+i> := ACC`
+- `Mode = 0b10: STOREIN2 i`  
+  `M<<IN2>+i> := ACC`
+- `Mode = 0b11: MOVE S D`  
+  `D := S`
+
+---
+
+## COMPUTE
+
+**Encoding:**
+- `[31, 30] := 0b00`
+- `[29] := MI`
+- `[28, 27, 26] := F`
+- `[25, 24] := D`
+- `[24, ..., 0] := i`
+
+**MI = 0:**
+- `F = 0b010: SUBI D i`  
+  `D := D - i`
+- `F = 0b011: ADDI D i`  
+  `D := D + i`
+- `F = 0b100: OPLUS D i`  
+  `D := D ⊕ i`
+- `F = 0b101: ORI D i`  
+  `D := D ∨ i`
+- `F = 0b110: ANDI D i`  
+  `D := D ∧ i`
+
+**MI = 1:**
+- `F = 0b010: SUB D i`  
+  `D := D - M<i>`
+- `F = 0b011: ADD D i`  
+  `D := D + M<i>`
+- `F = 0b100: OPLUS D i`  
+  `D := D ⊕ M<i>`
+- `F = 0b101: OR D i`  
+  `D := D ∨ M<i>`
+- `F = 0b110: AND D i`  
+  `D := D ∧ M<i>`
+
+---
+
+## JUMP
+
+**Encoding:**
+- `[31, 30] := 0b11`
+- `[29, 28, 27] := C`
+- `[26, 25, 24] := *`
+- `[24, ..., 0] := i`
+
+**C = 0b000:**  
+`NOP`  
+`PC := PC + 1`
+
+**C = 0b001:**  
+`JUMP> i`  
+`PC := (ACC > 0) ? PC + i : PC + 1`
+
+**C = 0b010:**  
+`JUMP= i`  
+`PC := (ACC = 0) ? PC + i : PC + 1`
+
+**C = 0b011:**  
+`JUMP≥ i`  
+`PC := (ACC ≥ 0) ? PC + i : PC + 1`
+
+**C = 0b100:**  
+`JUMP< i`  
+`PC := (ACC < 0) ? PC + i : PC + 1`
+
+**C = 0b101:**  
+`JUMP≠ i`  
+`PC := (ACC ≠ 0) ? PC + i : PC + 1`
+
+**C = 0b110:**  
+`JUMP≤ i`  
+`PC := (ACC ≤ 0) ? PC + i : PC + 1`
+
+**C = 0b111:**  
+`JUMP i`  
+`PC := PC + i`
+
+
 ## Features
 
 Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
@@ -36,36 +155,3 @@ Calling out known issues can help limit users opening duplicate issues against y
 Users appreciate release notes as you update your extension.
 
 ### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
----
-
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
