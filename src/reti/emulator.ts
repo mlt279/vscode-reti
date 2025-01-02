@@ -18,7 +18,7 @@ export async function emulate(code: string[][]) {
         }
         instructions.push(instruction);
     }
-    let emulator = new Emulator(instructions, data);
+    let emulator = new Emulator(instructions, []);
 
     while (emulator.getCurrentInstruction() !== 0) {
         emulator.step();

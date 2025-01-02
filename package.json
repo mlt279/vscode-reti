@@ -14,11 +14,16 @@
   ],
   "main": "./dist/extension.js",
   "contributes": {
+    "icons" :{
+      "reti-assemble": {
+        "description": "Assemble icon",
+        "default": {
+          "fontPath": "./fonts/icomoon.woff",
+          "fontCharacter": "\\EA81"
+        }
+      }
+    },
     "commands": [
-      {
-        "command": "reti.helloWorld",
-        "title": "Hello World"
-      },
       {
         "command": "reti.emulate",
         "title": "Emulate",
@@ -31,6 +36,16 @@
       {
         "command": "reti.generate",
         "title": "Generate Random ReTI-Code"
+      },
+      {
+        "command": "reti.assemble",
+        "title": "Assemble ReTI-Code",
+        "icon": "$(reti-assemble)"
+      },
+      {
+        "command": "reti.disassemble",
+        "title": "Disassemble ReTI-Code",
+        "icon": "$(debug-reverse)"
       }
     ],
     "languages": [
@@ -48,12 +63,24 @@
       }
     ],
     "menus": {
-      "editor/title": [
+      "editor/title": [        
         {
-          "command": "reti.emulate",
+        "command" : "reti.emulate",
+        "when": "editorLangId == 'reti'",
+        "group": "navigation@1",
+        "tooltip": "Assemble ReTI Code, Ctrl+Alt+A"
+        },
+        {
+          "command": "reti.assemble",
           "when": "editorLangId == 'reti'",
-          "group": "navigation",
+          "group": "navigation@2",
           "tooltip": "Emulate ReTI Code, Ctrl+Alt+E"
+        },
+        {
+          "command" : "reti.disassemble",
+          "when": "editorLangId == 'retias'",
+          "group": "navigation@2",
+          "tooltip": "Disassemble ReTI Code, Ctrl+Alt+D"
         }
       ]
     },
