@@ -12,8 +12,9 @@ This is the README for your extension "reti-tools". After writing up a brief des
 ### ReTI-Quiz
 ---
 
-## ReTI-Architecture
-### LOAD
+## ReTI
+### Commands
+#### LOAD
 
 **Encoding:**
 - `[31, 30] := 0b01`
@@ -32,7 +33,7 @@ This is the README for your extension "reti-tools". After writing up a brief des
 - `Mode = 0b11: LOADI D i`  
     `Effect: D := i`
 
-### STORE
+#### STORE
 
 **Encoding:**
 - `[31, 30] := 0b10`
@@ -51,7 +52,7 @@ This is the README for your extension "reti-tools". After writing up a brief des
 - `Mode = 0b11: MOVE S D`  
     `Effect: D := S`
 
-### COMPUTE
+#### COMPUTE
 
 **Encoding:**
 - `[31, 30] := 0b00`
@@ -84,7 +85,7 @@ This is the README for your extension "reti-tools". After writing up a brief des
 - `F = 0b110: AND D i`  
     `Effect: D := D ∧ M<i>`
 
-### JUMP
+#### JUMP
 
 **Encoding:**
 - `[31, 30] := 0b11`
