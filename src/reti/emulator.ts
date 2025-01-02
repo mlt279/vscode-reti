@@ -145,7 +145,7 @@ export class Emulator{
                 this.outPutChannel.appendLine(`Invalid compute code for compute operation: ${f} at PC = ${this.getRegister(registerCode.PC)}.`);
                 return 1;
         }
-        this.reti.setRegister(destination, result < 0 ? immediateAsTwoc(result, 32) : result);
+        this.reti.setRegister(destination, result < 0 ? immediateAsTwoc(result, 32): result);
 
         if (destination !== registerCode.PC) {
             this.reti.setRegister(registerCode.PC, this.reti.getRegister(registerCode.PC) + 1);
@@ -167,7 +167,8 @@ export class Emulator{
                 immediate = immediateAsTwoc(immediate);
                 break;
             default:
-                immediate = this.reti.getData(immediateUnsigned(this.reti.getRegister(mode) + immediateAsTwoc(immediate)));
+                immediate = immediateAsTwoc(immediate);
+                immediate = this.reti.getData(immediateUnsigned(this.reti.getRegister(mode) + immediate));
                 break;
         }
         this.reti.setRegister(destination, immediate);
@@ -199,7 +200,9 @@ export class Emulator{
                     break;
             }
 
-            this.reti.setRegister(registerCode.PC, this.reti.getRegister(registerCode.PC) + 1);
+            if (destination !== registerCode.PC || mode !== 0b11) {
+                this.reti.setRegister(registerCode.PC, this.reti.getRegister(registerCode.PC) + 1);
+            }
             return 0;
     }
 
