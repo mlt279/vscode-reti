@@ -1,6 +1,25 @@
 import { computeCode, opType, registerCode } from './retiStructure';
 import { generateBitMask } from '../util/retiUtility';
 
+export function assembleFile(code: string[][]): Array<[number, string]> {
+    let results: Array<[number, string]> = [];
+    for (let i = 0; i < code.length; i++) {
+        let errCode = 0;
+        let errMessage = "";
+        let line = code[i];
+        let instruction = 0;
+        [errCode, instruction, errMessage] = assembleLine(line);
+        if (errCode !== 0) {
+            results.push([instruction, errMessage]);
+        }
+        else {
+            results.push([instruction, line.join(" ")]);
+        }
+    }
+    return results;
+
+}
+
 // Assemble a line of ReTI code. Returns an integer to indicate success, the resulting binInstruction,
 // as well as a string containing possible error messages or explanation for assembly.
 export function assembleLine(line: string[]): [number, number, string] {

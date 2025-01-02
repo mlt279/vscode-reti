@@ -8,6 +8,7 @@ import { showQuizPanel } from './ui/quizPanel';
 import { randomInstruction, randomReti } from './util/randomReti';
 import { decodeInstruction } from './reti/disassembler';
 import { binToHex, hexToBin } from './util/retiUtility';
+import { assembleFile } from './reti/assembler';
 
 
 // This method is called when your extension is activated
@@ -23,9 +24,10 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 
 	const QuizCommand = vscode.commands.registerCommand('reti.quiz', () => { 
-		showQuizPanel(context); 
+		showQuizPanel(context);
 	});
 
+	// TODO: Move into a seperate function
 	const RandomCommand = vscode.commands.registerCommand('reti.generate', async () => {
 		const val = await vscode.window.showInputBox({ prompt: "Enter desired length of random code (Max 4096). If left empty, a random length will be chosen." });
 
@@ -84,7 +86,18 @@ export function activate(context: vscode.ExtensionContext) {
         await vscode.window.showTextDocument(tempFile);
 	});
 
-	context.subscriptions.push(HelloWorldCommand, CountdownCommand, EmulateCommand, QuizCommand, RandomCommand);
+	const AssembleCommand = vscode.commands.registerCommand('reti.assemble', async () => {
+		const editor = vscode.window.activeTextEditor;
+		if (editor) {
+			const code = parse(editor.document);
+			const assembled = await assembleFile(code);
+			const formatted = assembled.map(([instruction, message]) => `${instruction} ; ${message}`).join('\n');
+			const tempFile = await vscode.workspace.openTextDocument({ content: formatted, language: 'retias' });
+			await vscode.window.showTextDocument(tempFile);
+		}
+	});
+
+	context.subscriptions.push(EmulateCommand, QuizCommand, RandomCommand, AssembleCommand);
 }
 
 
