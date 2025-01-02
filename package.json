@@ -42,11 +42,11 @@
         "title": "Assemble ReTI-Code",
         "icon": "$(reti-assemble)"
       },
-      {
-        "command": "reti.disassemble",
-        "title": "Disassemble ReTI-Code",
-        "icon": "$(debug-reverse)"
-      }
+      // {
+      //   "command": "reti.disassemble",
+      //   "title": "Disassemble ReTI-Code",
+      //   "icon": "$(reti-assemble)"
+      // }
     ],
     "languages": [
       {
@@ -76,12 +76,12 @@
           "group": "navigation@2",
           "tooltip": "Emulate ReTI Code, Ctrl+Alt+E"
         },
-        {
-          "command" : "reti.disassemble",
-          "when": "editorLangId == 'retias'",
-          "group": "navigation@2",
-          "tooltip": "Disassemble ReTI Code, Ctrl+Alt+D"
-        }
+        // {
+        //   "command" : "reti.disassemble",
+        //   "when": "editorLangId == 'retias'",
+        //   "group": "navigation@2",
+        //   "tooltip": "Disassemble ReTI Code, Ctrl+Alt+D"
+        // }
       ]
     },
     "keybindings": [
@@ -89,7 +89,12 @@
         "command": "reti.emulate",
         "key": "ctrl+alt+e",
         "when": "editorLangId == 'reti'"
-      }
+      },
+      {
+        "command": "reti.assemble",
+        "key": "ctrl+alt+a",
+        "when": "editorLangId == 'reti'"
+      },
     ]
   },
   "scripts": {
