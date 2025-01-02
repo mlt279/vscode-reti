@@ -16,7 +16,7 @@ suite('Parser Test Suite', async () => {
         const document = await vscode.workspace.openTextDocument(testFilePath);
         await vscode.window.showTextDocument(document);
 
-        let parsedData = parser.parse(document);
+        let parsedData = parser.parseDotReti(document);
 
         let expectedData: string[][] = [
             ['LOADI', 'ACC', '10'],
@@ -39,7 +39,7 @@ suite('Parser Test Suite', async () => {
         const document = await vscode.workspace.openTextDocument(testFilePath);
         await vscode.window.showTextDocument(document);
 
-        let parsedData = parser.parse(document);
+        let parsedData = parser.parseDotReti(document);
 
         let expectedData: string[][] = [];
 
@@ -56,7 +56,7 @@ suite('Parser Test Suite', async () => {
         const document = await vscode.workspace.openTextDocument(testFilePath);
         await vscode.window.showTextDocument(document);
 
-        let parsedData = parser.parse(document);
+        let parsedData = parser.parseDotReti(document);
 
         let expectedData: string[][] = [];
 
@@ -73,7 +73,7 @@ suite('Parser Test Suite', async () => {
         const document = await vscode.workspace.openTextDocument(testFilePath);
         await vscode.window.showTextDocument(document);
 
-        let parsedData = parser.parse(document);
+        let parsedData = parser.parseDotReti(document);
 
         let expectedData: string[][] = [
             ['LOADI', 'ACC', '10'],
@@ -92,7 +92,7 @@ suite('Parser Test Suite', async () => {
         const document = await vscode.workspace.openTextDocument(testFilePath);
         await vscode.window.showTextDocument(document);
 
-        let parsedData = parser.parse(document);
+        let parsedData = parser.parseDotReti(document);
 
         let expectedData: string[][] = [
             ['LOADI', 'ACC', '10'],
@@ -111,7 +111,7 @@ suite('Parser Test Suite', async () => {
         const document = await vscode.workspace.openTextDocument(testFilePath);
         await vscode.window.showTextDocument(document);
 
-        let parsedData = parser.parse(document);
+        let parsedData = parser.parseDotReti(document);
 
         let expectedData: string[][] = [
             ['LOADI', 'ACC', '10'],
@@ -134,7 +134,7 @@ suite('Parser Test Suite', async () => {
         const document = await vscode.workspace.openTextDocument(testFilePath);
         await vscode.window.showTextDocument(document);
 
-        let parsedData = parser.parse(document);
+        let parsedData = parser.parseDotReti(document);
 
         let expectedData: string[][] = [
             ['LOADI', 'ACC', '10'],
@@ -153,21 +153,4 @@ suite('Parser Test Suite', async () => {
 
     // #region Parse .retias file
     // #endregion
-
-    test ("Open and parse an unsupported file type", async () => {
-        const testFilePath = path.join(__dirname, "testUnsupported.txt");
-        const fileContent = "LOADI ACC 10;\nSTORE 1;\nSUBI ACC 1;\nJUMP= 2;\nJUMP -4;";
-
-        fs.writeFileSync(testFilePath, fileContent);
-        const document = await vscode.workspace.openTextDocument(testFilePath);
-        await vscode.window.showTextDocument(document);
-
-        let parsedData = parser.parse(document);
-
-        let expectedData: string[][] = [];
-
-        assert.deepStrictEqual(parsedData, expectedData);
-
-        fs.unlinkSync(testFilePath);
-    });
 });

@@ -2,7 +2,7 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import { Emulator } from './reti/emulator';
-import { parse } from './util/parser';
+import { parseDotReti, parseDotRetiAs } from './util/parser';
 import { showQuizPanel } from './ui/quizPanel';
 import { randomInstruction, randomReti } from './util/randomReti';
 import { decodeInstruction } from './reti/disassembler';
@@ -18,22 +18,38 @@ export function activate(context: vscode.ExtensionContext) {
 	let emulateTokenSource : vscode.CancellationTokenSource | undefined = undefined;
 
 	const EmulateCommand = vscode.commands.registerCommand('reti.emulate', async () => {
+		if (emulateTokenSource) {
+			vscode.window.showErrorMessage("Emulation already in progress.");
+			return;
+		}
 		const editor = vscode.window.activeTextEditor;
 		if (editor) {
-			const code = parse(editor.document);
-			if (code.length === 0) {
-				vscode.window.showErrorMessage("No code to emulate.");
-				return;
-			}
-			const assembled: number[] = [];
-			for (let line of code) {
-				const [errcode, instruction, message] = assembleLine(line);
-				if (errcode !== 0) {
-					vscode.window.showErrorMessage(`Error when assembling: ${instruction} | ${message}`);
+			let code: string[][] = [];
+			let assembled: number[] = [];
+
+			if (editor.document.languageId === 'reti') {
+				code = parseDotReti(editor.document);
+				if (code.length === 0) {
+					vscode.window.showErrorMessage("No code to emulate.");
 					return;
 				}
-				assembled.push(instruction);
+				for (let line of code) {
+					const [errcode, instruction, message] = assembleLine(line);
+					if (errcode !== 0) {
+						vscode.window.showErrorMessage(`Error when assembling: ${instruction} | ${message}`);
+						return;
+					}
+					assembled.push(instruction);
+				}
 			}
+			else if (editor.document.languageId === 'retias') {
+				assembled = parseDotRetiAs(editor.document);
+			}
+			else {
+				vscode.window.showErrorMessage("Unsupported file type. Please use .reti or .retias files.");
+				return;
+			}
+
 			emulateTokenSource = new vscode.CancellationTokenSource();
 			const outputChannel = vscode.window.createOutputChannel("ReTI Emulator");
 			let emulator = new Emulator(assembled, [], outputChannel);
@@ -124,15 +140,57 @@ export function activate(context: vscode.ExtensionContext) {
 	const AssembleCommand = vscode.commands.registerCommand('reti.assemble', async () => {
 		const editor = vscode.window.activeTextEditor;
 		if (editor) {
-			const code = parse(editor.document);
+			const document = editor.document;
+			let code = [];
+		
+			if (document.languageId === 'reti') {
+				code = parseDotReti(document);
+			}
+			else {
+				vscode.window.showErrorMessage("Unsupported file type. Please use .reti files.");
+				return;
+			}
+
 			const assembled = await assembleFile(code);
-			const formatted = assembled.map(([instruction, message]) => `${instruction} ; ${message}`).join('\n');
+			const formatted = assembled.map(([instruction, message]) => `${binToHex(instruction)} ; ${message}`).join('\n');
 			const tempFile = await vscode.workspace.openTextDocument({ content: formatted, language: 'retias' });
 			await vscode.window.showTextDocument(tempFile);
 		}
 	});
 
-	context.subscriptions.push(EmulateCommand, QuizCommand, RandomCommand, AssembleCommand, StopEmulationCommand);
+	const DisassembleCommand = vscode.commands.registerCommand('reti.disassemble', async () => {
+		const editor = vscode.window.activeTextEditor;
+		if (editor) {
+			const document = editor.document;
+			if (document.languageId !== 'retias') {
+				vscode.window.showErrorMessage("Unsupported file type. Please use .retias files.");
+				return;
+			}
+			const instructions = parseDotRetiAs(document);
+
+			let content = "";
+			let maxInstructionLength = 0;
+			let code: string[] = [];
+
+			// Extra step needed for formatting. Determines the maximum length of any instruction.
+			for (let i = 0; i < instructions.length; i++) {
+				const instruction = decodeInstruction(instructions[i])[0];
+				maxInstructionLength = Math.max(maxInstructionLength, instruction.length);
+				code.push(instruction);
+			}
+
+			for (let i = 0; i < code.length; i++) {
+				const command = code[i];
+				const paddedCommand = command.padEnd(maxInstructionLength, ' ');
+				content += `${paddedCommand} ; ${binToHex(instructions[i])} \n`;
+			}
+
+			const tempFile = await vscode.workspace.openTextDocument({ content: content, language: 'reti' });
+			await vscode.window.showTextDocument(tempFile);
+		}
+	});
+
+	context.subscriptions.push(EmulateCommand, QuizCommand, RandomCommand, AssembleCommand, StopEmulationCommand, DisassembleCommand);
 }
 
 

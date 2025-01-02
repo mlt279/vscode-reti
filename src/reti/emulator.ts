@@ -40,6 +40,7 @@ export class Emulator{
     public async emulate(token: vscode.CancellationToken): Promise<ReTIState> {
         while (true) {
             if (token.isCancellationRequested) {
+                this.outPutChannel.appendLine("Emulation stopped.");
                 break;
             }
 

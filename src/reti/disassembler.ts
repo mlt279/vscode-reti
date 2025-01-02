@@ -26,6 +26,9 @@ const jumpConditionSymbols: { [key: number]: string } = {
     0b111: ""
 };
 
+// @param instruction: The instruction to decode.
+// @returns: A tuple of the instruction string and an explanation of the instruction if succesfull 
+// or an error message if unsuccesful.
 export function decodeInstruction(instruction: number): [string, string] {
     let explanation: string = "";
     let instructionString: string = "";

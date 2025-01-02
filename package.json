@@ -18,6 +18,13 @@
         "description": "Assemble icon",
         "default": {
           "fontPath": "./fonts/icomoon.woff",
+          "fontCharacter": "\\EA5B"
+        }
+      },
+      "reti-disassemble": {
+        "description": "Disassemble icon",
+        "default": {
+          "fontPath": "./fonts/icomoon.woff",
           "fontCharacter": "\\EA81"
         }
       }
@@ -45,6 +52,11 @@
         "command": "reti.stopEmulation",
         "title": "Stop Emulation",
         "icon": "$(stop)"
+      },
+      {
+        "command": "reti.disassemble",
+        "title": "Disassemble ReTI-Code",
+        "icon": "$(reti-disassemble)"
       }
     ],
     "languages": [
@@ -59,13 +71,24 @@
           ".reti"
         ],
         "configuration": "./language-configuration.json"
+      },
+      {
+        "id": "retias",
+        "aliases": [
+          "ReTI Assembler",
+          "retias"
+        ],
+        "extensions": [
+          ".retias"
+        ],
+        "configuration": "./language-configuration.json"
       }
     ],
     "menus": {
       "editor/title": [        
         {
         "command" : "reti.emulate",
-        "when": "editorLangId == 'reti'",
+        "when": "editorLangId == 'reti' || editorLangId == 'retias'",
         "group": "navigation@1",
         "tooltip": "Assemble ReTI Code, Ctrl+Alt+A."
         },
@@ -77,9 +100,15 @@
         },
         {
           "command": "reti.stopEmulation",
-          "when": "editorLangId == 'reti'",
+          "when": "editorLangId == 'reti' || editorLangId == 'retias'",
           "group": "navigation@2",
           "tooltip": "Stops emulation."
+        },
+        {
+          "command": "reti.disassemble",
+          "when": "editorLangId == 'retias'",
+          "group": "navigation@3",
+          "tooltip": "Disassemble ReTI Code."
         }
       ]
     },
