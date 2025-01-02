@@ -144,7 +144,7 @@ export function assembleLine(line: string[]): [number, number, string] {
                         break;
                     }
                     else {
-                        return [-1, binInstruction, `Error: Invalid instruction '${instruction}'. Expected register after 'load'.`];
+                        return [-1, binInstruction, `Error: Invalid instruction '${instruction}'. Expected valid register ∈ {"IN1", "IN2"} after 'load'.`];
                     }
                 default:
                     return [-1, binInstruction, `Error: Invalid load instruction '${instruction}'.`];
