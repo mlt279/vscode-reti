@@ -69,7 +69,7 @@ export function assembleLine(line: string[]): [number, number, string] {
                         break;
                     }
                     else {
-                        return [-1, binInstruction, `Error: Invalid instruction '${instruction}'. Expected 'storein1' or 'storein2'.`];
+                        return [-1, binInstruction, `Error: Invalid instruction '${instruction}'. Expected valid register ∈ {"IN1", "IN2"} after 'store'.`];
                     }
                 default:
                     return [-1, binInstruction,`Error: Invalid store instruction '${instruction}'.`];
@@ -174,7 +174,7 @@ export function assembleLine(line: string[]): [number, number, string] {
                     binInstruction = binInstruction |  registerCode.IN2 << 26;
                     break;
                 default:
-                    return [-1, binInstruction, `Error: Invalid source register '${source}'. Expected 'pc', 'in1', 'acc', or 'in2'.`];
+                    return [-1, binInstruction, `Error: Invalid source register '${source}'. Expected ∈ ("PC", "IN1", "IN2", "ACC").`];
             }
         }
         // #endregion
@@ -250,7 +250,7 @@ export function assembleLine(line: string[]): [number, number, string] {
                 registerType = registerCode.IN2;
                 break;
             default:
-                return [-1, binInstruction, `Error: Invalid register '${register}'. Expected 'pc', 'in1', 'acc', or 'in2'.`];
+                return [-1, binInstruction, `Error: Invalid register '${register}'. Expected ∈ ("PC", "IN1", "IN2", "ACC").`];
         }
 
         binInstruction = binInstruction | registerType << 24;
