@@ -167,8 +167,10 @@ export class Emulator{
                 immediate = immediateAsTwoc(immediate);
                 break;
             default:
-                immediate = immediateAsTwoc(immediate);
-                immediate = this.reti.getData(immediateUnsigned(this.reti.getRegister(mode) + immediate));
+                let immediateTwoc = immediateAsTwoc(immediate);
+                let IN1 = this.reti.getRegister(mode);
+                let address = immediateUnsigned(IN1 + immediateTwoc);
+                immediate = this.reti.getData(address);
                 break;
         }
         this.reti.setRegister(destination, immediate);
@@ -214,9 +216,9 @@ export class Emulator{
         let condition = instruction >> 27 & 0b111;
         let immediate = immediateAsTwoc(instruction & generateBitMask(24));
        
-        let gt = condition >> 2 & 0b1;
+        let lt = condition >> 2 & 0b1;
         let eq = condition >> 1 & 0b1;
-        let lt = condition & 0b1;
+        let gt = condition & 0b1;
         let ACC = this.reti.getRegister(registerCode.ACC);
 
         // NOTE: Even if the jump command would cause PC to be negative (negative immediate > PC) PC would
