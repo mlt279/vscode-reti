@@ -4,13 +4,16 @@ This is the README for your extension "reti-tools". After writing up a brief des
 
 
 ## Features
+---
 
 ### Emulator
+---
 
 ### ReTI-Quiz
+---
 
-### ReTI-Architecture
-#### LOAD
+## ReTI-Architecture
+### LOAD
 
 **Encoding:**
 - `[31, 30] := 0b01`
@@ -21,17 +24,15 @@ This is the README for your extension "reti-tools". After writing up a brief des
 
 **Mode:**
 - `Mode = 0b00: LOAD D i`  
-  `Effect: D := M<i>`
+    `Effect: D := M<i>`
 - `Mode = 0b01: LOADIN1 D i`  
-  `Effect: D := M<i + <IN1>>`
+    `Effect: D := M<i + <IN1>>`
 - `Mode = 0b10: LOADIN2 D i`  
-  `Effect: D := M<i + <IN2>>`
+    `Effect: D := M<i + <IN2>>`
 - `Mode = 0b11: LOADI D i`  
-  `Effect: D := i`
+    `Effect: D := i`
 
----
-
-#### STORE
+### STORE
 
 **Encoding:**
 - `[31, 30] := 0b10`
@@ -42,17 +43,15 @@ This is the README for your extension "reti-tools". After writing up a brief des
 
 **Mode:**
 - `Mode = 0b00: STORE i`  
-  `Effect: M<i> := ACC`
+    `Effect: M<i> := ACC`
 - `Mode = 0b01: STOREIN1 i`  
-  `Effect: M<<IN1>+i> := ACC`
+    `Effect: M<<IN1>+i> := ACC`
 - `Mode = 0b10: STOREIN2 i`  
-  `Effect: M<<IN2>+i> := ACC`
+    `Effect: M<<IN2>+i> := ACC`
 - `Mode = 0b11: MOVE S D`  
-  `Effect: D := S`
+    `Effect: D := S`
 
----
-
-#### COMPUTE
+### COMPUTE
 
 **Encoding:**
 - `[31, 30] := 0b00`
@@ -63,30 +62,29 @@ This is the README for your extension "reti-tools". After writing up a brief des
 
 **MI = 0:**
 - `F = 0b010: SUBI D i`  
-  `Effect: D := D - i`
+    `Effect: D := D - i`
 - `F = 0b011: ADDI D i`  
-  `Effect: D := D + i`
+    `Effect: D := D + i`
 - `F = 0b100: OPLUS D i`  
-  `Effect: D := D ⊕ i`
+    `Effect: D := D ⊕ i`
 - `F = 0b101: ORI D i`  
-  `Effect: D := D ∨ i`
+    `Effect: D := D ∨ i`
 - `F = 0b110: ANDI D i`  
-  `Effect: D := D ∧ i`
+    `Effect: D := D ∧ i`
 
 **MI = 1:**
 - `F = 0b010: SUB D i`  
-  `Effect: D := D - M<i>`
+    `Effect: D := D - M<i>`
 - `F = 0b011: ADD D i`  
-  `Effect: D := D + M<i>`
+    `Effect: D := D + M<i>`
 - `F = 0b100: OPLUS D i`  
-  `Effect: D := D ⊕ M<i>`
+    `Effect: D := D ⊕ M<i>`
 - `F = 0b101: OR D i`  
-  `Effect: D := D ∨ M<i>`
+    `Effect: D := D ∨ M<i>`
 - `F = 0b110: AND D i`  
-  `Effect: D := D ∧ M<i>`
+    `Effect: D := D ∧ M<i>`
 
----
-#### JUMP
+### JUMP
 
 **Encoding:**
 - `[31, 30] := 0b11`
@@ -96,28 +94,28 @@ This is the README for your extension "reti-tools". After writing up a brief des
 
 **C (Condition):**
 - `C = 0b000: NOP`  
-  `Effect: PC := PC + 1`
+    `Effect: PC := PC + 1`
 
 - `C = 0b001: JUMP> i`  
-  `Effect: PC := (ACC > 0) ? PC + i : PC + 1`
+    `Effect: PC := (ACC > 0) ? PC + i : PC + 1`
 
 - `C = 0b010: JUMP= i`  
-  `Effect: PC := (ACC = 0) ? PC + i : PC + 1`
+    `Effect: PC := (ACC = 0) ? PC + i : PC + 1`
 
 - `C = 0b011: JUMP≥ i`  
-  `Effect: PC := (ACC ≥ 0) ? PC + i : PC + 1`
+    `Effect: PC := (ACC ≥ 0) ? PC + i : PC + 1`
 
 - `C = 0b100: JUMP< i`  
-  `Effect: PC := (ACC < 0) ? PC + i : PC + 1`
+    `Effect: PC := (ACC < 0) ? PC + i : PC + 1`
 
 - `C = 0b101: JUMP≠ i`  
-  `Effect: PC := (ACC ≠ 0) ? PC + i : PC + 1`
+    `Effect: PC := (ACC ≠ 0) ? PC + i : PC + 1`
 
 - `C = 0b110: JUMP≤ i`  
-  `Effect: PC := (ACC ≤ 0) ? PC + i : PC + 1`
+    `Effect: PC := (ACC ≤ 0) ? PC + i : PC + 1`
 
 - `C = 0b111: JUMP i`  
-  `Effect: PC := PC + i`
+    `Effect: PC := PC + i`
 
 
 ## Requirements
