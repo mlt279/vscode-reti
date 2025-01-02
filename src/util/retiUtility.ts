@@ -29,8 +29,8 @@ export function hexToBin(hex: string): string {
 }
 
 // Makes sure the immediate is handled as a Twoc by extending the signed bit to 32 bits if negative.
-export function immediateAsTwoc(immediate: number): number {
-    if ((immediate & (1 << 23)) !== 0) {
+export function immediateAsTwoc(immediate: number, size: number = 24): number {
+    if ((immediate & (1 << size - 1)) !== 0) {
         return immediate | 0xff000000;
     }
     return immediate;

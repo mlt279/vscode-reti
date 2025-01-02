@@ -1,25 +1,60 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import { countdown } from './util/countdown';
-import { emulate } from './reti/emulator';
+import { Emulator } from './reti/emulator';
 import { parse } from './util/parser';
 import { showQuizPanel } from './ui/quizPanel';
 import { randomInstruction, randomReti } from './util/randomReti';
 import { decodeInstruction } from './reti/disassembler';
 import { binToHex, hexToBin } from './util/retiUtility';
-import { assembleFile } from './reti/assembler';
+import { assembleFile, assembleLine } from './reti/assembler';
+import { stateToString } from './reti/retiStructure';
 
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
 
+	let emulateTokenSource : vscode.CancellationTokenSource | undefined = undefined;
+
 	const EmulateCommand = vscode.commands.registerCommand('reti.emulate', async () => {
 		const editor = vscode.window.activeTextEditor;
 		if (editor) {
 			const code = parse(editor.document);
-			await emulate(code);
+			if (code.length === 0) {
+				vscode.window.showErrorMessage("No code to emulate.");
+				return;
+			}
+			const assembled: number[] = [];
+			for (let line of code) {
+				const [errcode, instruction, message] = assembleLine(line);
+				if (errcode !== 0) {
+					vscode.window.showErrorMessage(`Error when assembling: ${instruction} | ${message}`);
+					return;
+				}
+				assembled.push(instruction);
+			}
+			emulateTokenSource = new vscode.CancellationTokenSource();
+			const outputChannel = vscode.window.createOutputChannel("ReTI Emulator");
+			let emulator = new Emulator(assembled, [], outputChannel);
+			try {
+				const finalState = await emulator.emulate(emulateTokenSource.token);
+				outputChannel.show();
+				vscode.window.showInformationMessage(`Emulation finished. Final state: ${stateToString(finalState)}`);
+			}
+			catch (e) {
+				vscode.window.showErrorMessage(`Error when emulating: ${e}`);
+			}
+		}
+	});
+
+	const StopEmulationCommand = vscode.commands.registerCommand('reti.stopEmulation', () => {
+		if (emulateTokenSource) {
+			emulateTokenSource.cancel();
+			// emulateTokenSource.dispose();
+		}
+		else {
+			vscode.window.showInformationMessage("No emulation to stop.");
 		}
 	});
 
@@ -97,7 +132,7 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	});
 
-	context.subscriptions.push(EmulateCommand, QuizCommand, RandomCommand, AssembleCommand);
+	context.subscriptions.push(EmulateCommand, QuizCommand, RandomCommand, AssembleCommand, StopEmulationCommand);
 }
 
 

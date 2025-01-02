@@ -1,7 +1,7 @@
 import { computeCode, opType, registerCode } from './retiStructure';
 import { generateBitMask } from '../util/retiUtility';
 
-export function assembleFile(code: string[][]): Array<[number, string]> {
+export async function assembleFile(code: string[][]): Promise<Array<[number, string]>> {
     let results: Array<[number, string]> = [];
     for (let i = 0; i < code.length; i++) {
         let errCode = 0;
@@ -17,7 +17,6 @@ export function assembleFile(code: string[][]): Array<[number, string]> {
         }
     }
     return results;
-
 }
 
 // Assemble a line of ReTI code. Returns an integer to indicate success, the resulting binInstruction,

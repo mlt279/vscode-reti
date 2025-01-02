@@ -1,6 +1,7 @@
 import { Interface } from "readline";
 import { binToHex, generateBitMask, immediateAsTwoc, immediateUnsigned } from "../util/retiUtility";
 import { get } from "http";
+import { CodeAction } from "vscode";
 
 const chunkSize = 2**16;
 
@@ -43,11 +44,27 @@ interface shadowReTI {
     memory: boolean[];
 }
 
+export function stateToString(state: ReTIState): string{
+    let result = "";
+    result += "Registers:\n";
+    result += `PC: ${state.registers[0]}\n`;
+    result += `IN1: ${state.registers[1]}\n`;
+    result += `IN2: ${state.registers[2]}\n`;
+    result += `ACC: ${state.registers[3]}\n`;
+
+    result += "\nData:\n";
+    for (let [address, data] of state.data) {
+        result += `${address}: ${binToHex(data)}\n`;
+    }
+
+    return result;
+}
+
 export class ReTI {
     // Memory is stored in chunks of size specified in chunkSize in the constructor.
     private memory: Map<number, number[]>;
     private registers: number[];
-    private shadow: shadowReTI;
+    public readonly shadow: shadowReTI;
 
 
     constructor(code: number[], data: number[]) {
@@ -73,10 +90,17 @@ export class ReTI {
 
     // Sets the data memory to the given data.
     public setMemory(data: number[]) {
-        this.memory.clear();
-        this.shadow.memory = [];
+        // Resetting memory except code.
+        this.shadow.memory = [false];
+        for (let key of this.memory.keys()) {
+            if (key !== 0) {
+                this.memory.delete(key);
+            }
+        }
+
+        // Setting the new data.
         if (data.length <= chunkSize) {
-            this.memory.set(1, data.fill(0, data.length, chunkSize));
+            this.memory.set(1, [...data, ...new Array(chunkSize - data.length).fill(0)]);
             this.shadow.memory[1] = true;
         }
         else {
@@ -89,23 +113,31 @@ export class ReTI {
         }
     }
 
+    // TODO: Do I continue to handle 0 as 0 + codeSize or do I throw an error?
     // Give an adress and a value both as number to write the value of the word to the data memory.
-    public setData(address: number, data: number) {
-        if (address >= 2**32) {
-            return;
+    public setData(address: number, data: number): number {
+        // TODO: If I don't want to handle 0 as 0 + codeSize, I have to remove the - this.shadow.codeSize
+        if (address >= 2**32 - this.shadow.codeSize || this.shadow.memory[Math.floor(address / chunkSize)] === false) {
+            return 1;
         }
 
-        if (this.shadow.memory[Math.floor(address / chunkSize) + 1] === undefined) {
-            this.memory.set(Math.floor(address / chunkSize) + 1, new Array<number>(chunkSize).fill(0));
+        let memoryChunk = this.memory.get(Math.floor(address / chunkSize) + 1);
+
+        // This will initialize a new chunk of memory if nothing has been stored at the address yet.
+        if (this.shadow.memory[Math.floor(address / chunkSize) + 1] === undefined || memoryChunk === undefined) {
+            this.memory.set(Math.floor(address / chunkSize) + 1, new Array(chunkSize).fill(0));
             this.shadow.memory[Math.floor(address / chunkSize) + 1] = true;
+            memoryChunk = this.memory.get(Math.floor(address / chunkSize) + 1);
         }
+
+        // True means the address is a writable data cell (not code).
         if (this.shadow.memory[Math.floor(address / chunkSize) + 1] === true) {
-            let memoryChunk = this.memory.get(Math.floor(address / chunkSize) + 1);
             if (memoryChunk === undefined) {
-                return;
+                return 1;
             }
             memoryChunk[address % chunkSize] = data;
         }
+        return 0;
     }
 
     // Returns the word stored add the given adress as a number.
@@ -193,6 +225,6 @@ export class ReTI {
     }
 
     public exportState(): ReTIState {
-        return { registers: this.registers, data: this.getNoneZeroData(), endCondition: "" };
+        return { registers: [...this.registers], data: this.getNoneZeroData(), endCondition: "" };
     }
 }

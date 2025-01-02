@@ -21,7 +21,7 @@ suite('Emulator Test Suite', async () => {
         let instruction4 = assembleLine(["JUMP=", "-2"]);
         assert.equal(instruction4[0], 0);
         let code = [instruction[1], instruction2[1], instruction3[1], instruction4[1]];
-        let emulator = new Emulator(code, [0, 1, 2, 3, 4, 5, 6, 7]);
+        let emulator = new Emulator(code, [0, 1, 2, 3, 4, 5, 6, 7], vscode.window.createOutputChannel("Emulator"));
         
         // One error:
         // Representation of numbers between signed and unsigned in PC. Possibly leading to other errors as well.
@@ -43,7 +43,7 @@ suite('Emulator Test Suite', async () => {
         let instruction2 = assembleLine(["LOADI", "ACC", "69"])[1];     // ACC = 69
         let instruction3 = assembleLine(["LOADIN2", "ACC", "4"])[1];    // ACC = 7
         let code = [instruction, instruction1, instruction2, instruction3];
-        let emulator = new Emulator(code, [0, 1, 2, 3, 4, 5, 6, 7]);
+        let emulator = new Emulator(code, [0, 1, 2, 3, 4, 5, 6, 7], vscode.window.createOutputChannel("Emulator"));
         assert.equal(emulator.getRegister(registerCode.IN1), 0);
         assert.equal(emulator.getRegister(registerCode.IN2), 0);
         assert.equal(emulator.getRegister(registerCode.ACC), 0);
@@ -70,7 +70,7 @@ suite('Emulator Test Suite', async () => {
         let instruction5 = assembleLine(["STOREIN2", "2"])[1]; // M<4> = 2
         let code = [instruction, instruction1, instruction2, instruction3, instruction4, instruction5];
 
-        let emulator = new Emulator(code, [0, 1, 2, 3, 4, 5, 6, 7]);
+        let emulator = new Emulator(code, [0, 1, 2, 3, 4, 5, 6, 7], vscode.window.createOutputChannel("Emulator"));
         assert.equal(emulator.getRegister(registerCode.IN1), 0);
         assert.equal(emulator.getRegister(registerCode.IN2), 0);
         assert.equal(emulator.getRegister(registerCode.ACC), 0);
@@ -150,7 +150,7 @@ suite('Emulator Test Suite', async () => {
         let and = assembleLine(["AND", "ACC", "8"])[1]; // ACC = 1
 
         let code = [instruction1, subi, addi, oplusi, ori, andi, andi2, sub, add, oplus, or, and];
-        let emulator = new Emulator(code, [0, 1, 2, 3, 4, 5, 6, 7, 1]);
+        let emulator = new Emulator(code, [0, 1, 2, 3, 4, 5, 6, 7, 1], vscode.window.createOutputChannel("Emulator"));
 
         assert.equal(emulator.getRegister(registerCode.IN1), 0);
         assert.equal(emulator.getRegister(registerCode.IN2), 0);

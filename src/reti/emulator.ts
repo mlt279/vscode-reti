@@ -3,64 +3,83 @@ import { computeCode, opType, registerCode, ReTI, ReTIState } from './retiStruct
 import { generateBitMask, immediateAsTwoc, immediateUnsigned } from '../util/retiUtility';
 import { assembleLine } from './assembler';
 
-export async function emulate(code: string[][]) {
-    // Parsing the instruction file.
-    let instructions: number[] = [];
-    for (let i = 0; i < code.length; i++) {
-        let errCode = 0;
-        let errMessage = "";
-        let line = code[i];
-        let instruction = 0;
-        [errCode, instruction, errMessage] = assembleLine(line);
-        if (errCode !== 0) {
-            vscode.window.showErrorMessage(`Error when parsing: ${errMessage}`);
-            return;
-        }
-        instructions.push(instruction);
-    }
-    let emulator = new Emulator(instructions, []);
+// export async function emulate(code: string[][]) {
+//     // Parsing the instruction file.
+//     let instructions: number[] = [];
+//     for (let i = 0; i < code.length; i++) {
+//         let errCode = 0;
+//         let errMessage = "";
+//         let line = code[i];
+//         let instruction = 0;
+//         [errCode, instruction, errMessage] = assembleLine(line);
+//         if (errCode !== 0) {
+//             vscode.window.showErrorMessage(`Error when parsing: ${errMessage}`);
+//             return;
+//         }
+//         instructions.push(instruction);
+//     }
+//     let emulator = new Emulator(instructions, []);
 
-    while (emulator.getCurrentInstruction() !== 0) {
-        emulator.step();
-        await vscode.window.showInformationMessage(emulator.exportState());
-    }
-}
+//     while (emulator.getCurrentInstruction() !== 0) {
+//         emulator.step();
+//         await vscode.window.showInformationMessage(emulator.exportState());
+//     }
+// }
 
 export class Emulator{
     private reti: ReTI;
-    private run: boolean = false;
     private initial_data: number[];
+    private outPutChannel: vscode.OutputChannel;
 
-    constructor(code: number[], data: number[]) {
+    constructor(code: number[], data: number[], outPutChannel: vscode.OutputChannel) {
         this.initial_data = data;
         this.reti = new ReTI(code, [...data]);
+        this.outPutChannel = outPutChannel;
     }
 
     public async emulate(token: vscode.CancellationToken): Promise<ReTIState> {
-        while (!token.isCancellationRequested) {
+        while (true) {
+            if (token.isCancellationRequested) {
+                break;
+            }
+
             await new Promise((resolve) => setImmediate(resolve, 0));
-            this.step();
+
+            let pc = this.reti.getRegister(registerCode.PC);
+            if (pc >= this.reti.shadow.codeSize) {
+                this.outPutChannel.appendLine(`Stopping emulation. PC is out of code range. PC = ${pc}`);
+                break;
+            }
+
+            let instruction = this.reti.getCode(pc);
+
+            if (this.execute(instruction) !== 0) {
+                this.outPutChannel.appendLine(`Stopping emulation. Invalid instruction @${pc}.`);
+                break;
+            }
+
+            let nextPC = this.reti.getRegister(registerCode.PC);
+            if (pc === nextPC) {
+                this.outPutChannel.appendLine(`Stopping emulation. Instruction @${pc} causes infinite loop.`);
+                break;
+            }
+
+            if (nextPC >= this.reti.shadow.codeSize) {
+                this.outPutChannel.appendLine(`Stopping emulation. Instruction @${pc} causes PC to be out of code range. PC = ${nextPC}`);
+                break;
+            }
         }
+        this.outPutChannel.show();
         return this.reti.exportState();
     }
 
     // Resets ReTI to starting state.
     // Registers = 0, data = starting_data
     public reset() {
-        this.stop();
         this.reti.setMemory([...this.initial_data]);
         for (let i = 0; i < 4; i++){
             this.reti.setRegister(i, 0);
         }
-    }
-
-    // 
-    public async start(token: vscode.CancellationToken) {
-        this.run = true;
-    }
-
-    public stop() {
-        this.run = false;
     }
 
     public step() {
@@ -68,36 +87,34 @@ export class Emulator{
         this.execute(instruction);
     }
 
-    private execute(instruction: number | string[]) {
+    private execute(instruction: number | string[]): number {
         if (typeof instruction !== 'number') {
             let errCode = 0;
             let errMessage = "";
             [errCode, instruction, errMessage ] = assembleLine(instruction);
             if (errCode !== 0) {
                 vscode.window.showErrorMessage(`Error when parsing: ${errMessage}`);
-                return;
+                return 0;
             }
         }
         let operation = instruction >> 30 & 0b11;
         switch (operation) {
             case opType.COMPUTE:
-                this.executeCompute(instruction);
-                break;
+                return this.executeCompute(instruction);
             case opType.LOAD:
-                this.executeLoad(instruction);
-                break;
+                return this.executeLoad(instruction);
             case opType.STORE:
-                this.executeStore(instruction);
-                break;
+                return this.executeStore(instruction);
             case opType.JUMP:
-                this.executeJump(instruction);
-                break;
+                return this.executeJump(instruction);
+            // Should not be needed because checking for 2 bits only has 4 possible combinations.
             default:
-                break;
+                return 1;
         }
     }
 
-    private executeCompute(instruction: number) {
+    // TODO: What should the real behaviour be when an invalid compute code is given? Abort or NOP?
+    private executeCompute(instruction: number): number {
         let mi = instruction >> 29 & 0b1;
         let f = instruction >> 26 & 0b111;
         let destination = instruction >> 24 & 0b11;
@@ -125,16 +142,19 @@ export class Emulator{
                 result = this.reti.getRegister(destination) & immediate;
                 break;
             default:
-                break;
+                this.outPutChannel.appendLine(`Invalid compute code for compute operation: ${f} at PC = ${this.getRegister(registerCode.PC)}.`);
+                return 1;
         }
-        this.reti.setRegister(destination, result < 0 ? immediateAsTwoc(result) : result);
+        this.reti.setRegister(destination, result < 0 ? immediateAsTwoc(result, 32) : result);
 
         if (destination !== registerCode.PC) {
             this.reti.setRegister(registerCode.PC, this.reti.getRegister(registerCode.PC) + 1);
         }
+        return 0;
     }
 
-    private executeLoad(instruction: number) {
+    // TODO: What if the immediate is calling a register where code is saved?
+    private executeLoad(instruction: number): number {
         let mode = instruction >> 28 & 0b11;
         let destination = instruction >> 24 & 0b11;
         let immediate = instruction & generateBitMask(24);
@@ -154,20 +174,25 @@ export class Emulator{
         if (destination !== registerCode.PC) {
             this.reti.setRegister(registerCode.PC, this.reti.getRegister(registerCode.PC) + 1);
         }
+        return 0;
     }
 
-    private executeStore(instruction: number) {
+    // TODO: What if the immediate is referencing a register where code is saved?
+    private executeStore(instruction: number): number {
             let mode = instruction >> 28 & 0b11;
             let source = instruction >> 26 & 0b11;
             let destination = instruction >> 24 & 0b11;
             let immediate = instruction & generateBitMask(24);
             switch (mode) {
+                // STORE
                 case 0b00:
                     this.reti.setData(immediateUnsigned(immediate), this.reti.getRegister(registerCode.ACC));
                     break;
+                // MOVE
                 case 0b11:
                     this.reti.setRegister(destination, this.reti.getRegister(source));
-                // IN1 and IN2 are handled the same.
+                    break;
+                // STOREIN1 and STOREIN2, both are handled the same. Mode := registerCode.IN1 or registerCode.IN2
                 default:
                     immediate = immediateAsTwoc(immediate);
                     this.reti.setData(immediateUnsigned(this.reti.getRegister(mode) + immediate), this.reti.getRegister(registerCode.ACC));
@@ -175,9 +200,14 @@ export class Emulator{
             }
 
             this.reti.setRegister(registerCode.PC, this.reti.getRegister(registerCode.PC) + 1);
+            return 0;
     }
 
-    private executeJump(instruction: number) {
+    // TODO: What if PC would be < 0? What if PC would be > codeSize?
+    // If < 0: PC would be handled as an unsigned number so that is not possible, but it 
+    // would lead to undefined behaviour in the code since it would be a huge number.
+    // If > codeSize the next iteration of the loop will just stop execution.
+    private executeJump(instruction: number): number {
         let condition = instruction >> 27 & 0b111;
         let immediate = immediateAsTwoc(instruction & generateBitMask(24));
        
@@ -186,12 +216,17 @@ export class Emulator{
         let lt = condition & 0b1;
         let ACC = this.reti.getRegister(registerCode.ACC);
 
+        // NOTE: Even if the jump command would cause PC to be negative (negative immediate > PC) PC would
+        // turn out to be a positive number probably outside of the code range since PC is always handled as an unsigned number.
+        // This is not addressed as the ReTI would probably also not do this. Instead it will be handled in the next iteration of
+        // instruction very likely as PC being outside of code range.
         if ((gt && (ACC > 0) ) || (eq && (ACC === 0)) || (lt && (ACC < 0))) {
             this.reti.setRegister(registerCode.PC, this.reti.getRegister(registerCode.PC) + immediate);
         }
         else {
             this.reti.setRegister(registerCode.PC, this.reti.getRegister(registerCode.PC) + 1);
         }
+        return 0;
     }
 
     public exportState(): string {
