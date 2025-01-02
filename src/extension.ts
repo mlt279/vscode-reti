@@ -54,6 +54,7 @@ export function activate(context: vscode.ExtensionContext) {
 			const outputChannel = vscode.window.createOutputChannel("ReTI Emulator");
 			let emulator = new Emulator(assembled, [], outputChannel);
 			try {
+				vscode.window.showInformationMessage("Emulation started.");
 				const finalState = await emulator.emulate(emulateTokenSource.token);
 				outputChannel.show();
 				vscode.window.showInformationMessage(`Emulation finished. Final state: ${stateToString(finalState)}`);
@@ -67,7 +68,8 @@ export function activate(context: vscode.ExtensionContext) {
 	const StopEmulationCommand = vscode.commands.registerCommand('reti.stopEmulation', () => {
 		if (emulateTokenSource) {
 			emulateTokenSource.cancel();
-			// emulateTokenSource.dispose();
+			emulateTokenSource.dispose();
+			emulateTokenSource = undefined;
 		}
 		else {
 			vscode.window.showInformationMessage("No emulation to stop.");
