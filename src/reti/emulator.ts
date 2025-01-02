@@ -1,16 +1,9 @@
 import * as vscode from 'vscode';
-import { waitForMS } from '../util/countdown';
 import { computeCode, opType, registerCode, ReTI, ReTIState } from './retiStructure';
 import { generateBitMask, immediateAsTwoc, immediateUnsigned } from '../util/retiUtility';
 import { assembleLine } from './assembler';
 
 export async function emulate(code: string[][]) {
-    // To be replaced with actual data.
-    let data: number[] = [];
-    for (let i = 0; i < 128; i++) {
-        data.push(i);
-    }
-
     // Parsing the instruction file.
     let instructions: number[] = [];
     for (let i = 0; i < code.length; i++) {
@@ -30,7 +23,6 @@ export async function emulate(code: string[][]) {
     while (emulator.getCurrentInstruction() !== 0) {
         emulator.step();
         await vscode.window.showInformationMessage(emulator.exportState());
-        await waitForMS(100);
     }
 }
 
@@ -46,7 +38,7 @@ export class Emulator{
 
     public async emulate(token: vscode.CancellationToken): Promise<ReTIState> {
         while (!token.isCancellationRequested) {
-            await new Promise((resolve) => setImmediate(resolve));
+            await new Promise((resolve) => setImmediate(resolve, 0));
             this.step();
         }
         return this.reti.exportState();
