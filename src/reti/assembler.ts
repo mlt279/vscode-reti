@@ -82,24 +82,33 @@ export function assembleLine(line: string[]): [number, number, string] {
 
             if (instruction.length === 4) {
                 condition = 0b111;
-            } else if (instruction.length === 5) {
-                switch (instruction[4]) {
+            } else if (instruction.length <= 7) {
+                switch (instruction.slice(4)) {
                     case '=':
+                    case 'eq':
                         condition = 0b010;
                         break;
                     case '>':
+                    case 'gt':
                         condition = 0b001;
                         break;
                     case '<':
+                    case 'lt':
                         condition = 0b100;
                         break;
                     case "≥":
+                    case ">=":
+                    case "geq":
                         condition = 0b011;
                         break;
                     case "≤":
+                    case "<=":
+                    case "leq":
                         condition = 0b110;
                         break;
                     case "≠":
+                    case "!=":
+                    case "ieq":
                         condition = 0b101;
                         break;
                     default:

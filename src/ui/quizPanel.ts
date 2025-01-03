@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import { randomInstruction } from '../util/randomReti';
-import { decode } from 'punycode';
 import { decodeInstruction } from '../reti/disassembler';
 import { binToHex, hexToBin } from '../util/retiUtility';
 

@@ -13,6 +13,7 @@ suite('Emulator Test Suite', async () => {
 
     test('Testing jump instruction.', async () => {
         let instruction = assembleLine(["JUMP", "2"]);
+        // instruction[0] is the error code.
         assert.equal(instruction[0], 0);
         let instruction2 = assembleLine(["JUMP<", "69"]);
         assert.equal(instruction2[0], 0);
@@ -23,18 +24,218 @@ suite('Emulator Test Suite', async () => {
         let code = [instruction[1], instruction2[1], instruction3[1], instruction4[1]];
         let emulator = new Emulator(code, [0, 1, 2, 3, 4, 5, 6, 7], vscode.window.createOutputChannel("Emulator"));
         
-        // One error:
-        // Representation of numbers between signed and unsigned in PC. Possibly leading to other errors as well.
-        // JUMP 2 is not working instead it is only increased by 1 for PC.
+
         assert.equal(emulator.getRegister(registerCode.PC), 0);
+        // Execute JUMP 2, PC = 2
         emulator.step();
         assert.equal(emulator.getRegister(registerCode.PC), 2);
+
+        // Execute JUMP> 50, PC = 3
         emulator.step();
         assert.equal(emulator.getRegister(registerCode.PC), 3);
+
+        // Execute JUMP= -2, PC = 1
         emulator.step();
         assert.equal(emulator.getRegister(registerCode.PC), 1);
+
+        // Execute JUMP< 69, PC = 2
         emulator.step();
         assert.equal(emulator.getRegister(registerCode.PC), 2);
+    });
+
+    test('Testing conditional jump instruction.', async () => {
+
+        // #region create instructions
+        let instructions: number[] = [];
+        // LOADI ACC 2 | 1, 20
+        let assemble = assembleLine(["LOADI", "ACC", "2"]);
+        assert.equal(assemble[0], 0);
+        instructions.push(assemble[1]);
+        // JUMP 2 | 2
+        assemble = assembleLine(["JUMP", "3"]);
+        assert.equal(assemble[0], 0);
+        instructions.push(assemble[1]);
+        // LOADI ACC 0 | 4
+        assemble = assembleLine(["LOADI", "ACC", "0"]);
+        assert.equal(assemble[0], 0);
+        instructions.push(assemble[1]);
+        // JUMP= 2 | 5
+        assemble = assembleLine(["JUMP=", "2"]);
+        assert.equal(assemble[0], 0);
+        instructions.push(assemble[1]);
+        // JUMP> -2 | 3
+        assemble = assembleLine(["JUMP>", "-2"]);
+        assert.equal(assemble[0], 0);
+        instructions.push(assemble[1]);
+        // LOADI ACC -1 | 6
+        assemble = assembleLine(["LOADI", "ACC", "-1"]);
+        assert.equal(assemble[0], 0);
+        instructions.push(assemble[1]);
+
+        // JUMP< 2 | 7
+        assemble = assembleLine(["JUMP<", "2"]);
+        assert.equal(assemble[0], 0);
+        instructions.push(assemble[1]);
+
+        // LOADI ACC 22 | 9
+        assemble = assembleLine(["LOADI", "ACC", "22"]);
+        assert.equal(assemble[0], 0);
+        instructions.push(assemble[1]);
+
+        // JUMP<= -1 | 8, 10
+        assemble = assembleLine(["JUMP<=", "-1"]);
+        assert.equal(assemble[0], 0);
+        instructions.push(assemble[1]);
+
+        // JUMP>= 2 | 11
+        assemble = assembleLine(["JUMP>=", "2"]);
+        assert.equal(assemble[0], 0);
+        instructions.push(assemble[1]);
+
+        // JUMP 3 | 14
+        assemble = assembleLine(["JUMP", "3"]);
+        assert.equal(assemble[0], 0);
+        instructions.push(assemble[1]);
+
+        // LOADI ACC 0| 12
+        assemble = assembleLine(["LOADI", "ACC", "0"]);
+        assert.equal(assemble[0], 0);
+        instructions.push(assemble[1]);
+
+        // JUMP>= -2 | 13
+        assemble = assembleLine(["JUMP>=", "-2"]);
+        assert.equal(assemble[0], 0);
+        instructions.push(assemble[1]);
+
+        // NOP | 15
+        assemble = assembleLine(["NOP"]);
+        assert.equal(assemble[0], 0);
+        instructions.push(assemble[1]);
+
+        // JUMP>= 2 |16
+        assemble = assembleLine(["JUMP>=", "2"]);
+        assert.equal(assemble[0], 0);
+        instructions.push(assemble[1]);
+
+        // JUMP -15 | 19
+        assemble = assembleLine(["JUMP", "-15"]);
+        assert.equal(assemble[0], 0);
+        instructions.push(assemble[1]);
+
+        // LOADI ACC 0 | 17
+        assemble = assembleLine(["LOADI", "ACC", "0"]);
+        assert.equal(assemble[0], 0);
+        instructions.push(assemble[1]);
+
+        // JUMP>= -2 |18
+        assemble = assembleLine(["JUMP>=", "-2"]);
+        assert.equal(assemble[0], 0);
+        instructions.push(assemble[1]);
+        //#endregion
+
+        let emulator = new Emulator(instructions, [0], vscode.window.createOutputChannel("Emulator"));
+
+        assert.equal(emulator.getRegister(registerCode.PC), 0);
+        // LOADI ACC 2
+        // Expected: ACC = 2
+        emulator.step();
+        assert.equal(emulator.getRegister(registerCode.PC), 1);
+        assert.equal(emulator.getRegister(registerCode.ACC), 2);
+
+        // JUMP 3
+        // Expected: PC = 1 + 3
+        emulator.step();
+        assert.equal(emulator.getRegister(registerCode.PC), 4);
+
+        // JUMP> -2
+        // Expected: PC = 4 - 2
+        emulator.step();
+        assert.equal(emulator.getRegister(registerCode.PC), 2);
+
+        // LOADI ACC 0
+        // Expected: ACC = 0
+        emulator.step();
+        assert.equal(emulator.getRegister(registerCode.PC), 3);
+        assert.equal(emulator.getRegister(registerCode.ACC), 0);
+
+        // JUMP= 2
+        // Expected: PC = 3 + 2
+        emulator.step();
+        assert.equal(emulator.getRegister(registerCode.PC), 5);
+        
+        // LOADI ACC -1
+        // Expected: ACC = -1
+        emulator.step();
+        assert.equal(emulator.getRegister(registerCode.PC), 6);
+
+        // JUMP< 2
+        // Expected: PC = 6 + 2
+        emulator.step();
+        assert.equal(emulator.getRegister(registerCode.PC), 8);
+
+        // JUMP<= -1
+        // Expected: PC = 8 - 1
+        emulator.step();
+        assert.equal(emulator.getRegister(registerCode.PC), 7);
+
+        // LOADI ACC 22
+        // Expected: ACC = 22
+        emulator.step();
+        assert.equal(emulator.getRegister(registerCode.PC), 8);
+        assert.equal(emulator.getRegister(registerCode.ACC), 22);
+
+        // JUMP<= -1
+        // Expected: PC = 8 + 1 (Don't execute JUMP)
+        emulator.step();
+        assert.equal(emulator.getRegister(registerCode.PC), 9);
+
+        // JUMP>= 2
+        // Expected: PC = 9 + 2
+        emulator.step();
+        assert.equal(emulator.getRegister(registerCode.PC), 11);
+
+        // LOADI ACC 0
+        // Expected: ACC = 0
+        emulator.step();
+        assert.equal(emulator.getRegister(registerCode.PC), 12);
+        assert.equal(emulator.getRegister(registerCode.ACC), 0);
+
+        // JUMP>= -2
+        // Expected: PC = 12 - 2
+        emulator.step();
+        assert.equal(emulator.getRegister(registerCode.PC), 10);
+
+        // JUMP 3
+        // Expected: PC = 10 + 3
+        emulator.step();
+        assert.equal(emulator.getRegister(registerCode.PC), 13);
+
+        // NOP
+        // Expected: PC = 13 + 1
+        emulator.step();
+        assert.equal(emulator.getRegister(registerCode.PC), 14);
+
+        // JUMP>= 2
+        // Expected: PC = 14 + 2
+        emulator.step();
+        assert.equal(emulator.getRegister(registerCode.PC), 16);
+
+        // LOADI ACC 0
+        // Expected: ACC = 0
+        emulator.step();
+        assert.equal(emulator.getRegister(registerCode.PC), 17);
+        assert.equal(emulator.getRegister(registerCode.ACC), 0);
+
+        //______________________________________________________
+        // JUMP>= -2
+        // Expected: PC = 17 - 2
+        emulator.step();
+        assert.equal(emulator.getRegister(registerCode.PC), 15);
+
+        // JUMP -15
+        // Expected: PC = 15 - 15
+        emulator.step();
+        assert.equal(emulator.getRegister(registerCode.PC), 0);
     });
 
     test('Testing load instruction.', async () => {
