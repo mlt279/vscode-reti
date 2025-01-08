@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+    <body>
+        <h1>RETI Quiz</h1>
+        <button onclick="reloadQuiz()">Reload Quiz</button>
+        <div id="timer" style="margin-top: 10px;">Time: 00:00</div>
+        <table id="quizTable" border="1" style="width: 100%; text-align: center; margin-top: 20px;">
+            <tr>
+                <th>Code</th>
+                <th>Hexadecimal</th>
+                <th>Input</th>
+                <th>Result</th>
+            </tr>
+        </table>
+        <div>
+            <h3>Explanation:</h3>
+            <div id="explanation"></div>
+        </div>
+        <div id="completionMessage"></div>
+        <script type="module">
+            import { randomInstruction } from '../../out/util/randomReti.js';
+            import { decodeInstruction } from '../../out/reti/disassembler.js';
+            import { binToHex, hexToBin } from '../../out/util/retiUtility.js';
+
+            let questionsAnswered = 0;
+            let correctAnswers = 0;
+            let numQuestions = 10;
+            let startTime;
+            let timerInterval;
+            let finished = false;
+
+            function reloadQuiz(){
+                const vscode = acquireVsCodeApi();
+                vscode.postMessage({command: 'reloadQuiz'});
+            }
+
+            function updateTimer() {
+                if (!startTime || finished) {
+                    return;
+                }
+
+                const currentTime = new Date().getTime();
+                const elapsedTime = currentTime - startTime;
+                const minutes = Math.floor(elapsedTime / 60000);
+                const seconds = Math.floor((elapsedTime % 60000) / 1000);
+
+                document.getElementById('timer').innerText = `Time: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+
+            function checkAnswer(rowIndex, correctValue, explanation) {
+                const input = document.getElementById(`input-${rowIndex}`);
+                const resultCell = document.getElementById(`result-${rowIndex}`);
+                const explanationDiv = document.getElementById('explanation');
+                const checkButton = document.getElementById(`check-button-${rowIndex}`);
+                
+                if (input.value.toLowerCase() === correctValue.toLowerCase()) {
+                    resultCell.innerHTML = '<span style="color: green;">✔️</span>';
+                    explanationDiv.innerText = 'Correct! ' + explanation;
+                    if (!input.disabled) {
+                        correctAnswers++;
+                        input.disabled = true;
+                    }
+                } else {
+                    resultCell.innerHTML = '<span style="color: red;">❌</span>';
+                    explanationDiv.innerText = 'Incorrect! ' + `The correct value was: ${correctValue}. \n`;
+
+                }
+
+                if (questionsAnswered === numQuestions) {
+                    finished = true;
+                    const currentTime = Date.now();
+                    const elapsedTime = (currentTime - startTime) / 1000;
+                    const minutes = Math.floor(elapsedTime / 60);
+                    const seconds = Math.floor(elapsedTime % 60);
+                    document.getElementById('completionMessage').innerText = `Quiz completed in ${minutes} minutes and ${seconds} seconds. You answered ${correctAnswers} out of ${numQuestions} questions correctly.`;
+                }
+            }
+
+            function generateQuizRows(numQuestions) {
+                const quizTable = document.getElementById('quizTable');
+                const questions = [];
+
+                for (let i = 0; i < 10; i++) {
+                    const row = document.createElement('tr');
+                    const instruction = randomInstruction();
+                    const [code, ex] = decodeInstruction(instruction);
+                    const expl = ex.slice(0, -1).replace(/;/g, ", ") + ".";
+
+                    const codehex = binToHex(instruction).toUpperCase();
+                    // Using this out of lazinesss since it is already correctly formatted this way.
+                    const binaryString = hexToBin(codehex);
+                    const formattedBinary = binaryString.replace(/(.{4})/g, '$1_').slice(0, -1);
+                    const explanation = codehex.replace(/(.{1})/g, '$1_') + " = " + formattedBinary + "\\n" + expl.replace(/'/g, "\\'");
+                    const missingIndex = Math.floor(Math.random() * codehex.length);
+                    const hexWithGap = codehex.slice(0, missingIndex) + '_' + codehex.slice(missingIndex + 1);
+                    
+                    const codeCell = document.createElement('td');
+                    codeCell.innerText = code;
+                    row.appendChild(codeCell);
+
+                    const hexCell = document.createElement('td');
+                    hexCell.innerText = hexWithGap;
+                    row.appendChild(hexCell);
+
+                    const inputCell = document.createElement('td');
+                    const input = document.createElement('input');
+                    input.id = `input-${i}`;
+                    inputCell.appendChild(input);
+                    row.appendChild(inputCell);
+
+                    const resultCell = document.createElement('td');
+                    resultCell.id = `result-${i}`;
+                    row.appendChild(resultCell);
+
+                    const checkButton = document.createElement('button');
+                    checkButton.id = `check-button-${i}`;
+                    checkButton.innerText = 'Check';
+                    checkButton.onclick = () => checkAnswer(i, codehex, expl);
+                    row.appendChild(checkButton);
+
+                    quizTable.appendChild(row);
+                }
+            }
+
+            window.onload = function() {
+                if (firstLoad) {
+                    firstLoad = false;
+                    startTime = Date.now();
+                    timerInterval = setInterval(updateTimer, 1000);
+                    generateQuizRows(numQuestions);
+                }
+            };
+        </script>
+    </body>
+</html>

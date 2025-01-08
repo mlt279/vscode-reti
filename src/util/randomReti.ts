@@ -78,10 +78,12 @@ function randomJumpInstruction():number {
     return 0b11 << 30 | condition << 27 | immediate;
 }
 
+// Function generates a random number between min and max.
 export function ranFromRange(min: number, max: number) {
     return Math.floor(Math.random() * (max - min + 1) + min);
 }
 
+// Function generates a random integer number between min and max.
 export function ranFromRangeInt(min: number, max: number) {
     return Math.floor(Math.random() * (max - min + 1) + min);
 }
