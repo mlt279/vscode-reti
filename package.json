@@ -7,7 +7,7 @@
     "vscode": "^1.96.0"
   },
   "categories": [
-    "Other"
+    "Programming Languages"
   ],
   "activationEvents": [
   ],
@@ -84,6 +84,49 @@
         "configuration": "./language-configuration.json"
       }
     ],
+    "grammars": 
+    [
+      {
+      "language": "reti",
+      "scopeName": "source.reti",
+      "path": "./syntaxes/reti.tmLanguage.json"
+      }
+    ],
+    "configurationDefaults": 
+    {
+      "editor.tokenColorCustomizations": {
+        "textMateRules": [
+          {
+            "scope": "instructions.reti",
+            "settings": 
+            {
+              "foreground": "#0078EC"
+            }
+          },
+          {
+            "scope": "registers.reti",
+            "settings": 
+            {
+              "foreground": "#EC008C"
+            }
+          },
+          {
+            "scope": "comment.line.reti",
+            "settings": 
+            {
+              "foreground": "#506844"
+            }
+          },
+          {
+            "scope": "constant.numeric.reti",
+            "settings": 
+            {
+              "foreground": "#EC9B00"
+            }
+          }
+        ]
+      }
+    },
     "menus": {
       "editor/title": [        
         {

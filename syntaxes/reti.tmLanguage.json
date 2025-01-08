@@ -1,0 +1,51 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "ReTI",
+	"patterns": [
+		{
+			"include": "#instructions"
+		},
+		{
+			"include": "#registers"
+		},
+		{
+			"include": "#comments"
+		},
+		{
+			"include": "#numbers"
+		}
+	],
+	"repository": {
+		"instructions": {
+			"patterns": [{
+				"name": "instructions.reti",
+				"match": "\\b(LOAD|LOADIN1|LOADIN2|LOADI|STORE|STOREIN1|STOREIN2|MOVE|JUMP|NOP|SUB|SUBI|ADD|ADDI|OPLUS|OPLUSI|AND|ANDI|OR|ORI)\\b"
+			}]
+		},
+		"registers": {
+			"patterns": [
+				{
+					"name": "registers.reti",
+					"match": "\\b(ACC|IN1|IN2|PC)\\b"
+				}
+			]
+		},
+		"comments": {
+			"patterns": [
+				{
+					"name": "comment.line.reti",
+					"match": ";.*$"
+				}
+			]
+		},
+		"numbers": {
+			"patterns": [
+				{
+					"name": "constant.numeric.reti",
+					"match": "\\b\\d+\\b"
+				}
+			]
+		}
+	},
+	"scopeName": "source.reti"
+}
