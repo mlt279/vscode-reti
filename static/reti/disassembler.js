@@ -1,22 +1,19 @@
 import { opType } from "./retiStructure.js";
 import { generateBitMask } from "../util/retiUtility.js";
-
-const Registers: { [key: number]: string } = {
+const Registers = {
     0b00: "PC",
     0b01: "IN1",
     0b10: "IN2",
     0b11: "ACC"
 };
-
-const computations : { [key: number]: string } = {
+const computations = {
     0b010: "SUB",
     0b011: "ADD",
     0b100: "OPLUS",
     0b101: "OR",
     0b110: "AND"
 };
-
-const jumpConditionSymbols: { [key: number]: string } = {
+const jumpConditionSymbols = {
     0b001: ">",
     0b010: "=",
     0b011: "≥",
@@ -25,13 +22,12 @@ const jumpConditionSymbols: { [key: number]: string } = {
     0b110: "≤",
     0b111: ""
 };
-
 // @param instruction: The instruction to decode.
 // @returns: A tuple of the instruction string and an explanation of the instruction if succesfull 
 // or an error message if unsuccesful.
-export function decodeInstruction(instruction: number): [string, string] {
-    let explanation: string = "";
-    let instructionString: string = "";
+export function decodeInstruction(instruction) {
+    let explanation = "";
+    let instructionString = "";
     let type = instruction >> 30 & 0b11;
     if (type === opType.COMPUTE) {
         explanation += `Bits at 31,30: ${type.toString(2).padStart(2, '0')} -> COMPUTE;`;
@@ -65,15 +61,13 @@ export function decodeInstruction(instruction: number): [string, string] {
         return ["Invalid instruction", ""];
     }
 }
-
-function decodeComputeInstruction(instruction: number): [string, string] {
+function decodeComputeInstruction(instruction) {
     let mi = instruction >> 29 & 0b1;
     let f = instruction >> 26 & 0b111;
     let destination = instruction >> 24 & 0b11;
     let immediate = instruction & generateBitMask(24);
     let instructionString = "";
     let explanation = "";
-
     instructionString += computations[f];
     if (mi === 0) {
         instructionString += "I ";
@@ -91,8 +85,7 @@ function decodeComputeInstruction(instruction: number): [string, string] {
     explanation += `Remaining bits 23 to 0 = ${immediate} = immediate value;`;
     return [instructionString, explanation];
 }
-
-function decodeLoadInstruction(instruction: number): [string, string] {
+function decodeLoadInstruction(instruction) {
     let mode = instruction >> 28 & 0b11;
     let destination = instruction >> 24 & 0b11;
     let immediate = instruction & generateBitMask(24);
@@ -100,10 +93,10 @@ function decodeLoadInstruction(instruction: number): [string, string] {
     let explanation = "";
     switch (mode) {
         case 0b00:
-            instructionString+= "LOAD ";
+            instructionString += "LOAD ";
             explanation += `Bits at 29,28: ${mode.toString(2).padStart(2, '0')} -> Mode = LOAD; Bits at 27, 26 are ignored;`;
             break;
-         case 0b11:
+        case 0b11:
             instructionString += "LOADI ";
             immediate = immediateAsTwoc(immediate);
             explanation += `Bits at 29,28: ${mode.toString(2).padStart(2, '0')} -> Mode == LOADI; Bits at 27, 26 are ignored;`;
@@ -120,8 +113,7 @@ function decodeLoadInstruction(instruction: number): [string, string] {
     explanation += `Remaining bits 23 to 0 = ${immediate} = immediate value;`;
     return [instructionString, explanation];
 }
-
-function decodeStoreInstruction(instruction: number): [string, string] {
+function decodeStoreInstruction(instruction) {
     let mode = instruction >> 28 & 0b11;
     let source = instruction >> 26 & 0b11;
     let destination = instruction >> 24 & 0b11;
@@ -130,7 +122,7 @@ function decodeStoreInstruction(instruction: number): [string, string] {
     let explanation = "";
     switch (mode) {
         case 0b00:
-            instructionString+= "STORE ";
+            instructionString += "STORE ";
             explanation += `Bits at 29,28: ${mode.toString(2).padStart(2, '0')} -> Mode = STORE; Bits at 27, 26 are ignored;`;
             break;
         case 0b11:
@@ -151,23 +143,19 @@ function decodeStoreInstruction(instruction: number): [string, string] {
     explanation += `Remaining bits 23 to 0 = ${immediate} = immediate value;`;
     return [instructionString, explanation];
 }
-
-function decodeJumpInstruction(instruction: number): [string, string] {
+function decodeJumpInstruction(instruction) {
     let condition = instruction >> 27 & 0b111;
     let immediate = instruction & generateBitMask(24);
-
     // Handling immediate as a twoc
     immediate = immediateAsTwoc(immediate);
-
     let gt = condition >> 2 & 0b1;
     let eq = condition >> 1 & 0b1;
     let lt = condition & 0b1;
     let instructionString = "";
     let explanation = "";
-
     if (condition !== 0) {
         instructionString = "JUMP" + jumpConditionSymbols[condition] + " ";
-        explanation = `Bit 29: ${gt.toString(2)} -> '>' is ${gt === 0 ? "not" : ""} checked & Bit 28: ${eq.toString(2)} -> '=' is ${eq === 0 ? "not" : ""} checked & Bit 27: ${lt.toString(2)} -> '<' is ${lt === 0 ? "not": ""} checked -> Condition = ${jumpConditionSymbols[condition] === "" ? "ALL" : jumpConditionSymbols[condition]};`;
+        explanation = `Bit 29: ${gt.toString(2)} -> '>' is ${gt === 0 ? "not" : ""} checked & Bit 28: ${eq.toString(2)} -> '=' is ${eq === 0 ? "not" : ""} checked & Bit 27: ${lt.toString(2)} -> '<' is ${lt === 0 ? "not" : ""} checked -> Condition = ${jumpConditionSymbols[condition] === "" ? "ALL" : jumpConditionSymbols[condition]};`;
         instructionString += immediate.toString();
         explanation += `Remaining bits 23 to 0 = ${immediate} = immediate value;`;
     }
@@ -177,10 +165,10 @@ function decodeJumpInstruction(instruction: number): [string, string] {
     }
     return [instructionString, explanation];
 }
-
-function immediateAsTwoc(immediate: number): number {
+function immediateAsTwoc(immediate) {
     if ((immediate & (1 << 23)) !== 0) {
         return immediate |= ~generateBitMask(24);
     }
     return immediate;
 }
+//# sourceMappingURL=disassembler.js.map

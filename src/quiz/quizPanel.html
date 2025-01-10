@@ -1,5 +1,9 @@
 <!DOCTYPE html>
 <html>
+    <head>
+        <title>RETI Quiz</title>
+        <meta charset="UTF-8">
+    </head>
     <body>
         <h1>RETI Quiz</h1>
         <button onclick="reloadQuiz()">Reload Quiz</button>
@@ -18,9 +22,11 @@
         </div>
         <div id="completionMessage"></div>
         <script type="module">
-            // import { randomInstruction } from '../../out/util/randomReti.js';
-            // import { decodeInstruction } from '../../out/reti/disassembler.js';
-            // import { binToHex, hexToBin } from '../../out/util/retiUtility.js';
+            import {randomInstruction} from '../../static/util/randomReti.js';
+            import {decodeInstruction} from '../../static/reti/disassembler.js';
+
+            import {hexToBin} from '../../static/util/retiUtility.js';
+            import {binToHex} from '../../static/util/retiUtility.js';
 
             let questionsAnswered = 0;
             let correctAnswers = 0;
@@ -28,6 +34,7 @@
             let startTime;
             let timerInterval;
             let finished = false;
+            let firstLoad = true;
 
             function reloadQuiz(){
                 const vscode = acquireVsCodeApi();
@@ -58,12 +65,16 @@
                     explanationDiv.innerText = 'Correct! ' + explanation;
                     if (!input.disabled) {
                         correctAnswers++;
-                        input.disabled = true;
                     }
                 } else {
                     resultCell.innerHTML = '<span style="color: red;">❌</span>';
                     explanationDiv.innerText = 'Incorrect! ' + `The correct value was: ${correctValue}. \n`;
 
+                }
+                if (!input.disabled) {
+                    questionsAnswered++;
+                    checkButton.disabled = true;
+                    input.disabled = true;
                 }
 
                 if (questionsAnswered === numQuestions) {
@@ -115,7 +126,7 @@
                     const checkButton = document.createElement('button');
                     checkButton.id = `check-button-${i}`;
                     checkButton.innerText = 'Check';
-                    checkButton.onclick = () => checkAnswer(i, codehex, expl);
+                    checkButton.onclick = () => checkAnswer(i, codehex[missingIndex], expl);
                     row.appendChild(checkButton);
 
                     quizTable.appendChild(row);
