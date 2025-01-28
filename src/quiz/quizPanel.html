@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>RETI Quiz</title>
+        <title>ReTI Quiz</title>
         <meta charset="UTF-8">
     </head>
     <body>
-        <h1>RETI Quiz</h1>
+        <h1>ReTI Quiz</h1>
         <button onclick="reloadQuiz()">Reload Quiz</button>
         <div id="timer" style="margin-top: 10px;">Time: 00:00</div>
         <table id="quizTable" border="1" style="width: 100%; text-align: center; margin-top: 20px;">
@@ -36,10 +36,17 @@
             let finished = false;
             let firstLoad = true;
 
-            function reloadQuiz(){
-                const vscode = acquireVsCodeApi();
-                vscode.postMessage({command: 'reloadQuiz'});
+            function reloadQuiz() {
+                const quizTable = document.getElementById('quizTable');
+                while (quizTable.rows.length > 1) {
+                    quizTable.deleteRow(1);
+                }
+                startTime = Date.now();
+                timerInterval = setInterval(updateTimer, 1000);
+                generateQuizRows(numQuestions);
+                document.getElementById('timer').innerText = `Time: 00:00`;
             }
+            window.reloadQuiz = reloadQuiz;
 
             function updateTimer() {
                 if (!startTime || finished) {
@@ -106,7 +113,7 @@
                     const hexWithGap = codehex.slice(0, missingIndex) + '_' + codehex.slice(missingIndex + 1);
                     
                     const codeCell = document.createElement('td');
-                    codeCell.innerText = code;
+                    codeCell.innerText = codehex;
                     row.appendChild(codeCell);
 
                     const hexCell = document.createElement('td');
