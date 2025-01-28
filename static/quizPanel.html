@@ -36,11 +36,12 @@
         </div>
         <div id="completionMessage"></div>
         <script type="module">
+            /*/IMPORTS/*/
             import {randomInstruction} from '../../static/util/randomReti.js';
             import {decodeInstruction} from '../../static/reti/disassembler.js';
-
             import {hexToBin} from '../../static/util/retiUtility.js';
             import {binToHex} from '../../static/util/retiUtility.js';
+            /*/END/*/
 
             let questionsAnswered = 0;
             let correctAnswers = 0;
@@ -173,7 +174,7 @@
 
 
                     const codeCell = document.createElement('td');
-                    codeCell.innerText = codehex;
+                    codeCell.innerText = code;
                     row.appendChild(codeCell);
 
                     const hexCell = document.createElement('td');

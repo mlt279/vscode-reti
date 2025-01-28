@@ -1,4 +1,6 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
+import * as fs from 'fs';
 import { randomInstruction } from '../util/randomReti';
 import { decodeInstruction } from '../reti/disassembler';
 import { binToHex, hexToBin } from '../util/retiUtility';
@@ -16,7 +18,33 @@ export function showQuizPanel(context: vscode.ExtensionContext) {
     let startTime: number | undefined;
     let timerInterval: NodeJS.Timeout | undefined;
 
+    const importString = "const randomInstruction = ${randomInstruction};\n" +
+    "const decodeInstruction = ${decodeInstruction};\n" +
+    "const binToHex = ${binToHex};\n" +
+    "const hexToBin = ${hexToBin};\n";
+
+    const htmlFilePath = path.join(context.extensionPath, 'static', 'quizPanel.html');
+
+    let html = '';
+    try {
+        html = fs.readFileSync(htmlFilePath).toString();
+    }
+    catch (err) {
+        vscode.window.showErrorMessage("Failed to read HTML file.");
+    }
+
+    function replaceImports(content: string, newImports: string): string {
+        // Regular expression to match content between /*/ -IMPORTS- /*/ and /*/ -END- /*/
+        const regex = /(?<=\/\*\/IMPORTS\/\*\/).+?(?=\/\*\/END\/\*\/)/gs;
+        
+        // Replace the content between the markers with newImports
+        return content.replace(regex, `/*/ -IMPORTS- /*/\n${newImports}\n/*/ -END- /*/`);
+    }
+    
+    const modifiedHTML = replaceImports(html, importString);
+
     const generateQuizHTML = (): string => {
+        return modifiedHTML;
         const rows = generateQuizRows(numQuestions);
         return `
     <html>
