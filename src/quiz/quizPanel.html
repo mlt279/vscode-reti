@@ -4,6 +4,20 @@
         <title>ReTI Quiz</title>
         <meta charset="UTF-8">
     </head>
+    <style>
+        .fixed-table {
+            table-layout: fixed;
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .fixed-table th, .fixed-table td {
+            text-align: center;
+            border: 1px solid black;
+        }
+        .bin-column {
+            width: 3.125%;
+        }
+    </style>
     <body>
         <h1>ReTI Quiz</h1>
         <button onclick="reloadQuiz()">Reload Quiz</button>
@@ -69,13 +83,15 @@
                 
                 if (input.value.toLowerCase() === correctValue.toLowerCase()) {
                     resultCell.innerHTML = '<span style="color: green;">✔️</span>';
-                    explanationDiv.innerText = 'Correct! ' + explanation;
+                    explanationDiv.innerText = 'Correct! ';
+                    explanationDiv.appendChild(explanation);
                     if (!input.disabled) {
                         correctAnswers++;
                     }
                 } else {
                     resultCell.innerHTML = '<span style="color: red;">❌</span>';
                     explanationDiv.innerText = 'Incorrect! ' + `The correct value was: ${correctValue}. \n`;
+                    explanationDiv.appendChild(explanation);
 
                 }
                 if (!input.disabled) {
@@ -102,16 +118,60 @@
                     const row = document.createElement('tr');
                     const instruction = randomInstruction();
                     const [code, ex] = decodeInstruction(instruction);
-                    const expl = ex.slice(0, -1).replace(/;/g, ", ") + ".";
 
                     const codehex = binToHex(instruction).toUpperCase();
                     // Using this out of lazinesss since it is already correctly formatted this way.
                     const binaryString = hexToBin(codehex);
                     const formattedBinary = binaryString.replace(/(.{4})/g, '$1_').slice(0, -1);
-                    const explanation = codehex.replace(/(.{1})/g, '$1_') + " = " + formattedBinary + "\\n" + expl.replace(/'/g, "\\'");
                     const missingIndex = Math.floor(Math.random() * codehex.length);
                     const hexWithGap = codehex.slice(0, missingIndex) + '_' + codehex.slice(missingIndex + 1);
                     
+                    const explanationTable = document.createElement('table');
+                    explanationTable.border = '1';
+                    explanationTable.style.width = '50%';
+                    explanationTable.style.textAlign = 'center';
+                    explanationTable.className = 'fixed-table';
+
+                    const header = document.createElement('tr');
+                    for (let i = 31; i >= 0; i--) {
+                        const th = document.createElement('th');
+                        th.innerText = i.toString();
+                        th.className = 'bin-column';
+                        header.appendChild(th);
+                    }
+                    explanationTable.appendChild(header);
+
+
+                    const hexRow = document.createElement('tr');
+                    for (let i = 0; i < 8; i++) {
+                        const td = document.createElement('td');
+                        td.innerText = codehex[i];
+                        td.className = 'bin-column';
+                        td.colSpan = 4;
+                        hexRow.appendChild(td);
+                    }
+                    explanationTable.appendChild(hexRow);
+
+                    const binaryRow = document.createElement('tr');
+                    for (let i = 0; i < 32; i++) {
+                        const td = document.createElement('td');
+                        td.innerText = binaryString[i];
+                        td.className = 'bin-column';
+                        binaryRow.appendChild(td);
+                    }
+                    explanationTable.appendChild(binaryRow);
+
+                    const codeRow = document.createElement('tr');
+                    const codeRowInput = document.createElement('td');
+                    codeRowInput.colSpan = 32;
+                    codeRowInput.innerText = code;
+                    codeRowInput.style.textAlign = 'center';
+                    codeRowInput.style.verticalAlign = 'middle';
+                    codeRow.appendChild(codeRowInput);
+                    explanationTable.appendChild(codeRow);
+
+
+
                     const codeCell = document.createElement('td');
                     codeCell.innerText = codehex;
                     row.appendChild(codeCell);
@@ -133,7 +193,7 @@
                     const checkButton = document.createElement('button');
                     checkButton.id = `check-button-${i}`;
                     checkButton.innerText = 'Check';
-                    checkButton.onclick = () => checkAnswer(i, codehex[missingIndex], expl);
+                    checkButton.onclick = () => checkAnswer(i, codehex[missingIndex], explanationTable);
                     row.appendChild(checkButton);
 
                     quizTable.appendChild(row);
