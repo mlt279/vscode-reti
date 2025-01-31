@@ -144,7 +144,7 @@ export function showQuizPanel(context: vscode.ExtensionContext) {
         for (let i = 0; i < numOfRows; i++) {
             const instruction = randomInstruction();
             const [code, ex] = decodeInstruction(instruction);
-            const expl = ex.slice(0, -1).replace(/;/g, ", ") + ".";
+            const expl = ex[0][0].slice(0, -1).replace(/;/g, ", ") + ".";
 
             const codehex = binToHex(instruction).toUpperCase();
             // Using this out of lazinesss since it is already correctly formatted this way.

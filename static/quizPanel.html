@@ -8,26 +8,44 @@
         .fixed-table {
             table-layout: fixed;
             width: 100%;
-            border-collapse: collapse;
+            /* border: 1px solid white; */
+            border: "1";
+            /* border-collapse: collapse; */
         }
         .fixed-table th, .fixed-table td {
             text-align: center;
-            border: 1px solid black;
+            /* background-color: #96D4D4; */
         }
         .bin-column {
             width: 3.125%;
+        }
+    </style>
+    <style>
+        .quiz-table {
+            table-layout: fixed;
+            width: 100%;
+            border: 1px solid rgb(0, 0, 0);
+            /* border-collapse: collapse; */
+            margin-top: 20px;
+        }
+        .quiz-table th, .quiz-table td {
+            text-align: center;
+            background-color: #dddddd;
+            border: 1px solid white;
+            padding: 8px;
         }
     </style>
     <body>
         <h1>ReTI Quiz</h1>
         <button onclick="reloadQuiz()">Reload Quiz</button>
         <div id="timer" style="margin-top: 10px;">Time: 00:00</div>
-        <table id="quizTable" border="1" style="width: 100%; text-align: center; margin-top: 20px;">
+        <table id="quizTable" class="quiz-table">
             <tr>
                 <th>Code</th>
                 <th>Hexadecimal</th>
                 <th>Input</th>
                 <th>Result</th>
+                <th></th>
             </tr>
         </table>
         <div>
@@ -118,7 +136,7 @@
                 for (let i = 0; i < 10; i++) {
                     const row = document.createElement('tr');
                     const instruction = randomInstruction();
-                    const [code, ex] = decodeInstruction(instruction);
+                    const [code, explanation] = decodeInstruction(instruction);
 
                     const codehex = binToHex(instruction).toUpperCase();
                     // Using this out of lazinesss since it is already correctly formatted this way.
@@ -128,45 +146,64 @@
                     const hexWithGap = codehex.slice(0, missingIndex) + '_' + codehex.slice(missingIndex + 1);
                     
                     const explanationTable = document.createElement('table');
-                    explanationTable.border = '1';
+                    explanationTable.border = "1";
+                    explanationTable.style.marginTop = '10px';
                     explanationTable.style.width = '50%';
                     explanationTable.style.textAlign = 'center';
                     explanationTable.className = 'fixed-table';
 
                     const header = document.createElement('tr');
-                    for (let i = 31; i >= 0; i--) {
+                    for (let i = 0; i < explanation.length; i++) {
                         const th = document.createElement('th');
-                        th.innerText = i.toString();
-                        th.className = 'bin-column';
+                        th.innerText = explanation[i][0];
+                        th.colSpan = explanation[i][1] % 5;
                         header.appendChild(th);
                     }
                     explanationTable.appendChild(header);
 
+                    const explRow = document.createElement('tr');
+                    for (let i = 0; i < explanation.length; i++) {
+                        const td = document.createElement('td');
+                        td.innerText = explanation[i][2];
+                        td.colSpan = explanation[i][1] % 5;
+                        explRow.appendChild(td);
+                    }
+                    explanationTable.appendChild(explRow);
+
+                    const binaryRow = document.createElement('tr');
+                    for (let i = 0; i < 9; i++) {
+                        const td = document.createElement('td');
+                        if (i === 8) {
+                            td.innerText = binaryString.slice(i);
+                            td.colSpan = 4;
+                        }
+                        else {
+                            td.innerText = binaryString[i];
+                        }
+                        td.className = 'bin-column';
+                        binaryRow.appendChild(td);
+                    }
+                    explanationTable.appendChild(binaryRow);
 
                     const hexRow = document.createElement('tr');
-                    for (let i = 0; i < 8; i++) {
+                    for (let i = 0; i < 3; i++) {
                         const td = document.createElement('td');
-                        td.innerText = codehex[i];
+                        if (i ===  2) {
+                            td.innerText = codehex.slice(i);
+                        }
+                        else {
+                            td.innerText = codehex[i];
+                        }
                         td.className = 'bin-column';
                         td.colSpan = 4;
                         hexRow.appendChild(td);
                     }
                     explanationTable.appendChild(hexRow);
 
-                    const binaryRow = document.createElement('tr');
-                    for (let i = 0; i < 32; i++) {
-                        const td = document.createElement('td');
-                        td.innerText = binaryString[i];
-                        td.className = 'bin-column';
-                        binaryRow.appendChild(td);
-                    }
-                    explanationTable.appendChild(binaryRow);
-
                     const codeRow = document.createElement('tr');
                     const codeRowInput = document.createElement('td');
-                    codeRowInput.colSpan = 32;
+                    codeRowInput.colSpan = 12;
                     codeRowInput.innerText = code;
-                    codeRowInput.style.textAlign = 'center';
                     codeRowInput.style.verticalAlign = 'middle';
                     codeRow.appendChild(codeRowInput);
                     explanationTable.appendChild(codeRow);
@@ -191,11 +228,13 @@
                     resultCell.id = `result-${i}`;
                     row.appendChild(resultCell);
 
+                    const checkButtonCell = document.createElement('td');
                     const checkButton = document.createElement('button');
                     checkButton.id = `check-button-${i}`;
                     checkButton.innerText = 'Check';
                     checkButton.onclick = () => checkAnswer(i, codehex[missingIndex], explanationTable);
-                    row.appendChild(checkButton);
+                    checkButtonCell.appendChild(checkButton);
+                    row.appendChild(checkButtonCell);
 
                     quizTable.appendChild(row);
                 }

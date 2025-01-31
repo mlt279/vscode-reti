@@ -26,144 +26,138 @@ const jumpConditionSymbols = {
 // @returns: A tuple of the instruction string and an explanation of the instruction if succesfull 
 // or an error message if unsuccesful.
 export function decodeInstruction(instruction) {
-    let explanation = "";
-    let instructionString = "";
     let type = instruction >> 30 & 0b11;
     if (type === opType.COMPUTE) {
-        explanation += `Bits at 31,30: ${type.toString(2).padStart(2, '0')} -> COMPUTE;`;
-        let result = decodeComputeInstruction(instruction);
-        explanation += result[1];
-        instructionString += result[0];
-        return [instructionString, explanation];
+        return decodeComputeInstruction(instruction);
     }
     else if (type === opType.LOAD) {
-        explanation += `Bits at 31,30: ${type.toString(2).padStart(2, '0')} -> LOAD;`;
-        let result = decodeLoadInstruction(instruction);
-        explanation += result[1];
-        instructionString += result[0];
-        return [instructionString, explanation];
+        return decodeLoadInstruction(instruction);
     }
     else if (type === opType.STORE) {
-        explanation += `Bits at 31,30: ${type.toString(2).padStart(2, '0')} -> STORE;`;
-        let result = decodeStoreInstruction(instruction);
-        explanation += result[1];
-        instructionString += result[0];
-        return [instructionString, explanation];
+        return decodeStoreInstruction(instruction);
     }
     else if (type === opType.JUMP) {
-        explanation += `Bits at 31,30: ${type.toString(2).padStart(2, '0')} -> JUMP;`;
-        let result = decodeJumpInstruction(instruction);
-        explanation += result[1];
-        instructionString += result[0];
-        return [instructionString, explanation];
+        return decodeJumpInstruction(instruction);
     }
     else {
-        return ["Invalid instruction", ""];
+        return ["Invalid instruction", []];
     }
 }
 function decodeComputeInstruction(instruction) {
+    let explanationList = [];
+    explanationList[0] = ["Type", 2, "COMPUTE"];
     let mi = instruction >> 29 & 0b1;
     let f = instruction >> 26 & 0b111;
     let destination = instruction >> 24 & 0b11;
     let immediate = instruction & generateBitMask(24);
     let instructionString = "";
-    let explanation = "";
     instructionString += computations[f];
+    explanationList[2] = ["Function", 3, computations[f]];
     if (mi === 0) {
         instructionString += "I ";
-        explanation += `Bits at 29: ${mi.toString(2)} -> Mode = Compute Immediate as value;`;
+        explanationList[1] = ["MI", 1, "I"];
         immediate = immediateAsTwoc(immediate);
     }
     else {
         instructionString += " ";
-        explanation += `Bits at 29: ${mi.toString(2)} -> Mode = Compute Immediate as address;`;
+        explanationList[1] = ["MI", 1, ""];
     }
-    explanation += `Bits at 28 to 26: ${f.toString(2).padStart(3, '0')} -> Function = ${computations[f]};`;
     instructionString += Registers[destination] + " ";
-    explanation += `Bits at 25,24: ${destination.toString(2).padStart(2, '0')} -> Destination = ${Registers[destination]};`;
+    explanationList[3] = ["Destination", 2, Registers[destination]];
     instructionString += immediate.toString();
-    explanation += `Remaining bits 23 to 0 = ${immediate} = immediate value;`;
-    return [instructionString, explanation];
+    explanationList[4] = ["Immediate", 24, immediate.toString()];
+    return [instructionString, explanationList];
 }
 function decodeLoadInstruction(instruction) {
+    let explanationList = [];
+    explanationList[0] = ["Type", 2, "LOAD"];
+    explanationList[2] = ["*", 2, ""];
     let mode = instruction >> 28 & 0b11;
     let destination = instruction >> 24 & 0b11;
     let immediate = instruction & generateBitMask(24);
     let instructionString = "";
-    let explanation = "";
     switch (mode) {
         case 0b00:
             instructionString += "LOAD ";
-            explanation += `Bits at 29,28: ${mode.toString(2).padStart(2, '0')} -> Mode = LOAD; Bits at 27, 26 are ignored;`;
+            explanationList[1] = ["Mode", 2, ""];
             break;
         case 0b11:
             instructionString += "LOADI ";
             immediate = immediateAsTwoc(immediate);
-            explanation += `Bits at 29,28: ${mode.toString(2).padStart(2, '0')} -> Mode == LOADI; Bits at 27, 26 are ignored;`;
+            explanationList[1] = ["Mode", 2, "I"];
             break;
         default:
             instructionString += "LOAD" + Registers[mode] + " ";
             immediate = immediateAsTwoc(immediate);
-            explanation += `Bits at 29,28: ${mode.toString(2).padStart(2, '0')} -> Mode == ${Registers[mode]} -> LOAD${Registers[mode]}; Bits at 27, 26 are ignored;`;
+            explanationList[1] = ["Mode", 2, Registers[mode]];
             break;
     }
     instructionString += Registers[destination] + " ";
-    explanation += `Bits at 25,24: ${destination.toString(2).padStart(2, '0')} -> Destination = ${Registers[destination]};`;
+    explanationList[3] = ["Destination", 2, Registers[destination]];
     instructionString += immediate.toString();
-    explanation += `Remaining bits 23 to 0 = ${immediate} = immediate value;`;
-    return [instructionString, explanation];
+    explanationList[4] = ["Immediate", 24, immediate.toString()];
+    return [instructionString, explanationList];
 }
 function decodeStoreInstruction(instruction) {
+    let explanationList = [];
+    explanationList[0] = ["Type", 2, "STORE"];
     let mode = instruction >> 28 & 0b11;
     let source = instruction >> 26 & 0b11;
     let destination = instruction >> 24 & 0b11;
     let immediate = instruction & generateBitMask(24);
     let instructionString = "";
-    let explanation = "";
     switch (mode) {
         case 0b00:
             instructionString += "STORE ";
-            explanation += `Bits at 29,28: ${mode.toString(2).padStart(2, '0')} -> Mode = STORE; Bits at 27, 26 are ignored;`;
+            explanationList[1] = ["Mode", 2, ""];
             break;
         case 0b11:
             instructionString = "MOVE " + Registers[source] + " ";
-            explanation += `Bits at 29,28: ${mode.toString(2).padStart(2, '0')} -> Mode == MOVE; Bits at 27, 26: ${source.toString(2).padStart(2, '0')} -> SOURCE = ${Registers[source]};`;
+            explanationList[1] = ["Mode", 2, "MOVE"];
+            explanationList[2] = ["Source", 2, Registers[source]];
+            explanationList[3] = ["Destination", 2, Registers[destination]];
+            explanationList[4] = ["*", 24, ""];
             instructionString += Registers[destination];
-            explanation += `Bits at 25,24: ${destination.toString(2).padStart(2, '0')} -> Destination = ${Registers[destination]};Immediate = remaining bits 23 to 0 = ${immediate} is ignored;`;
-            return [instructionString, explanation];
+            return [instructionString, explanationList];
         // IN1 and IN2 are handled the same.
         default:
             immediate = immediateAsTwoc(immediate);
             instructionString += "STORE" + Registers[mode] + " ";
-            explanation += `Bits at 29,28: ${mode.toString(2).padStart(2, '0')} -> Mode == ${Registers[mode]} -> STORE${Registers[mode]}; Bits at 27, 26 are ignored;`;
+            explanationList[1] = ["Mode", 2, Registers[mode]];
             break;
     }
-    explanation += `Bits at 25,24: ${destination.toString(2).padStart(2, '0')} -> Destination = ${Registers[destination]};`;
+    explanationList[2] = ["*", 2, ""];
+    explanationList[3] = ["*", 2, ""];
     instructionString += immediate.toString();
-    explanation += `Remaining bits 23 to 0 = ${immediate} = immediate value;`;
-    return [instructionString, explanation];
+    explanationList[4] = ["Immediate", 24, immediate.toString()];
+    return [instructionString, explanationList];
 }
 function decodeJumpInstruction(instruction) {
+    let explanationList = [];
+    explanationList[0] = ["Type", 2, "JUMP"];
+    explanationList[2] = ["*", 3, ""];
     let condition = instruction >> 27 & 0b111;
     let immediate = instruction & generateBitMask(24);
     // Handling immediate as a twoc
     immediate = immediateAsTwoc(immediate);
-    let gt = condition >> 2 & 0b1;
-    let eq = condition >> 1 & 0b1;
-    let lt = condition & 0b1;
+    explanationList[3] = ["Immediate", 24, immediate.toString()];
+    // Not needed for know. Later on this ideally could be used to better explain how the jump conditions work.
+    // let gt = condition >> 2 & 0b1;
+    // let eq = condition >> 1 & 0b1;
+    // let lt = condition & 0b1;
     let instructionString = "";
     let explanation = "";
     if (condition !== 0) {
         instructionString = "JUMP" + jumpConditionSymbols[condition] + " ";
-        explanation = `Bit 29: ${gt.toString(2)} -> '>' is ${gt === 0 ? "not" : ""} checked & Bit 28: ${eq.toString(2)} -> '=' is ${eq === 0 ? "not" : ""} checked & Bit 27: ${lt.toString(2)} -> '<' is ${lt === 0 ? "not" : ""} checked -> Condition = ${jumpConditionSymbols[condition] === "" ? "ALL" : jumpConditionSymbols[condition]};`;
+        explanationList[1] = ["Condition", 3, jumpConditionSymbols[condition]];
         instructionString += immediate.toString();
         explanation += `Remaining bits 23 to 0 = ${immediate} = immediate value;`;
     }
     else {
         instructionString = "NOP";
-        explanation = "Bits at 29,28,27: 0 = All conditions are 0 and therefore none is checked -> NOP;";
+        explanationList[1] = ["Condition", 3, "NOP"];
     }
-    return [instructionString, explanation];
+    return [instructionString, explanationList];
 }
 function immediateAsTwoc(immediate) {
     if ((immediate & (1 << 23)) !== 0) {

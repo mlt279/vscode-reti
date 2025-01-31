@@ -1,4 +1,6 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
+import * as fs from 'fs';
 import { randomInstruction } from '../util/randomReti';
 import { decodeInstruction } from '../reti/disassembler';
 import { binToHex, hexToBin } from '../util/retiUtility';
@@ -8,7 +10,27 @@ export function showQuizPanel(context) {
     let numQuestions = 10;
     let startTime;
     let timerInterval;
+    const importString = "const randomInstruction = ${randomInstruction};\n" +
+        "const decodeInstruction = ${decodeInstruction};\n" +
+        "const binToHex = ${binToHex};\n" +
+        "const hexToBin = ${hexToBin};\n";
+    const htmlFilePath = path.join(context.extensionPath, 'static', 'quizPanel.html');
+    let html = '';
+    try {
+        html = fs.readFileSync(htmlFilePath).toString();
+    }
+    catch (err) {
+        vscode.window.showErrorMessage("Failed to read HTML file.");
+    }
+    function replaceImports(content, newImports) {
+        // Regular expression to match content between /*/ -IMPORTS- /*/ and /*/ -END- /*/
+        const regex = /(?<=\/\*\/IMPORTS\/\*\/).+?(?=\/\*\/END\/\*\/)/gs;
+        // Replace the content between the markers with newImports
+        return content.replace(regex, `/*/ -IMPORTS- /*/\n${newImports}\n/*/ -END- /*/`);
+    }
+    const modifiedHTML = replaceImports(html, importString);
     const generateQuizHTML = () => {
+        return modifiedHTML;
         const rows = generateQuizRows(numQuestions);
         return `
     <html>
@@ -107,7 +129,7 @@ export function showQuizPanel(context) {
         for (let i = 0; i < numOfRows; i++) {
             const instruction = randomInstruction();
             const [code, ex] = decodeInstruction(instruction);
-            const expl = ex.slice(0, -1).replace(/;/g, ", ") + ".";
+            const expl = ex[0][0].slice(0, -1).replace(/;/g, ", ") + ".";
             const codehex = binToHex(instruction).toUpperCase();
             // Using this out of lazinesss since it is already correctly formatted this way.
             const binaryString = hexToBin(codehex);
