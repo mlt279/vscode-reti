@@ -24,15 +24,15 @@
 				},
 				{
 					"name": "keyword.control.store",
-					"match": "\\bSTORE(?:IN[12])?\\b"
+					"match": "\\bSTORE(IN[12])?\\b"
 				},
 				{
 					"name": "keyword.control.load",
-					"match": "\\bLOAD(?:I|IN[12])?\\b"
+					"match": "\\bLOAD(I|IN[12])?\\b"
 				},
 				{
 					"name": "keyword.control.jump",
-					"match": "\\bJUMP(?:(>|=|≥|<|≠|≤|lt|eq|leq|gt|geq|neq))?\\b"
+					"match": "\\b((JUMP)(!=|<=|>=|>|=|≥|<|≠|≤|lt|eq|leq|gt|geq|neq)?)(?!(\\w|>|=|≥|<|≠|≤))"
 				},
 				{
 					"name": "keyword.control.nop",
@@ -41,10 +41,6 @@
 				{
 					"name": "keyword.control.compute",
 					"match": "\\b(ADD|SUB|OPLUS|AND|OR)(?:I)?\\b"
-				},
-				{
-					"name": "variable.language.register",
-					"match": "\\b(IN[12]|ACC|PC)\\b"
 				}
 			]
 		},
