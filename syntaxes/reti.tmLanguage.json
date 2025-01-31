@@ -20,27 +20,27 @@
 			"patterns": [
 				{
 					"name": "keyword.control.move",
-					"match": "\\bMOVE\\b"
+					"match": "(?<=(^|\\s))MOVE(?!(\\w|>|=|≥|<|≠|≤))"
 				},
 				{
 					"name": "keyword.control.store",
-					"match": "\\bSTORE(IN[12])?\\b"
+					"match": "(?<=(^|\\s))STORE(IN[12])?(?!(\\w|>|=|≥|<|≠|≤))"
 				},
 				{
 					"name": "keyword.control.load",
-					"match": "\\bLOAD(I|IN[12])?\\b"
+					"match": "(?<=(^|\\s))LOAD(I|IN[12])?(?!(\\w|>|=|≥|<|≠|≤))"
 				},
 				{
 					"name": "keyword.control.jump",
-					"match": "\\b((JUMP)(!=|<=|>=|>|=|≥|<|≠|≤|lt|eq|leq|gt|geq|neq)?)(?!(\\w|>|=|≥|<|≠|≤))"
+					"match": "(?<=(^|\\s))JUMP(?:!=|<=|>=|>|=|≥|<|≠|≤|lt|eq|leq|gt|geq|neq)?(?!(\\w|>|=|≥|<|≠|≤))"
 				},
 				{
 					"name": "keyword.control.nop",
-					"match": "\\bNOP\\b"
+					"match": "(?<=(^|\\s))NOP(?!(\\w|>|=|≥|<|≠|≤))"
 				},
 				{
 					"name": "keyword.control.compute",
-					"match": "\\b(ADD|SUB|OPLUS|AND|OR)(?:I)?\\b"
+					"match": "(?<=(^|\\s))(ADD|SUB|OPLUS|AND|OR)(?:I)?(?!(\\w|>|=|≥|<|≠|≤))"
 				}
 			]
 		},
@@ -48,7 +48,7 @@
 			"patterns": [
 				{
 					"name": "registers.reti",
-					"match": "\\b(ACC|IN1|IN2|PC)\\b"
+					"match": "(?<=(^|\\s))(ACC|IN1|IN2|PC)(?!(\\w|>|=|≥|<|≠|≤))"
 				}
 			]
 		},
@@ -64,7 +64,7 @@
 			"patterns": [
 				{
 					"name": "constant.numeric.reti",
-					"match": "\\b\\d+\\b"
+					"match": "(?<=(^|\\s))-?\\d+(?!(\\w|>|=|≥|<|≠|≤))"
 				}
 			]
 		}
