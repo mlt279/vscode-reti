@@ -17,10 +17,36 @@
 	],
 	"repository": {
 		"instructions": {
-			"patterns": [{
-				"name": "instructions.reti",
-				"match": "\\b(LOAD|LOADIN1|LOADIN2|LOADI|STORE|STOREIN1|STOREIN2|MOVE|JUMP|NOP|SUB|SUBI|ADD|ADDI|OPLUS|OPLUSI|AND|ANDI|OR|ORI)\\b"
-			}]
+			"patterns": [
+				{
+					"name": "keyword.control.move",
+					"match": "\\bMOVE\\b"
+				},
+				{
+					"name": "keyword.control.store",
+					"match": "\\bSTORE(?:IN[12])?\\b"
+				},
+				{
+					"name": "keyword.control.load",
+					"match": "\\bLOAD(?:I|IN[12])?\\b"
+				},
+				{
+					"name": "keyword.control.jump",
+					"match": "\\bJUMP(?:(>|=|≥|<|≠|≤|lt|eq|leq|gt|geq|neq))?\\b"
+				},
+				{
+					"name": "keyword.control.nop",
+					"match": "\\bNOP\\b"
+				},
+				{
+					"name": "keyword.control.compute",
+					"match": "\\b(ADD|SUB|OPLUS|AND|OR)(?:I)?\\b"
+				},
+				{
+					"name": "variable.language.register",
+					"match": "\\b(IN[12]|ACC|PC)\\b"
+				}
+			]
 		},
 		"registers": {
 			"patterns": [

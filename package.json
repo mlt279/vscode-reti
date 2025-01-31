@@ -97,31 +97,10 @@
       "editor.tokenColorCustomizations": {
         "textMateRules": [
           {
-            "scope": "instructions.reti",
-            "settings": 
-            {
-              "foreground": "#0078EC"
-            }
-          },
-          {
-            "scope": "registers.reti",
-            "settings": 
-            {
-              "foreground": "#EC008C"
-            }
-          },
-          {
             "scope": "comment.line.reti",
             "settings": 
             {
               "foreground": "#506844"
-            }
-          },
-          {
-            "scope": "constant.numeric.reti",
-            "settings": 
-            {
-              "foreground": "#EC9B00"
             }
           }
         ]
