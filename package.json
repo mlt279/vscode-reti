@@ -174,6 +174,8 @@
     "npm-run-all": "^4.1.5",
     "typescript": "^5.7.2",
     "@vscode/test-cli": "^0.0.10",
-    "@vscode/test-electron": "^2.4.1"
+    "@vscode/test-electron": "^2.4.1",
+    "vscode-languageclient": "^8.0.0",
+    "vscode-languageserver": "^8.0.0"
   }
 }
