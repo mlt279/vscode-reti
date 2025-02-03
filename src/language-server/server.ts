@@ -14,6 +14,7 @@ import {TextDocument} from 'vscode-languageserver-textdocument';
 
 const connection = createConnection(ProposedFeatures.all);
 const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
+documents.listen(connection);
 
 const validRegisters = ["ACC", "PC", "IN1", "IN2"];
 const validInstructions = ["JUMP", "LOAD", "STORE", "MOVE", "ADD", "SUB", "AND", "OR", "OPLUS"];
@@ -55,6 +56,7 @@ function validateTextDocument(textDocument: TextDocument) {
             }
         }
     });
+    connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
 }
 
 // TODO: Look at how this works and how to implement it. Especially if 
@@ -67,5 +69,15 @@ connection.onCompletion(
         }));
     }
 );
+
+connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
+    // If you want to add more details, modify the item here
+    return {
+        ...item,
+        detail: `ReTI instruction: ${item.label}`,
+        documentation: `This is an instruction for the ReTI assembly language.`
+    };
+});
+
 
 connection.listen();

@@ -9,10 +9,13 @@ import { decodeInstruction } from './reti/disassembler';
 import { binToHex, hexToBin } from './util/retiUtility';
 import { assembleFile, assembleLine } from './reti/assembler';
 import { stateToString } from './reti/retiStructure';
+import { ReTILanguageClient } from './language-server/client';
+let languageClient;
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context) {
     let emulateTokenSource = undefined;
+    languageClient = new ReTILanguageClient(context);
     const EmulateCommand = vscode.commands.registerCommand('reti.emulate', async () => {
         if (emulateTokenSource) {
             vscode.window.showErrorMessage("Emulation already in progress.");
@@ -170,5 +173,8 @@ export function activate(context) {
     context.subscriptions.push(EmulateCommand, QuizCommand, RandomCommand, AssembleCommand, StopEmulationCommand, DisassembleCommand);
 }
 // This method is called when your extension is deactivated
-export function deactivate() { }
+export function deactivate() {
+    // Deactivate the language client
+    languageClient.deactivate();
+}
 //# sourceMappingURL=extension.js.map

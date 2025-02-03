@@ -1,16 +1,14 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const node_1 = require("vscode-languageserver/node");
-const vscode_languageserver_textdocument_1 = require("vscode-languageserver-textdocument");
-const connection = (0, node_1.createConnection)(node_1.ProposedFeatures.all);
-const documents = new node_1.TextDocuments(vscode_languageserver_textdocument_1.TextDocument);
+import { createConnection, TextDocuments, DiagnosticSeverity, ProposedFeatures, TextDocumentSyncKind, CompletionItemKind } from 'vscode-languageserver/node';
+import { TextDocument } from 'vscode-languageserver-textdocument';
+const connection = createConnection(ProposedFeatures.all);
+const documents = new TextDocuments(TextDocument);
 const validRegisters = ["ACC", "PC", "IN1", "IN2"];
 const validInstructions = ["JUMP", "LOAD", "STORE", "MOVE", "ADD", "SUB", "AND", "OR", "OPLUS"];
 connection.onInitialize((params) => {
     return {
         capabilities: {
             // Note: Change later on maybe to incremental. Check what type would be right.
-            textDocumentSync: node_1.TextDocumentSyncKind.Full,
+            textDocumentSync: TextDocumentSyncKind.Full,
             completionProvider: {
                 resolveProvider: true
             }
@@ -29,7 +27,7 @@ function validateTextDocument(textDocument) {
         if (tokens.length > 0) {
             if (!validInstructions.includes(tokens[0])) {
                 diagnostics.push({
-                    severity: node_1.DiagnosticSeverity.Error,
+                    severity: DiagnosticSeverity.Error,
                     range: {
                         start: { line: index, character: 0 },
                         end: { line: index, character: tokens[0].length }
@@ -46,7 +44,7 @@ function validateTextDocument(textDocument) {
 connection.onCompletion((_textDocumentPosition) => {
     return validInstructions.map(instr => ({
         label: instr,
-        kind: node_1.CompletionItemKind.Keyword
+        kind: CompletionItemKind.Keyword
     }));
 });
 connection.listen();

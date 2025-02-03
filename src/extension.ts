@@ -1,6 +1,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { Emulator } from './reti/emulator';
 import { parseDotReti, parseDotRetiAs } from './util/parser';
 import { showQuizPanel } from './ui/quizPanel';
@@ -9,17 +10,35 @@ import { decodeInstruction } from './reti/disassembler';
 import { binToHex, hexToBin } from './util/retiUtility';
 import { assembleFile, assembleLine } from './reti/assembler';
 import { stateToString } from './reti/retiStructure';
-import { ReTILanguageClient } from './language-server/client';
+import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient/node';
 
-let languageClient: ReTILanguageClient;
+
+let languageClient: LanguageClient | undefined = undefined;
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
-export function activate(context: vscode.ExtensionContext) {
+export function activate(context: vscode.ExtensionContext) {	
+
+	const serverModule = context.asAbsolutePath(path.join('out', 'language-server', 'server.js'));
+	let debugOptions = { execArgv: ['--nolazy', '--inspect=6009'] };
+
+	let serverOptions: ServerOptions = {
+		run: { module: serverModule, transport: TransportKind.ipc },
+		debug: { module: serverModule, transport: TransportKind.ipc, options: debugOptions }
+	};
+
+	let clientOptions: LanguageClientOptions = {
+		documentSelector: [{ scheme: 'file', language: 'reti' }],
+		synchronize: {
+			fileEvents: vscode.workspace.createFileSystemWatcher('**/.clientrc')
+		}
+	};
+
+	languageClient = new LanguageClient('ReTI', 'ReTI Language Server', serverOptions, clientOptions);
+	languageClient.start();
+
 
 	let emulateTokenSource : vscode.CancellationTokenSource | undefined = undefined;
-
-	languageClient = new ReTILanguageClient(context);
 
 	const EmulateCommand = vscode.commands.registerCommand('reti.emulate', async () => {
 		if (emulateTokenSource) {
@@ -203,5 +222,8 @@ export function activate(context: vscode.ExtensionContext) {
 // This method is called when your extension is deactivated
 export function deactivate() {
 	// Deactivate the language client
-	languageClient.deactivate();
+	if (!languageClient) {
+		return undefined;
+	}
+	return languageClient.stop();
 }
