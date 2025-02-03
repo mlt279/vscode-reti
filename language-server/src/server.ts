@@ -1,4 +1,3 @@
-import { TextDocument } from 'vscode';
 import {
     createConnection,
     TextDocuments,
@@ -11,9 +10,10 @@ import {
     CompletionItemKind,
     TextDocumentPositionParams
 } from 'vscode-languageserver/node';
+import {TextDocument} from 'vscode-languageserver-textdocument';
 
 const connection = createConnection(ProposedFeatures.all);
-const documents: TextDocuments = [];
+const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
 
 const validRegisters = ["ACC", "PC", "IN1", "IN2"];
 const validInstructions = ["JUMP", "LOAD", "STORE", "MOVE", "ADD", "SUB", "AND", "OR", "OPLUS"];

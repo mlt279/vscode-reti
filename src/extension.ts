@@ -9,13 +9,17 @@ import { decodeInstruction } from './reti/disassembler';
 import { binToHex, hexToBin } from './util/retiUtility';
 import { assembleFile, assembleLine } from './reti/assembler';
 import { stateToString } from './reti/retiStructure';
+import { ReTILanguageClient } from './language-server/client';
 
+let languageClient: ReTILanguageClient;
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
 
 	let emulateTokenSource : vscode.CancellationTokenSource | undefined = undefined;
+
+	languageClient = new ReTILanguageClient(context);
 
 	const EmulateCommand = vscode.commands.registerCommand('reti.emulate', async () => {
 		if (emulateTokenSource) {
@@ -197,4 +201,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 
 // This method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate() {
+	// Deactivate the language client
+	languageClient.deactivate();
+}
