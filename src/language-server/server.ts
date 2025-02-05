@@ -18,6 +18,15 @@ documents.listen(connection);
 
 const validRegisters = ["ACC", "PC", "IN1", "IN2"];
 const validInstructions = ["JUMP", "LOAD", "STORE", "MOVE", "ADD", "SUB", "AND", "OR", "OPLUS"];
+const validInstructionPatterns = [/(?<=(^|\\s))MOVE(?!(\\w|>|=|≥|<|≠|≤))/i,
+    /(?<=(^|\\s))STORE(IN[12])?(?!(\\w|>|=|≥|<|≠|≤))/i,
+    /(?<=(^|\\s))LOAD(I|IN[12])?(?!(\\w|>|=|≥|<|≠|≤))/i,
+    /(?<=(^|\\s))JUMP(?:!=|<=|>=|>|=|≥|<|≠|≤|lt|eq|leq|gt|geq|neq)?(?!(\\w|>|=|≥|<|≠|≤))/i,
+    /(?<=(^|\\s))NOP(?!(\\w|>|=|≥|<|≠|≤))/i,
+    /(?<=(^|\\s))(ADD|SUB|OPLUS|AND|OR)(?:I)?(?!(\\w|>|=|≥|<|≠|≤))/i
+];
+const validRegisterPatterns = /(?<=(^|\\s))(ACC|IN1|IN2|PC)(?!(\\w|>|=|≥|<|≠|≤))/i;
+const validNumberPatters = [/(?<=(^|\\s))-?\\d+(?!(\\w|>|=|≥|<|≠|≤))/];
 
 connection.onInitialize((params: InitializeParams) => {
     return {
@@ -43,20 +52,35 @@ function validateTextDocument(textDocument: TextDocument) {
         const instruction = line.split(";")[0].trim();
         const tokens = instruction.split(/\s+/);
         if (tokens.length > 0) {
-            if (!validInstructions.includes(tokens[0])) {
+            if (tokens.length > 3) {
+                diagnostics.push({
+                    severity: DiagnosticSeverity.Error,
+                    range: {
+                        start: { line: index, character: 0 },
+                        end: { line: index, character: instruction.length }
+                    },
+                    message: `Instruction can have at most 3 tokens, found ${tokens.length}.`,
+                    source: 'reti'
+                });
+            }
+            if (!validInstructionPatterns.some(pattern => pattern.test(instruction))) {
                 diagnostics.push({ 
                     severity: DiagnosticSeverity.Error,
                     range: {
                         start: { line: index, character: 0 },
                         end: { line: index, character: tokens[0].length }
                     },
-                    message: `Invalid instruction: ${tokens[0]}`,
+                    message: `Unknown operation.}`,
                     source: 'reti'
                 });
             }
         }
     });
     connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
+}
+
+function isValidInstruction(instruction: string): boolean {
+    return validInstructionPatterns.some(pattern => pattern.test(instruction));
 }
 
 // TODO: Look at how this works and how to implement it. Especially if 

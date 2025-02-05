@@ -20,27 +20,27 @@
 			"patterns": [
 				{
 					"name": "keyword.control.move",
-					"match": "(?<=(^|\\s))MOVE(?!(\\w|>|=|≥|<|≠|≤))"
+					"match": "(?i)(?<=(^|\\s))MOVE(?!(\\w|>|=|≥|<|≠|≤))"
 				},
 				{
 					"name": "keyword.control.store",
-					"match": "(?<=(^|\\s))STORE(IN[12])?(?!(\\w|>|=|≥|<|≠|≤))"
+					"match": "(?i)(?<=(^|\\s))STORE(IN[12])?(?!(\\w|>|=|≥|<|≠|≤))"
 				},
 				{
 					"name": "keyword.control.load",
-					"match": "(?<=(^|\\s))LOAD(I|IN[12])?(?!(\\w|>|=|≥|<|≠|≤))"
+					"match": "(?i)(?<=(^|\\s))LOAD(I|IN[12])?(?!(\\w|>|=|≥|<|≠|≤))"
 				},
 				{
 					"name": "keyword.control.jump",
-					"match": "(?<=(^|\\s))JUMP(?:!=|<=|>=|>|=|≥|<|≠|≤|lt|eq|leq|gt|geq|neq)?(?!(\\w|>|=|≥|<|≠|≤))"
+					"match": "(?i)(?<=(^|\\s))JUMP(?:!=|<=|>=|>|=|≥|<|≠|≤|lt|eq|leq|gt|geq|neq)?(?!(\\w|>|=|≥|<|≠|≤))"
 				},
 				{
 					"name": "keyword.control.nop",
-					"match": "(?<=(^|\\s))NOP(?!(\\w|>|=|≥|<|≠|≤))"
+					"match": "(?i)(?<=(^|\\s))NOP(?!(\\w|>|=|≥|<|≠|≤))"
 				},
 				{
 					"name": "keyword.control.compute",
-					"match": "(?<=(^|\\s))(ADD|SUB|OPLUS|AND|OR)(?:I)?(?!(\\w|>|=|≥|<|≠|≤))"
+					"match": "(?i)(?<=(^|\\s))(ADD|SUB|OPLUS|AND|OR)(?:I)?(?!(\\w|>|=|≥|<|≠|≤))"
 				}
 			]
 		},
@@ -48,7 +48,7 @@
 			"patterns": [
 				{
 					"name": "registers.reti",
-					"match": "(?<=(^|\\s))(ACC|IN1|IN2|PC)(?!(\\w|>|=|≥|<|≠|≤))"
+					"match": "(?i)(?<=(^|\\s))(ACC|IN1|IN2|PC)(?!(\\w|>|=|≥|<|≠|≤))"
 				}
 			]
 		},
