@@ -30,33 +30,33 @@ const validInstructionPatterns = [/(?<=(^|\s))MOVE(?!(\w|>|=|≥|<|≠|≤))/i,
     /(?<=(^|\s))(ADD|SUB|OPLUS|AND|OR)(?:I)?(?!(\w|>|=|≥|<|≠|≤))/i
 ];
 
-const validInstructions: { [key: string]: [string, string] } = {
-    "MOVE": ["Moves content of the first register to the second register. Result: D := S.", "MOVE S D"],
-    "STORE": ["Stores the value of ACC register into the i-th memory cell. Result: M(i) := ACC", "STORE i"], 
-    "STOREIN1": ["Stores the value of ACC register into the (i+IN1)-th memory cell. Result: M(i+IN1) := ACC", "STOREIN1 i"], 
-    "STOREIN2": ["Stores the value of ACC register into the (i+IN2)-th memory cell. Result: M(i+IN2) := ACC", "STOREIN2 i"],
-    "LOAD": ["Loads the value of the i-th memory cell into the destination register. Result: D := M(i)", "LOAD D i"], 
-    "LOADI": ["Loads the value of i into the destination register. Result: D := i", "LOADI D i"], 
-    "LOADIN1": ["Loads the value of the (i+IN1)-th memory cell into the destination register. Result: D := M(IN1+i)", "LOADIN1 D i"], 
-    "LOADIN2": ["Loads the value of the (i+IN2)-th memory cell into the destination register. Result: D := M(IN1+i)", "LOADIN2 D i"],
-    "JUMP": ["Increases the program counter by i. Result: PC := PC + i", "JUMP i"], 
-    "JUMP>": ["Increases the program counter by i if ACC > 0. Result: if ACC > 0 then PC := PC + i else PC := PC + 1", "JUMP> i"], 
-    "JUMP=": ["Increases the program counter by i if ACC = 0. Result: if ACC = 0 then PC := PC + i else PC := PC + 1", "JUMP= i"], 
-    "JUMP≥": ["Increases the program counter by i if ACC ≥ 0. Result: if ACC ≥ 0 then PC := PC + i else PC := PC + 1", "JUMP≥ i"], 
-    "JUMP<": ["Increases the program counter by i if ACC < 0. Result: if ACC < 0 then PC := PC + i else PC := PC + 1", "JUMP< i"], 
-    "JUMP≠": ["Increases the program counter by i if ACC ≠ 0. Result: if ACC ≠ 0 then PC := PC + i else PC := PC + 1", "JUMP≠ i"], 
-    "JUMP≤": ["Increases the program counter by i if ACC ≤ 0. Result: if ACC ≤ 0 then PC := PC + i else PC := PC + 1", "JUMP≤ i"], 
-    "NOP": ["Increase the program counter by 1 (does nothing). Result: PC := PC + 1", "NOP"],
-    "ADD": ["Adds the value of the i-th memory cell to the value of the destination register. Result: D := D + M(i)", "ADD D i"], 
-    "ADDI": ["Adds the value of i to the value of the destination register. Result: D := D + i", "ADDI D i"], 
-    "SUB": ["Subtracts the value of the i-th memory cell from the value of the destination register. Result: D := D - M(i)", "SUB D i"], 
-    "SUBI": ["Subtracts the value of i from the value of the destination register. Result: D := D - i", "SUBI D i"], 
-    "OPLUS": ["Bitwise XNOR of the value of the i-th memory cell and the value of the destination register. Result: D := D ⊕ M(i)", "OPLUS D i"], 
-    "OPLUSI": ["Bitwise XNOR of the value of i and the value of the destination register. Result: D := D ⊕ i", "OPLUSI D i"], 
-    "AND": ["Bitwise AND of the value of the i-th memory cell and the value of the destination register. Result: D := D ∧ M(i)", "AND D i"], 
-    "ANDI": ["Bitwise AND of the value of i and the value of the destination register. Result: D := D ∧ i", "ANDI D i"], 
-    "OR": ["Bitwise OR of the value of the i-th memory cell and the value of the destination register. Result: D := D ∨ M(i)", "OR D i"], 
-    "ORI": ["Bitwise OR of the value of i and the value of the destination register. Result: D := D ∨ i", "ORI D i"]
+const validInstructions: { [key: string]: { documentation: string, usage: string, result: string } } = {
+    "MOVE": { documentation: "Moves content of the first register to the second register.", usage: "MOVE S D", result: "D := S" },
+    "STORE": { documentation: "Stores the value of ACC register into the i-th memory cell.", usage: "STORE i", result: "M(i) := ACC" }, 
+    "STOREIN1": { documentation: "Stores the value of ACC register into the (i+IN1)-th memory cell.", usage: "STOREIN1 i", result: "M(i+IN1) := ACC" }, 
+    "STOREIN2": { documentation: "Stores the value of ACC register into the (i+IN2)-th memory cell.", usage: "STOREIN2 i", result: "M(i+IN2) := ACC" },
+    "LOAD": { documentation: "Loads the value of the i-th memory cell into the destination register.", usage: "LOAD D i", result: "D := M(i)" }, 
+    "LOADI": { documentation: "Loads the value of i into the destination register.", usage: "LOADI D i", result: "D := i" }, 
+    "LOADIN1": { documentation: "Loads the value of the (i+IN1)-th memory cell into the destination register.", usage: "LOADIN1 D i", result: "D := M(IN1+i)" }, 
+    "LOADIN2": { documentation: "Loads the value of the (i+IN2)-th memory cell into the destination register.", usage: "LOADIN2 D i", result: "D := M(IN1+i)" },
+    "JUMP": { documentation: "Increases the program counter by i.", usage: "JUMP i", result: "PC := PC + i" }, 
+    "JUMP>": { documentation: "Increases the program counter by i if ACC > 0.", usage: "JUMP> i", result: "if ACC > 0 then PC := PC + i else PC := PC + 1" }, 
+    "JUMP=": { documentation: "Increases the program counter by i if ACC = 0.", usage: "JUMP= i", result: "if ACC = 0 then PC := PC + i else PC := PC + 1" }, 
+    "JUMP≥": { documentation: "Increases the program counter by i if ACC ≥ 0.", usage: "JUMP≥ i", result: "if ACC ≥ 0 then PC := PC + i else PC := PC + 1" }, 
+    "JUMP<": { documentation: "Increases the program counter by i if ACC < 0.", usage: "JUMP< i", result: "if ACC < 0 then PC := PC + i else PC := PC + 1" }, 
+    "JUMP≠": { documentation: "Increases the program counter by i if ACC ≠ 0.", usage: "JUMP≠ i", result: "if ACC ≠ 0 then PC := PC + i else PC := PC + 1" }, 
+    "JUMP≤": { documentation: "Increases the program counter by i if ACC ≤ 0.", usage: "JUMP≤ i", result: "if ACC ≤ 0 then PC := PC + i else PC := PC + 1" }, 
+    "NOP": { documentation: "Increase the program counter by 1 (does nothing).", usage: "NOP", result: "PC := PC + 1" },
+    "ADD": { documentation: "Adds the value of the i-th memory cell to the value of the destination register.", usage: "ADD D i", result: "D := D + M(i)" }, 
+    "ADDI": { documentation: "Adds the value of i to the value of the destination register.", usage: "ADDI D i", result: "D := D + i" }, 
+    "SUB": { documentation: "Subtracts the value of the i-th memory cell from the value of the destination register.", usage: "SUB D i", result: "D := D - M(i)" }, 
+    "SUBI": { documentation: "Subtracts the value of i from the value of the destination register.", usage: "SUBI D i", result: "D := D - i" }, 
+    "OPLUS": { documentation: "Bitwise XNOR of the value of the i-th memory cell and the value of the destination register.", usage: "OPLUS D i", result: "D := D ⊕ M(i)" }, 
+    "OPLUSI": { documentation: "Bitwise XNOR of the value of i and the value of the destination register.", usage: "OPLUSI D i", result: "D := D ⊕ i" }, 
+    "AND": { documentation: "Bitwise AND of the value of the i-th memory cell and the value of the destination register.", usage: "AND D i", result: "D := D ∧ M(i)" }, 
+    "ANDI": { documentation: "Bitwise AND of the value of i and the value of the destination register.", usage: "ANDI D i", result: "D := D ∧ i" }, 
+    "OR": { documentation: "Bitwise OR of the value of the i-th memory cell and the value of the destination register.", usage: "OR D i", result: "D := D ∨ M(i)" }, 
+    "ORI": { documentation: "Bitwise OR of the value of i and the value of the destination register.", usage: "ORI D i", result: "D := D ∨ i" }
 };
 
 const validTokens = Object.keys(validRegisters).concat(Object.keys(validInstructions));
@@ -133,7 +133,7 @@ function validateTextDocument(textDocument: TextDocument) {
 
             // STORE Instruction, should be followed by exactly one register.
             // STORE* I
-            if (/(?<=(^|\s))STORE(IN[12])?(?!(\w|>|=|≥|<|≠|≤))/i.test(tokens[0])) {
+            else if (/(?<=(^|\s))STORE(IN[12])?(?!(\w|>|=|≥|<|≠|≤))/i.test(tokens[0])) {
                 if (tokens.length > 2) {
                     diagnostics.push({
                         severity: DiagnosticSeverity.Error,
@@ -174,13 +174,13 @@ function validateTextDocument(textDocument: TextDocument) {
 
             // LOAD Instruction, should be followed by exactly one register and a number.
             // LOAD* D I
-            if (/(?<=(^|\s))LOAD(I|IN[12])?(?!(\w|>|=|≥|<|≠|≤))/i.test(tokens[0])) {
+            else if (/(?<=(^|\s))LOAD(I|IN[12])?(?!(\w|>|=|≥|<|≠|≤))/i.test(tokens[0])) {
                 if (!validRegisterPattern.test(tokens[1])) {
                     diagnostics.push({
                         severity: DiagnosticSeverity.Error,
                         range: {
-                            start: { line: index, character: 0 },
-                            end: { line: index, character: tokens[0].length }
+                            start: { line: index, character: tokens[0].length + 1 },
+                            end: { line: index, character: tokens[0].length + tokens[1].length + 1 }
                         },
                         message: `${tokens[1]} is not a valid register.`,
                         source: 'reti'
@@ -214,13 +214,13 @@ function validateTextDocument(textDocument: TextDocument) {
 
             // COMPUTE Instructions, should be followed by a valid register and a number.
             // COMPUTE D I
-            if (/(?<=(^|\s))(ADD|SUB|OPLUS|AND|OR)(?:I)?(?!(\w|>|=|≥|<|≠|≤))/i.test(tokens[0])) {
+            else if (/(?<=(^|\s))(ADD|SUB|OPLUS|AND|OR)(?:I)?(?!(\w|>|=|≥|<|≠|≤))/i.test(tokens[0])) {
                 if (!validRegisterPattern.test(tokens[1])) {
                     diagnostics.push({
                         severity: DiagnosticSeverity.Error,
                         range: {
-                            start: { line: index, character: 0 },
-                            end: { line: index, character: tokens[0].length }
+                            start: { line: index, character: tokens[0].length + tokens[1].length + 2 },
+                            end: { line: index, character: tokens[0].length + tokens[1].length + tokens[2].length + 2 }
                         },
                         message: `${tokens[1]} is not a valid register.`,
                         source: 'reti'
@@ -251,6 +251,59 @@ function validateTextDocument(textDocument: TextDocument) {
                     }
                 }
             }
+
+            else if (/(?<=(^|\s))JUMP(?:!=|<=|>=|>|=|≥|<|≠|≤|lt|eq|leq|gt|geq|neq)?(?!(\w|>|=|≥|<|≠|≤))/i.test(tokens[0])) {
+                if (!validNumberPattern.test(tokens[1])) {
+                    diagnostics.push({
+                        severity: DiagnosticSeverity.Error,
+                        range: {
+                            start: { line: index, character: tokens[0].length + 1 },
+                            end: { line: index, character: tokens[0].length + tokens[1].length + 1 }
+                        },
+                        message: `${tokens[1]} is not a known number.`,
+                        source: 'reti'
+                    });
+
+                    if(tokens[1].startsWith('-')) {
+                        diagnostics.push({
+                            severity: DiagnosticSeverity.Warning,
+                            range: {
+                                start: { line: index, character: tokens[0].length + 1 },
+                                end: { line: index, character: tokens[0].length + tokens[1].length + 1 }
+                            },
+                            message: `If PC should fall < 0 unexpected behaviour might happen.`,
+                            source: 'reti'
+                        });
+                    }
+                }
+            }
+
+            else if (/(?<=(^|\s))NOP(?!(\w|>|=|≥|<|≠|≤))/i.test(tokens[0])) {
+                if (tokens.length > 1) {
+                    diagnostics.push({
+                        severity: DiagnosticSeverity.Error,
+                        range: {
+                            start: { line: index, character: tokens[0].length + 1 },
+                            end: { line: index, character: tokens[0].length + tokens[1].length + 1 }
+                        },
+                        message: `NOP instruction does not take any operands.`,
+                        source: 'reti'
+                    });
+                }
+            }
+
+            // No valid opcode found at start of the line.
+            else {
+                diagnostics.push({
+                    severity: DiagnosticSeverity.Error,
+                    range: {
+                        start: { line: index, character: 0 },
+                        end: { line: index, character: tokens[0].length }
+                    },
+                    message: `Unknown instruction ${tokens[0]}.`,
+                    source: 'reti'
+                });
+            }
         }
     });
     connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
@@ -269,12 +322,16 @@ connection.onCompletion(
 connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
     return {
         ...item,
-        detail: validRegisters[item.label] ? validRegisters[item.label] : validInstructions[item.label][1],
-        documentation: validInstructions[item.label] ? validInstructions[item.label][0] : undefined,
+        // Registers don't have a documentation or a result so validInstructions has a different Format.
+        // This means it is necessary to check if the item is a register.
+        detail: validRegisters[item.label] ? validRegisters[item.label] : validInstructions[item.label].usage,
+        documentation: validInstructions[item.label] ? validInstructions[item.label].documentation : undefined,
         kind: validRegisters[item.label] ? CompletionItemKind.Variable : CompletionItemKind.Function
     };
 });
 
+// TODO (Optional): Implement a hover provider that shows the actual effect of the instruction. 
+// (e.g. MOVE IN1 IN2 -> IN2 := IN1 instead of D := S)
 connection.onHover((textDocumentposition: TextDocumentPositionParams) => {
     const document = documents.get(textDocumentposition.textDocument.uri);
     if (document) {
@@ -309,7 +366,7 @@ connection.onHover((textDocumentposition: TextDocumentPositionParams) => {
                 return {
                     contents: {
                         kind: "markdown",
-                        value: `**${tokens[tokenIndex]}**\n\n${validInstructions[tokens[tokenIndex]][0]}`
+                        value: `**${tokens[tokenIndex]}**\n\nUsage: ${validInstructions[tokens[tokenIndex]].usage}\n\n\n\nResult: ${validInstructions[tokens[tokenIndex]].result} \n\n${validInstructions[tokens[tokenIndex]].documentation}`
                     }
                 };
             }
