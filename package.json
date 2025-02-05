@@ -9,7 +9,7 @@
   "categories": [
     "Programming Languages"
   ],
-  "activationEvents": ["onLanguage:reti"],
+  "activationEvents": [],
   "main": "./dist/extension.js",
   "contributes": {
     "icons": {
