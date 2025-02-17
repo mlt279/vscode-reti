@@ -22,13 +22,23 @@ const validRegisters: { [key: string]: string } = {
     "IN1": "Indexregister 1",
     "IN2": "Indexregister 2"
 };
-const validInstructionPatterns = [/(?<=(^|\s))MOVE(?!(\w|>|=|≥|<|≠|≤))/i,
-    /(?<=(^|\s))STORE(IN[12])?(?!(\w|>|=|≥|<|≠|≤))/i,
-    /(?<=(^|\s))LOAD(I|IN[12])?(?!(\w|>|=|≥|<|≠|≤))/i,
-    /(?<=(^|\s))JUMP(?:!=|<=|>=|>|=|≥|<|≠|≤|lt|eq|leq|gt|geq|neq)?(?!(\w|>|=|≥|<|≠|≤))/i,
-    /(?<=(^|\s))NOP(?!(\w|>|=|≥|<|≠|≤))/i,
-    /(?<=(^|\s))(ADD|SUB|OPLUS|AND|OR)(?:I)?(?!(\w|>|=|≥|<|≠|≤))/i
-];
+class InstructionPatterns {
+    static move = /(?<=(^|\s))MOVE(?!(\w|>|=|≥|<|≠|≤))/i;
+    static store = /(?<=(^|\s))STORE(IN[12])?(?!(\w|>|=|≥|<|≠|≤))/i;
+    static load = /(?<=(^|\s))LOAD(I|IN[12])?(?!(\w|>|=|≥|<|≠|≤))/i;
+    static jump = /(?<=(^|\s))JUMP(?:!=|<=|>=|>|=|≥|<|≠|≤|lt|eq|leq|gt|geq|neq)?(?!(\w|>|=|≥|<|≠|≤))/i;
+    static nop = /(?<=(^|\s))NOP(?!(\w|>|=|≥|<|≠|≤))/i;
+    static compute = /(?<=(^|\s))(ADD|SUB|OPLUS|AND|OR)(?:I)?(?!(\w|>|=|≥|<|≠|≤))/i;
+}
+
+enum InstructionType {
+    move = "MOVE",
+    store = "STORE",
+    load = "LOAD",
+    jump = "JUMP",
+    nop = "NOP",
+    compute = "COMPUTE"
+}
 
 const validInstructions: { [key: string]: { documentation: string, usage: string, result: string } } = {
     "MOVE": { documentation: "Moves content of the first register to the second register.", usage: "MOVE S D", result: "D := S" },
@@ -90,220 +100,216 @@ function validateTextDocument(textDocument: TextDocument) {
     lines.forEach((line, index) => {
         const instruction = line.split(";")[0].trim();
         const tokens = instruction.split(/\s+/);
-        if (tokens.length > 0) {
-            if (tokens.length > 3) {
-                diagnostics.push({
-                    severity: DiagnosticSeverity.Error,
-                    range: {
-                        start: { line: index, character: 0 },
-                        end: { line: index, character: instruction.length }
-                    },
-                    message: `Instruction can have at most 3 tokens, found ${tokens.length}.`,
-                    source: 'reti'
-                });
-            }
+        let instructionType: InstructionType | null = null;
 
-            // MOVE Instruction, should be followed by two registers.
-            // MOVE S D
-            if (/(?<=(^|\s))MOVE(?!(\w|>|=|≥|<|≠|≤))/i.test(tokens[0])) {
-                if (!validRegisterPattern.test(tokens[1])) {
+        if (tokens[0] === "") {
+            return;
+        }
+
+        if (InstructionPatterns.move.test(tokens[0])) {
+            instructionType = InstructionType.move;
+        }
+        
+        if (InstructionPatterns.store.test(tokens[0])) {
+            instructionType = InstructionType.store;
+        }
+        
+        if (InstructionPatterns.load.test(tokens[0])) {
+            instructionType = InstructionType.load;
+        }
+        
+        if (InstructionPatterns.jump.test(tokens[0])) {
+            instructionType = InstructionType.jump;
+        }
+        
+        if (InstructionPatterns.nop.test(tokens[0])) {
+            instructionType = InstructionType.nop;
+        }
+        
+        if (InstructionPatterns.compute.test(tokens[0])) {
+            instructionType = InstructionType.compute;
+        }
+
+        switch (instructionType) {
+
+            // NOP instructions should not have any operands.
+            case InstructionType.nop:
+                if (tokens.length !== 1) {
                     diagnostics.push({
                         severity: DiagnosticSeverity.Error,
                         range: {
                             start: { line: index, character: tokens[0].length + 1 },
-                            end: { line: index, character: tokens[0].length + tokens[1].length + 1  }
+                            end: { line: index, character: line.length }
                         },
-                        message: `MOVE should be followed by a register. ${tokens[1]} is not a valid source register.`,
-                        source: 'reti'
+                        message: `NOP instruction does not take any operands.`,
+                        source: "reti"
+                    });
+                }
+                break;
+
+            // MOVE instructions should be followed by a source and a destination register.
+            // MOVE S D
+            case InstructionType.move:
+                if (tokens.length !== 3) {
+                    diagnostics.push({
+                        severity: DiagnosticSeverity.Error,
+                        range: {
+                            start: { line: index, character: tokens[0].length + 1 },
+                            end: { line: index, character: line.length }
+                        },
+                        message: `${instructionType} instruction requires exactly 2 operands.`,
+                        source: "reti"
                     });
                 }
 
-                if (!validRegisterPattern.test(tokens[2])) {
+                if (tokens[1] && !validRegisterPattern.test(tokens[1])) {
                     diagnostics.push({
                         severity: DiagnosticSeverity.Error,
+                        range: {
+                            start: { line: index, character: tokens[0].length + 1 },
+                            end: { line: index, character: line.length }
+                        },
+                        message: `${tokens[1]} is not a valid register.`,
+                        source: "reti"
+                    });
+                }
+
+                if (tokens[2] && !validRegisterPattern.test(tokens[2])) {
+                    diagnostics.push({
+                        severity: DiagnosticSeverity.Error,
+                        range: {
+                            start: { line: index, character: tokens[0].length + 1 },
+                            end: { line: index, character: line.length }
+                        },
+                        message: `${tokens[2]} is not a valid register.`,
+                        source: "reti"
+                    });
+
+                }
+
+                return;                               
+
+            // LOAD handles immediate as unsigned so a warning will be given if a negative number is used.
+            // The rest of the pattern is checked in the case for COMPUTE as it is the same for both cases.
+            case InstructionType.load:
+                if(tokens[2] && tokens[2].startsWith('-') && tokens[0].toLowerCase() === "load") {
+                    diagnostics.push({
+                        severity: DiagnosticSeverity.Warning,
                         range: {
                             start: { line: index, character: tokens[0].length + tokens[1].length + 2 },
                             end: { line: index, character: tokens[0].length + tokens[1].length + tokens[2].length + 2 }
                         },
-                        message: `${tokens[2]} is not a valid destination register.`,
+                        message: `Immediate will be treated as unsigned. Negative numbers might not behave as expected.`,
                         source: 'reti'
                     });
                 }
-            }
+            // COMPUTE and LOAD instructions have the same pattern. They are handled by the same case.
+            // Both should be followed by a source register and a number.
+            // COMPUTE* D I || LOAD* D I
+            case InstructionType.compute:
+                if (tokens.length !== 3) {
+                    diagnostics.push({
+                        severity: DiagnosticSeverity.Error,
+                        range: {
+                            start: { line: index, character: tokens[0].length + 1 },
+                            end: { line: index, character: line.length }
+                        },
+                        message: `${instructionType} instruction requires exactly 2 operands.`,
+                        source: "reti"
+                    });
+                }
 
-            // STORE Instruction, should be followed by exactly one register.
-            // STORE* I
-            else if (/(?<=(^|\s))STORE(IN[12])?(?!(\w|>|=|≥|<|≠|≤))/i.test(tokens[0])) {
+                if (tokens[1] && !validRegisterPattern.test(tokens[1])) {
+                    diagnostics.push({
+                        severity: DiagnosticSeverity.Error,
+                        range: {
+                            start: { line: index, character: tokens[0].length + 1 },
+                            end: { line: index, character: line.length }
+                        },
+                        message: `${tokens[1]} is not a valid register.`,
+                        source: "reti"
+                    });
+                }
+
+                if (tokens[2] && !validNumberPattern.test(tokens[2])) {
+                    diagnostics.push({
+                        severity: DiagnosticSeverity.Error,
+                        range: {
+                            start: { line: index, character: tokens[0].length + 1 },
+                            end: { line: index, character: line.length }
+                        },
+                        message: `${tokens[2]} is not a valid number.`,
+                        source: "reti"
+                    });
+                }
+                return;
+
+            
+            // STORE handles immediate as unsigned so a warning will be given if a negative number is used.
+            // The rest of the pattern is checked in the case for COMPUTE as it is the same for both cases.
+            case InstructionType.store:
+                if(tokens[1] && tokens[1].startsWith('-') && tokens[0].toLowerCase() === "store") {
+                    diagnostics.push({
+                        severity: DiagnosticSeverity.Warning,
+                        range: {
+                            start: { line: index, character: tokens[0].length + 1 },
+                            end: { line: index, character: tokens[0].length + tokens[1].length + 1 }
+                        },
+                        message: `Immediate will be treated as unsigned. Negative numbers might not behave as expected.`,
+                        source: 'reti'
+                    });
+                }
+            // STORE and JUMP instructions have the same pattern. They are handled by the same case.
+            // Both should be followed by a number and only have 2 tokens.
+            // STORE* I || JUMP* I
+            case InstructionType.jump:
                 if (tokens.length > 2) {
                     diagnostics.push({
                         severity: DiagnosticSeverity.Error,
                         range: {
-                            start: { line: index, character: tokens[0].length + 1 },
-                            end: { line: index, character: tokens[0].length + tokens[1].length + 1 }
+                            start: { line: index, character: tokens[0].length + tokens[1].length + 2},
+                            end: { line: index, character: line.length }
                         },
-                        message: `Too many operands. STORE instruction only takes one operand.`,
-                        source: 'reti'
+                        message: `${instructionType} only takes one argument.`,
+                        source: "reti"
                     });
                 }
 
-                if (!validNumberPattern.test(tokens[1])) {
+                if (tokens.length === 1) {
+                    diagnostics.push({
+                        severity: DiagnosticSeverity.Error,
+                        range: {
+                            start: { line: index, character: tokens[0].length },
+                            end: { line: index, character: line.length }
+                        },
+                        message: `${instructionType} requires an operand.`,
+                        source: "reti"
+                    });
+                }
+
+                if (tokens[1] && !validNumberPattern.test(tokens[1])) {
                     diagnostics.push({
                         severity: DiagnosticSeverity.Error,
                         range: {
                             start: { line: index, character: tokens[0].length + 1 },
-                            end: { line: index, character: tokens[0].length + tokens[1].length + 1 }
+                            end: { line: index, character: line.length }
                         },
                         message: `${tokens[1]} is not a valid number.`,
-                        source: 'reti'
+                        source: "reti"
                     });
                 }
-                else {
-                    if(tokens[1].startsWith('-')) {
-                        diagnostics.push({
-                            severity: DiagnosticSeverity.Warning,
-                            range: {
-                                start: { line: index, character: tokens[0].length + 1 },
-                                end: { line: index, character: tokens[0].length + tokens[1].length + 1 }
-                            },
-                            message: `Immediate will be treated as unsigned. Negative numbers might not behave as expected.`,
-                            source: 'reti'
-                        });
-                    }
-                }
-            }
-
-            // LOAD Instruction, should be followed by exactly one register and a number.
-            // LOAD* D I
-            else if (/(?<=(^|\s))LOAD(I|IN[12])?(?!(\w|>|=|≥|<|≠|≤))/i.test(tokens[0])) {
-                if (!validRegisterPattern.test(tokens[1])) {
-                    diagnostics.push({
-                        severity: DiagnosticSeverity.Error,
-                        range: {
-                            start: { line: index, character: tokens[0].length + 1 },
-                            end: { line: index, character: tokens[0].length + tokens[1].length + 1 }
-                        },
-                        message: `${tokens[1]} is not a valid register.`,
-                        source: 'reti'
-                    });
-                }
-
-                if (!validNumberPattern.test(tokens[2])) {
-                    diagnostics.push({
-                        severity: DiagnosticSeverity.Error,
-                        range: {
-                            start: { line: index, character: tokens[0].length + tokens[1].length + 2 },
-                            end: { line: index, character: tokens[0].length + tokens[1].length + tokens[2].length + 2 }
-                        },
-                        message: `${tokens[2]} is not a known number.`,
-                        source: 'reti'
-                    });
-
-                    if(tokens[1].startsWith('-') && !(tokens[0]).toLowerCase().endsWith('i')) {
-                        diagnostics.push({
-                            severity: DiagnosticSeverity.Warning,
-                            range: {
-                                start: { line: index, character: tokens[0].length + tokens[1].length + 2 },
-                                end: { line: index, character: tokens[0].length + tokens[1].length + tokens[2].length + 3 }
-                            },
-                            message: `Immediate will be treated as unsigned. Negative numbers might not behave as expected.`,
-                            source: 'reti'
-                        });
-                    }
-                }
-            }
-
-            // COMPUTE Instructions, should be followed by a valid register and a number.
-            // COMPUTE D I
-            else if (/(?<=(^|\s))(ADD|SUB|OPLUS|AND|OR)(?:I)?(?!(\w|>|=|≥|<|≠|≤))/i.test(tokens[0])) {
-                if (!validRegisterPattern.test(tokens[1])) {
-                    diagnostics.push({
-                        severity: DiagnosticSeverity.Error,
-                        range: {
-                            start: { line: index, character: tokens[0].length + tokens[1].length + 2 },
-                            end: { line: index, character: tokens[0].length + tokens[1].length + tokens[2].length + 2 }
-                        },
-                        message: `${tokens[1]} is not a valid register.`,
-                        source: 'reti'
-                    });
-                }
-
-                if (!validNumberPattern.test(tokens[2])) {
-                    diagnostics.push({
-                        severity: DiagnosticSeverity.Error,
-                        range: {
-                            start: { line: index, character: tokens[0].length + tokens[1].length + 2 },
-                            end: { line: index, character: tokens[0].length + tokens[1].length + tokens[2].length + 2 }
-                        },
-                        message: `${tokens[2]} is not a known number.`,
-                        source: 'reti'
-                    });
-
-                    if(tokens[1].startsWith('-') && !(tokens[0]).toLowerCase().endsWith('i')) {
-                        diagnostics.push({
-                            severity: DiagnosticSeverity.Warning,
-                            range: {
-                                start: { line: index, character: tokens[0].length + tokens[1].length + 2 },
-                                end: { line: index, character: tokens[0].length + tokens[1].length + tokens[2].length + 3 }
-                            },
-                            message: `Immediate will be treated as unsigned. Negative numbers might not behave as expected.`,
-                            source: 'reti'
-                        });
-                    }
-                }
-            }
-
-            else if (/(?<=(^|\s))JUMP(?:!=|<=|>=|>|=|≥|<|≠|≤|lt|eq|leq|gt|geq|neq)?(?!(\w|>|=|≥|<|≠|≤))/i.test(tokens[0])) {
-                if (!validNumberPattern.test(tokens[1])) {
-                    diagnostics.push({
-                        severity: DiagnosticSeverity.Error,
-                        range: {
-                            start: { line: index, character: tokens[0].length + 1 },
-                            end: { line: index, character: tokens[0].length + tokens[1].length + 1 }
-                        },
-                        message: `${tokens[1]} is not a known number.`,
-                        source: 'reti'
-                    });
-
-                    if(tokens[1].startsWith('-')) {
-                        diagnostics.push({
-                            severity: DiagnosticSeverity.Warning,
-                            range: {
-                                start: { line: index, character: tokens[0].length + 1 },
-                                end: { line: index, character: tokens[0].length + tokens[1].length + 1 }
-                            },
-                            message: `If PC should fall < 0 unexpected behaviour might happen.`,
-                            source: 'reti'
-                        });
-                    }
-                }
-            }
-
-            else if (/(?<=(^|\s))NOP(?!(\w|>|=|≥|<|≠|≤))/i.test(tokens[0])) {
-                if (tokens.length > 1) {
-                    diagnostics.push({
-                        severity: DiagnosticSeverity.Error,
-                        range: {
-                            start: { line: index, character: tokens[0].length + 1 },
-                            end: { line: index, character: tokens[0].length + tokens[1].length + 1 }
-                        },
-                        message: `NOP instruction does not take any operands.`,
-                        source: 'reti'
-                    });
-                }
-            }
-
-            // No valid opcode found at start of the line.
-            else {
+                break;
+            default:
                 diagnostics.push({
                     severity: DiagnosticSeverity.Error,
                     range: {
                         start: { line: index, character: 0 },
                         end: { line: index, character: tokens[0].length }
                     },
-                    message: `Unknown instruction ${tokens[0]}.`,
-                    source: 'reti'
+                    message: "Invalid opcode.",
+                    source: "reti"
                 });
-            }
+                return;
         }
     });
     connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
