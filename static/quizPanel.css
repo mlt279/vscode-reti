@@ -1,0 +1,131 @@
+body, html {
+    text-align: center;
+    align-items: center;
+    font-family: Arial, sans-serif;
+    background-color: #e5eaee
+}
+#quizTable {
+  font-family: Arial, Helvetica, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+#quizTable td, #quizTable th {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+#quizTable tr:nth-child(odd){background-color: #343434;}
+#quizTable tr:nth-child(even){background-color: #3f3f3f;}
+
+#quizTable tr:hover {background-color: #252525;}
+
+#quizTable th {
+  padding-top: 12px;
+  padding-bottom: 12px;
+  text-align: left;
+  background-color: #342f5d;
+  color: white;
+}
+
+#quizTable td {
+  color: white;  
+}
+
+.check-button {
+padding: 10px 20px;
+font-size: 16px;
+margin: 5px;
+background-color: #342f5d;
+color: white;
+border: none;
+border-radius: 4px;
+cursor: pointer;
+}
+
+.check-button:hover {
+    background-color: #39355c;
+}
+
+.table-explanation {
+  font-family: Arial, Helvetica, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+  color: white;
+}
+
+.table-explanation td, .table-explanation th {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+.table-explanation tr:nth-child(odd){background-color: #343434;}
+.table-explanation tr:nth-child(even){background-color: #3f3f3f;}
+
+/* .table-explanation tr:nth-child(even){background-color: #666666;} */
+
+.table-explanation tr:hover {background-color: #252525;}
+
+.table-explanation th {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    text-align: left;
+    background-color: #342f5d;
+    color: white;
+  }
+  
+#button-reload {
+padding: 10px 20px;
+font-size: 16px;
+margin: 5px;
+background-color: #342f5d;
+color: white;
+border: none;
+border-radius: 4px;
+cursor: pointer;   
+}
+
+#button-reload:hover {
+    background-color: #39355c;
+}
+
+.solution-input {
+padding: 10px;
+margin-top: 10px;
+font-size: 16px;
+width: 20%;
+max-width: 200px;
+border: 1px solid #ccc;
+border-radius: 4px; 
+background-color: #343434;
+align-items: left;
+align-content: left;
+color: white;
+}
+
+.code-cell {
+    max-width: 600px;
+    width: 30%;
+}
+
+.solution-input:hover{
+    background-color: #4d4c4c;
+}
+
+.result-cell {
+    text-align: center;
+    width: 2%;
+}
+
+.editable {
+    display: inline-block;
+    width: 1.2ch;
+    height: max-content;
+    border-bottom: 1px solid #ccc;
+    color:white;
+    border-radius: 2px;
+    font-size: 1em;
+    line-height: 1em;
+    vertical-align: bottom;
+    text-align: bottom;
+}
