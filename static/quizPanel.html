@@ -5,7 +5,7 @@
     <title>ReTI Quiz</title>
     <meta charset="UTF-8">
 </head>
-<style>
+<!-- <style>
     .fixed-table {
         table-layout: fixed;
         width: 100%;
@@ -40,11 +40,116 @@
         border: 1px solid white;
         padding: 8px;
     }
-</style>
+</style> -->
+<style>
+    body, html {
+        text-align: center;
+        align-items: center;
+        font-family: Arial, sans-serif;
+        background-color: #e5eaee
+    }
+    #quizTable {
+      font-family: Arial, Helvetica, sans-serif;
+      border-collapse: collapse;
+      width: 100%;
+    }
+    
+    #quizTable td, #quizTable th {
+      border: 1px solid #ddd;
+      padding: 8px;
+    }
+    
+    #quizTable tr:nth-child(even){background-color: #343434;}
 
+    #quizTable tr:hover {background-color: #343434;}
+    
+    #quizTable th {
+      padding-top: 12px;
+      padding-bottom: 12px;
+      text-align: left;
+      background-color: #342f5d;
+      color: white;
+    }
+
+    #quizTable td {
+      background-color: #343434;
+      color: white;  
+    }
+
+    .check-button {
+    padding: 10px 20px;
+    font-size: 16px;
+    margin: 5px;
+    background-color: #342f5d;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    }
+
+    .check-button:hover {
+        background-color: #39355c;
+    }
+
+    #button-reload {
+    padding: 10px 20px;
+    font-size: 16px;
+    margin: 5px;
+    background-color: #342f5d;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;   
+    }
+
+    #button-reload:hover {
+        background-color: #39355c;
+    }
+
+    .solution-input {
+    padding: 10px;
+    margin-top: 10px;
+    font-size: 16px;
+    width: 20%;
+    max-width: 200px;
+    border: 1px solid #ccc;
+    border-radius: 4px; 
+    background-color: #343434;
+    align-items: left;
+    align-content: left;
+    color: white;
+    }
+
+    .code-cell {
+        max-width: 600px;
+        width: 30%;
+    }
+
+    .solution-input:hover{
+        background-color: #4d4c4c;
+    }
+
+    .result-cell {
+        text-align: center;
+        width: 2%;
+    }
+
+    .editable {
+        display: inline-block;
+        width: 1.2ch;
+        height: max-content;
+        border-bottom: 1px solid #ccc;
+        color:white;
+        border-radius: 2px;
+        font-size: 1em;
+        line-height: 1em;
+        vertical-align: bottom;
+        text-align: bottom;
+    }
+    </style>
 <body>
-    <h1>ReTI Quiz</h1>
-    <button onclick="reloadQuiz()">Reload Quiz</button>
+    <h1>&#x1f4a1ReTI Quiz</h1>
+    <button id="button-reload" onclick="reloadQuiz()">Reload</button>
     <div id="timer" style="margin-top: 10px;">Time: 00:00</div>
     <table id="quizTable" class="quiz-table">
         <tr>
@@ -108,28 +213,29 @@
         }
 
         function checkAnswer(rowIndex, correctValue, explanation) {
-            const input = document.getElementById(`input-${rowIndex}`);
+            const inputElement = document.getElementById(`missingChar-${rowIndex}`);
+            const input = inputElement.innerText.trim();
             const resultCell = document.getElementById(`result-${rowIndex}`);
             const explanationDiv = document.getElementById('explanation');
             const checkButton = document.getElementById(`check-button-${rowIndex}`);
 
-            if (input.value.toLowerCase() === correctValue.toLowerCase()) {
-                resultCell.innerHTML = '<span style="color: green;">✔️</span>';
+            if (input.toLowerCase() === correctValue.toLowerCase()) {
+                resultCell.innerHTML = '<span style="color: green;">&#10004;</span>';
                 explanationDiv.innerText = 'Correct! ';
                 explanationDiv.appendChild(explanation);
                 if (!input.disabled) {
                     correctAnswers++;
                 }
             } else {
-                resultCell.innerHTML = '<span style="color: red;">❌</span>';
+                resultCell.innerHTML = '<span style="color: red;">&#10060;</span>';
                 explanationDiv.innerText = 'Incorrect! ' + `The correct value was: ${correctValue}. \n`;
                 explanationDiv.appendChild(explanation);
 
             }
-            if (!input.disabled) {
+            if (inputElement.contentEditable) {
                 questionsAnswered++;
                 checkButton.disabled = true;
-                input.disabled = true;
+                inputElement.contentEditable = false;
             }
 
             if (questionsAnswered === numQuestions) {
@@ -156,7 +262,7 @@
                 const binaryString = hexToBin(codehex);
                 const formattedBinary = binaryString.replace(/(.{4})/g, '$1_').slice(0, -1);
                 const missingIndex = Math.floor(Math.random() * codehex.length);
-                const hexWithGap = codehex.slice(0, missingIndex) + '_' + codehex.slice(missingIndex + 1);
+                const hexWithGap = codehex.slice(0, missingIndex) + `<span id="missingChar-${i}" class="editable" contenteditable="true"></span>` + codehex.slice(missingIndex + 1);
 
                 const explanationTable = document.createElement('table');
                 explanationTable.border = "1";
@@ -225,25 +331,31 @@
 
                 const codeCell = document.createElement('td');
                 codeCell.innerText = code;
+                codeCell.classList.add('code-cell');
                 row.appendChild(codeCell);
 
                 const hexCell = document.createElement('td');
-                hexCell.innerText = hexWithGap;
+                hexCell.classList.add('hex-cell');
+                hexCell.innerHTML = hexWithGap;
                 row.appendChild(hexCell);
 
-                const inputCell = document.createElement('td');
-                const input = document.createElement('input');
-                input.id = `input-${i}`;
-                inputCell.appendChild(input);
-                row.appendChild(inputCell);
+                // const hexCell = document.createElement('td');
+                // const input = document.createElement('input');
+                // input.id = `input-${i}`;
+                // input.value = hexWithGap;
+                // input.classList.add("solution-input");
+                // hexCell.appendChild(input);
+                // row.appendChild(hexCell);
 
                 const resultCell = document.createElement('td');
                 resultCell.id = `result-${i}`;
+                resultCell.classList.add('result-cell');
                 row.appendChild(resultCell);
 
                 const checkButtonCell = document.createElement('td');
                 const checkButton = document.createElement('button');
                 checkButton.id = `check-button-${i}`;
+                checkButton.classList.add('check-button');
                 checkButton.innerText = 'Check';
                 checkButton.onclick = () => checkAnswer(i, codehex[missingIndex], explanationTable);
                 checkButtonCell.appendChild(checkButton);
@@ -261,6 +373,15 @@
                 generateQuizRows(numQuestions);
             }
         };
+
+        function restrictInput(index){
+            let inputElement = document.getElementById(`missingChar-${i}`);
+            let currText = inputElement.innerText.trim();
+
+            if (currText.length() > 1) {
+                inputElement.innerText = currText.charAt(0);
+            }
+        }
     </script>
 </body>
 
