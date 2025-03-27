@@ -155,7 +155,6 @@
         <tr>
             <th>Code</th>
             <th>Hexadecimal</th>
-            <th>Input</th>
             <th>Result</th>
             <th></th>
         </tr>
@@ -186,10 +185,14 @@
             while (quizTable.rows.length > 1) {
                 quizTable.deleteRow(1);
             }
+            finished = false;
             startTime = Date.now();
             timerInterval = setInterval(updateTimer, 1000);
             generateQuizRows(numQuestions);
             document.getElementById('timer').innerText = `Time: 00:00`;
+
+            correctAnswers = 0;
+            questionsAnswered = 0;
 
             const explanationDiv = document.getElementById('explanation');
             explanationDiv.innerHTML = '';
@@ -223,7 +226,7 @@
                 resultCell.innerHTML = '<span style="color: green;">&#10004;</span>';
                 explanationDiv.innerText = 'Correct! ';
                 explanationDiv.appendChild(explanation);
-                if (!input.disabled) {
+                if (inputElement.contentEditable == "true") {
                     correctAnswers++;
                 }
             } else {
@@ -232,13 +235,12 @@
                 explanationDiv.appendChild(explanation);
 
             }
-            if (inputElement.contentEditable) {
+            if (inputElement.contentEditable == "true") {
                 questionsAnswered++;
-                checkButton.disabled = true;
-                inputElement.contentEditable = false;
+                document.getElementById(`missingChar-${rowIndex}`).contentEditable = "false";
             }
 
-            if (questionsAnswered === numQuestions) {
+            if (questionsAnswered >= numQuestions) {
                 finished = true;
                 const currentTime = Date.now();
                 const elapsedTime = (currentTime - startTime) / 1000;
