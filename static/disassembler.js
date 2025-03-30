@@ -1,5 +1,5 @@
 import { opType } from "./retiStructure.js";
-import { generateBitMask } from "../util/retiUtility.js";
+import { generateBitMask } from "./retiUtility.js";
 const Registers = {
     0b00: "PC",
     0b01: "IN1",

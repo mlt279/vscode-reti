@@ -1,7 +1,18 @@
+:root {
+  --vscode-background: var(--vscode-editor-background);
+  --vscode-foreground: var(--vscode-editor-foreground);
+  --vscode-button-background: var(--vscode-button-background);
+  --vscode-button-foreground: var(--vscode-button-foreground);
+  --vscode-table-border: var(--vscode-editorWidget-border);
+  --vscode-selection-background: var(--vscode-editor-selectionBackground);
+  --vscode-hover-background: var(--vscode-list-hoverBackground);
+  --vscode-accent-color: var(--vscode-activityBar-background);
+}
+
 body, html {
   text-align: center;
-  background-color: #171734;
-  color: white;
+  background-color: var(--vscode-background);
+  color: var(--vscode-foreground);
   align-items: center;
   font-family: Arial, sans-serif;
 }
@@ -10,47 +21,51 @@ body, html {
   font-family: Arial, Helvetica, sans-serif;
   border-collapse: collapse;
   width: 100%;
-  color: white;
+  color: var(--vscode-foreground);
 }
 
 #quizTable td, #quizTable th, .table-explanation td, .table-explanation th {
-  border: 1px solid #ddd;
+  border: 1px solid var(--vscode-table-border);
   padding: 8px;
 }
 
 #quizTable tr:nth-child(odd), .table-explanation tr:nth-child(odd) {
-  background-color: #343434;
+  background-color: var(--vscode-hover-background);
 }
 
 #quizTable tr:nth-child(even), .table-explanation tr:nth-child(even) {
-  background-color: #3f3f3f;
+  background-color: darken(var(--vscode-hover-background), 20%);
+}
+
+#quizTable tr:hover, .table-explanation tr:hover {
+  opacity: 0.7;
 }
 
 #quizTable th, .table-explanation th {
   padding-top: 12px;
   padding-bottom: 12px;
   text-align: left;
-  background-color: #0b3c5d;
-  color: white;
+  background-color: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
 }
 
 #quizTable td, .table-explanation td {
-  color: white;  
+  color: var(--vscode-foreground);  
 }
 
 .check-button, #button-reload {
   padding: 10px 20px;
   font-size: 16px;
   margin: 5px;
-  background-color: #0b3c5d;
-  color: white;
+  background-color: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
   border: none;
   border-radius: 4px;
   cursor: pointer;
 }
 
-#quizTable tr:hover, .table-explanation tr:hover, .check-button:hover, #button-reload:hover {
-  opacity: 0.8;
+.check-button:hover, #button-reload:hover {
+  opacity: 0.7;
 }
 
 .solution-input {
@@ -61,12 +76,12 @@ body, html {
   max-width: 200px;
   border: 1px solid #ccc;
   border-radius: 4px;
-  background-color: #343434;
-  color: white;
+  background-color: var(--vscode-background);
+  color: var(--vscode-foreground);
 }
 
 .solution-input:hover {
-  background-color: #4d4c4c;
+  opacity: 0.7;
 }
 
 .code-cell {

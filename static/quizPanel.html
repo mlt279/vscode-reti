@@ -5,43 +5,12 @@
     <title>ReTI Quiz</title>
     <meta charset="UTF-8">
 </head>
-<!-- <style>
-    .fixed-table {
-        table-layout: fixed;
-        width: 100%;
-        /* border: 1px solid white; */
-        border: "1";
-        /* border-collapse: collapse; */
-    }
-
-    .fixed-table th,
-    .fixed-table td {
-        text-align: center;
-        /* background-color: #96D4D4; */
-    }
-
-    .bin-column {
-        width: 3.125%;
-    }
-</style>
-<style>
-    .quiz-table {
-        table-layout: fixed;
-        width: 100%;
-        border: 1px solid rgb(0, 0, 0);
-        /* border-collapse: collapse; */
-        margin-top: 20px;
-    }
-
-    .quiz-table th,
-    .quiz-table td {
-        text-align: center;
-        background-color: #dddddd;
-        border: 1px solid white;
-        padding: 8px;
-    }
-</style> -->
+<!--CSS-START-->
 <link rel="stylesheet" type="text/css" href="quizPanel.css">
+<!--CSS-END-->
+<!--CSS-START-->
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<!--CSS-END-->
 <body>
     <h1>&#x1f4a1ReTI Quiz</h1>
     <button id="button-reload" onclick="reloadQuiz()">Reload</button>
@@ -61,11 +30,8 @@
     <div id="completionMessage"></div>
     <script type="module">
         /*/IMPORTS/*/
-        import { randomInstruction } from '../../static/util/randomReti.js';
-        import { decodeInstruction } from '../../static/reti/disassembler.js';
-        import { hexToBin } from '../../static/util/retiUtility.js';
-        import { binToHex } from '../../static/util/retiUtility.js';
-        /*/END/*/
+        import { randomInstruction, decodeInstruction, hexToBin, binToHex } from './reti.js';
+        /*/IMPORTS-END/*/
 
         let questionsAnswered = 0;
         let correctAnswers = 0;
@@ -231,14 +197,6 @@
                 hexCell.classList.add('hex-cell');
                 hexCell.innerHTML = hexWithGap;
                 row.appendChild(hexCell);
-
-                // const hexCell = document.createElement('td');
-                // const input = document.createElement('input');
-                // input.id = `input-${i}`;
-                // input.value = hexWithGap;
-                // input.classList.add("solution-input");
-                // hexCell.appendChild(input);
-                // row.appendChild(hexCell);
 
                 const resultCell = document.createElement('td');
                 resultCell.id = `result-${i}`;
