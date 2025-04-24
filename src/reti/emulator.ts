@@ -37,10 +37,12 @@ export class Emulator{
         this.outPutChannel = outPutChannel;
     }
 
-    public async emulate(token: vscode.CancellationToken): Promise<ReTIState> {
+    public async emulate(token: vscode.CancellationToken, breakpoints?: Set<number>): Promise<ReTIState> {
+        let end_cnd = "";
         while (true) {
             if (token.isCancellationRequested) {
                 this.outPutChannel.appendLine("Emulation stopped.");
+                end_cnd = "Emulation stopped.";
                 break;
             }
 
@@ -49,6 +51,7 @@ export class Emulator{
             let pc = this.reti.getRegister(registerCode.PC);
             if (pc >= this.reti.shadow.codeSize) {
                 this.outPutChannel.appendLine(`Stopping emulation. PC is out of code range. PC = ${pc}`);
+                end_cnd = "PC out of code range.";
                 break;
             }
 
@@ -56,22 +59,27 @@ export class Emulator{
 
             if (this.execute(instruction) !== 0) {
                 this.outPutChannel.appendLine(`Stopping emulation. Invalid instruction @${pc}.`);
+                end_cnd = "Invalid Instruction.";
                 break;
             }
 
             let nextPC = this.reti.getRegister(registerCode.PC);
             if (pc === nextPC) {
                 this.outPutChannel.appendLine(`Stopping emulation. Instruction @${pc} causes infinite loop.`);
+                end_cnd = "Instruction causes infinite loop.";
                 break;
             }
 
             if (nextPC >= this.reti.shadow.codeSize) {
                 this.outPutChannel.appendLine(`Stopping emulation. Instruction @${pc} causes PC to be out of code range. PC = ${nextPC}`);
+                end_cnd = "PC out of code range.";
                 break;
             }
         }
         this.outPutChannel.show();
-        return this.reti.exportState();
+        let export_state = this.reti.exportState();
+        export_state.endCondition = end_cnd;
+        return export_state;
     }
 
     // Resets ReTI to starting state.
