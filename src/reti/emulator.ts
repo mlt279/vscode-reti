@@ -52,6 +52,12 @@ export class Emulator{
                 end_cnd = "PC out of code range.";
                 break;
             }
+
+            if (breakpoints?.has(this.getRegister(registerCode.PC))) {
+                this.outPutChannel.appendLine("Stopping emulation. Breakpoint reached.");
+                end_cnd = "Breakpoint reached.";
+                break;
+            }
         }
         this.outPutChannel.show();
         let export_state = this.reti.exportState();
