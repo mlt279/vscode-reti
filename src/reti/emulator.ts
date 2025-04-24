@@ -3,29 +3,6 @@ import { computeCode, opType, registerCode, ReTI, ReTIState } from './retiStruct
 import { generateBitMask, immediateAsTwoc, immediateUnsigned } from '../util/retiUtility';
 import { assembleLine } from './assembler';
 
-// export async function emulate(code: string[][]) {
-//     // Parsing the instruction file.
-//     let instructions: number[] = [];
-//     for (let i = 0; i < code.length; i++) {
-//         let errCode = 0;
-//         let errMessage = "";
-//         let line = code[i];
-//         let instruction = 0;
-//         [errCode, instruction, errMessage] = assembleLine(line);
-//         if (errCode !== 0) {
-//             vscode.window.showErrorMessage(`Error when parsing: ${errMessage}`);
-//             return;
-//         }
-//         instructions.push(instruction);
-//     }
-//     let emulator = new Emulator(instructions, []);
-
-//     while (emulator.getCurrentInstruction() !== 0) {
-//         emulator.step();
-//         await vscode.window.showInformationMessage(emulator.exportState());
-//     }
-// }
-
 export class Emulator{
     private reti: ReTI;
     private initial_data: number[];
