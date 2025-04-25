@@ -24,7 +24,7 @@
           "reti"
         ],
         "label": "ReTI Debug",
-        "program": "./out/debugAdapter.js",
+        "program": "./out/debug/debugAdapter.js",
         "runtime": "node",
         "configurationAttributes": {
           "launch": {

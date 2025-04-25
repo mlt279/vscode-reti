@@ -215,8 +215,14 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	});
 
-	const DebugCommand = vscode.commands.registerCommand('reti.debug', async() => {
-		vscode.window.showWarningMessage("Starting Debugger lul");
+	const DebugCommand = vscode.commands.registerCommand('reti.debug', async(resource: vscode.Uri) => {
+		vscode.debug.startDebugging( undefined, {
+			type: 'reti-debug',
+			name: "Debug ReTI",
+			request: "launch",
+			program: resource.fsPath,
+			stopOnEntry: true
+		});
 	});
 
 	context.subscriptions.push(EmulateCommand, QuizCommand, RandomCommand, AssembleCommand, StopEmulationCommand, DisassembleCommand, DebugCommand);
