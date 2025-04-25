@@ -173,32 +173,32 @@
         {
           "command": "reti.emulate",
           "when": "editorLangId == 'reti' || editorLangId == 'retias'",
-          "group": "navigation@1",
+          "group": "navigation@2",
           "tooltip": "Assemble ReTI Code, Ctrl+Alt+A."
         },
         {
           "command": "reti.assemble",
           "when": "editorLangId == 'reti'",
-          "group": "navigation@3",
+          "group": "navigation@4",
           "tooltip": "Emulate ReTI Code, Ctrl+Alt+E."
         },
         {
           "command": "reti.stopEmulation",
           "when": "editorLangId == 'reti' || editorLangId == 'retias'",
-          "group": "navigation@2",
+          "group": "navigation@3",
           "tooltip": "Stops emulation."
         },
         {
           "command": "reti.disassemble",
           "when": "editorLangId == 'retias'",
-          "group": "navigation@3",
+          "group": "navigation@4",
           "tooltip": "Disassemble ReTI Code."
         },
         {
           "command": "reti.debug",
-          "when": "editorLangID == 'reti'",
+          "when": "editorLangId == 'reti' || editorLangId == 'retias'",
           "group": "navigation@1",
-          "tooltip": "Debug ReTI Code"
+          "tooltip": "Debug ReTI Code."
         }
       ]
     },

@@ -6,3 +6,7 @@ import {
 	Thread, StackFrame, Scope, Source, Handles, Breakpoint, MemoryEvent
 } from '@vscode/debugadapter';
 import { DebugProtocol } from '@vscode/debugprotocol';
+
+interface ILaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
+    
+}

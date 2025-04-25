@@ -215,7 +215,11 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	});
 
-	context.subscriptions.push(EmulateCommand, QuizCommand, RandomCommand, AssembleCommand, StopEmulationCommand, DisassembleCommand);
+	const DebugCommand = vscode.commands.registerCommand('reti.debug', async() => {
+		vscode.window.showWarningMessage("Starting Debugger lul");
+	});
+
+	context.subscriptions.push(EmulateCommand, QuizCommand, RandomCommand, AssembleCommand, StopEmulationCommand, DisassembleCommand, DebugCommand);
 }
 
 
