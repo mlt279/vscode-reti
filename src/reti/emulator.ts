@@ -6,9 +6,9 @@ import { assembleLine } from './assembler';
 export class Emulator{
     private reti: ReTI;
     private initial_data: number[];
-    private outPutChannel: vscode.OutputChannel;
+    private outPutChannel?: vscode.OutputChannel;
 
-    constructor(code: number[], data: number[], outPutChannel: vscode.OutputChannel) {
+    constructor(code: number[], data: number[], outPutChannel?: vscode.OutputChannel) {
         this.initial_data = data;
         this.reti = new ReTI(code, [...data]);
         this.outPutChannel = outPutChannel;
@@ -18,7 +18,7 @@ export class Emulator{
         let end_cnd = "";
         while (true) {
             if (token.isCancellationRequested) {
-                this.outPutChannel.appendLine("Emulation stopped.");
+                this.outPutChannel?.appendLine("Emulation stopped.");
                 end_cnd = "Emulation stopped.";
                 break;
             }
@@ -27,7 +27,7 @@ export class Emulator{
 
             let pc = this.reti.getRegister(registerCode.PC);
             if (pc >= this.reti.shadow.codeSize) {
-                this.outPutChannel.appendLine(`Stopping emulation. PC is out of code range. PC = ${pc}`);
+                this.outPutChannel?.appendLine(`Stopping emulation. PC is out of code range. PC = ${pc}`);
                 end_cnd = "PC out of code range.";
                 break;
             }
@@ -35,31 +35,31 @@ export class Emulator{
             let instruction = this.reti.getCode(pc);
 
             if (this.execute(instruction) !== 0) {
-                this.outPutChannel.appendLine(`Stopping emulation. Invalid instruction @${pc}.`);
+                this.outPutChannel?.appendLine(`Stopping emulation. Invalid instruction @${pc}.`);
                 end_cnd = "Invalid Instruction.";
                 break;
             }
 
             let nextPC = this.reti.getRegister(registerCode.PC);
             if (pc === nextPC) {
-                this.outPutChannel.appendLine(`Stopping emulation. Instruction @${pc} causes infinite loop.`);
+                this.outPutChannel?.appendLine(`Stopping emulation. Instruction @${pc} causes infinite loop.`);
                 end_cnd = "Instruction causes infinite loop.";
                 break;
             }
 
             if (nextPC >= this.reti.shadow.codeSize) {
-                this.outPutChannel.appendLine(`Stopping emulation. Instruction @${pc} causes PC to be out of code range. PC = ${nextPC}`);
+                this.outPutChannel?.appendLine(`Stopping emulation. Instruction @${pc} causes PC to be out of code range. PC = ${nextPC}`);
                 end_cnd = "PC out of code range.";
                 break;
             }
 
             if (breakpoints?.has(this.getRegister(registerCode.PC))) {
-                this.outPutChannel.appendLine("Stopping emulation. Breakpoint reached.");
+                this.outPutChannel?.appendLine("Stopping emulation. Breakpoint reached.");
                 end_cnd = "Breakpoint reached.";
                 break;
             }
         }
-        this.outPutChannel.show();
+        this.outPutChannel?.show();
         let export_state = this.reti.exportState();
         export_state.endCondition = end_cnd;
         return export_state;
@@ -134,7 +134,7 @@ export class Emulator{
                 result = this.reti.getRegister(destination) & immediate;
                 break;
             default:
-                this.outPutChannel.appendLine(`Invalid compute code for compute operation: ${f} at PC = ${this.getRegister(registerCode.PC)}.`);
+                this.outPutChannel?.appendLine(`Invalid compute code for compute operation: ${f} at PC = ${this.getRegister(registerCode.PC)}.`);
                 return 1;
         }
         this.reti.setRegister(destination, result < 0 ? immediateAsTwoc(result, 32): result);
