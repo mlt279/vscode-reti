@@ -19,12 +19,12 @@
     ],
     "debuggers": [
       {
-        "type": "mock",
+        "type": "reti",
         "languages": [
           "reti"
         ],
-        "label": "Mock Debug",
-        "program": "./out/debugAdapter.js",
+        "label": "ReTI Debug",
+        "program": "./out/debug/debugAdapter.js",
         "runtime": "node",
         "configurationAttributes": {
           "launch": {
@@ -46,20 +46,6 @@
                 "type": "boolean",
                 "description": "Enable logging of the Debug Adapter Protocol.",
                 "default": true
-              },
-              "compileError": {
-                "type": "string",
-                "description": "Simulates a compile error in 'launch' request.",
-                "enum": [
-                  "default",
-                  "show",
-                  "hide"
-                ],
-                "enumDescriptions": [
-                  "default: show fake compile error to user",
-                  "show fake compile error to user",
-                  "do not show fake compile error to user"
-                ]
               }
             }
           },
@@ -82,27 +68,13 @@
                 "type": "boolean",
                 "description": "Enable logging of the Debug Adapter Protocol.",
                 "default": true
-              },
-              "compileError": {
-                "type": "string",
-                "description": "Simulates a compile error in 'attach' request.",
-                "enum": [
-                  "default",
-                  "show",
-                  "hide"
-                ],
-                "enumDescriptions": [
-                  "default: show fake compile error to user",
-                  "show fake compile error to user",
-                  "do not show fake compile error to user"
-                ]
               }
             }
           }
         },
         "initialConfigurations": [
           {
-            "type": "mock",
+            "type": "reti",
             "request": "launch",
             "name": "Ask for file name",
             "program": "${workspaceFolder}/${command:AskForProgramName}",
@@ -111,10 +83,10 @@
         ],
         "configurationSnippets": [
           {
-            "label": "Mock Debug: Launch",
+            "label": "ReTI Debug: Launch",
             "description": "A new configuration for 'debugging' a user selected markdown file.",
             "body": {
-              "type": "mock",
+              "type": "reti",
               "request": "launch",
               "name": "Ask for file name",
               "program": "^\"\\${workspaceFolder}/\\${command:AskForProgramName}\"",
@@ -123,7 +95,7 @@
           }
         ],
         "variables": {
-          "AskForProgramName": "extension.mock-debug.getProgramName"
+          "AskForProgramName": "reti.debug.getProgramName"
         }
       }
     ],
@@ -241,12 +213,6 @@
           "when": "editorLangId == 'retias'",
           "group": "navigation@4",
           "tooltip": "Disassemble ReTI Code."
-        },
-        {
-          "command": "reti.debug",
-          "when": "editorLangId == 'reti' || editorLangId == 'retias'",
-          "group": "navigation@1",
-          "tooltip": "Debug ReTI Code."
         }
       ],
       "editor/title/run": [
@@ -257,7 +223,7 @@
           "tooltip": "Assemble ReTI Code, Ctrl+Alt+A."
         },
         {
-          "command": "extension.mock-debug.debugEditorContents",
+          "command": "reti.debug.debugEditorContents",
           "when": "resourceLangId == reti",
           "group": "navigation@2"
         }        

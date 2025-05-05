@@ -18,8 +18,8 @@ import { tmpdir } from 'os';
 import { join } from 'path';
 import { platform } from 'process';
 import { ProviderResult } from 'vscode';
-import { MockDebugSession } from './debug/mockDebug';
-import { activateMockDebug, workspaceFileAccessor } from './debug/activateMockDebug';
+import { ReTIDebugSession } from './debug/retiDebug';
+import { activateReTIDebug, workspaceFileAccessor } from './debug/activateReTIDebug';
 
 
 const runMode: 'external' | 'server' | 'namedPipeServer' | 'inline' = 'inline';
@@ -241,22 +241,22 @@ export function activate(context: vscode.ExtensionContext) {
 	switch (runMode) {
 		case 'server':
 			// run the debug adapter as a server inside the extension and communicate via a socket
-			activateMockDebug(context, new MockDebugAdapterServerDescriptorFactory());
+			activateReTIDebug(context, new ReTIDebugAdapterServerDescriptorFactory());
 			break;
 
 		case 'namedPipeServer':
 			// run the debug adapter as a server inside the extension and communicate via a named pipe (Windows) or UNIX domain socket (non-Windows)
-			activateMockDebug(context, new MockDebugAdapterNamedPipeServerDescriptorFactory());
+			activateReTIDebug(context, new ReTIDebugAdapterNamedPipeServerDescriptorFactory());
 			break;
 
 		case 'external': default:
 			// run the debug adapter as a separate process
-			activateMockDebug(context, new DebugAdapterExecutableFactory());
+			activateReTIDebug(context, new DebugAdapterExecutableFactory());
 			break;
 
 		case 'inline':
 			// run the debug adapter inside the extension and directly talk to it
-			activateMockDebug(context);
+			activateReTIDebug(context);
 			break;
 	}
 
@@ -288,7 +288,7 @@ class DebugAdapterExecutableFactory implements vscode.DebugAdapterDescriptorFact
 	}
 }
 
-class MockDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDescriptorFactory {
+class ReTIDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDescriptorFactory {
 
 	private server?: Net.Server;
 
@@ -297,7 +297,7 @@ class MockDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDesc
 		if (!this.server) {
 			// start listening on a random port
 			this.server = Net.createServer(socket => {
-				const session = new MockDebugSession(workspaceFileAccessor);
+				const session = new ReTIDebugSession(workspaceFileAccessor);
 				session.setRunAsServer(true);
 				session.start(socket as NodeJS.ReadableStream, socket);
 			}).listen(0);
@@ -314,7 +314,7 @@ class MockDebugAdapterServerDescriptorFactory implements vscode.DebugAdapterDesc
 	}
 }
 
-class MockDebugAdapterNamedPipeServerDescriptorFactory implements vscode.DebugAdapterDescriptorFactory {
+class ReTIDebugAdapterNamedPipeServerDescriptorFactory implements vscode.DebugAdapterDescriptorFactory {
 
 	private server?: Net.Server;
 
@@ -326,7 +326,7 @@ class MockDebugAdapterNamedPipeServerDescriptorFactory implements vscode.DebugAd
 			const pipePath = platform === "win32" ? join('\\\\.\\pipe\\', pipeName) : join(tmpdir(), pipeName);
 
 			this.server = Net.createServer(socket => {
-				const session = new MockDebugSession(workspaceFileAccessor);
+				const session = new ReTIDebugSession(workspaceFileAccessor);
 				session.setRunAsServer(true);
 				session.start(<NodeJS.ReadableStream>socket, socket);
 			}).listen(pipePath);

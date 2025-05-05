@@ -1,15 +1,3 @@
-/*---------------------------------------------------------
- * Copyright (C) Microsoft Corporation. All rights reserved.
- *--------------------------------------------------------*/
-/*
- * mockDebug.ts implements the Debug Adapter that "adapts" or translates the Debug Adapter Protocol (DAP) used by the client (e.g. VS Code)
- * into requests and events of the real "execution engine" or "debugger" (here: class MockRuntime).
- * When implementing your own debugger extension for VS Code, most of the work will go into the Debug Adapter.
- * Since the Debug Adapter is independent from VS Code, it can be used in any client (IDE) supporting the Debug Adapter Protocol.
- *
- * The most important class of the Debug Adapter is the MockDebugSession which implements many DAP requests by talking to the MockRuntime.
- */
-
 import {
 	Logger, logger,
 	LoggingDebugSession,
@@ -23,12 +11,6 @@ import { MockRuntime, IRuntimeBreakpoint, FileAccessor, RuntimeVariable } from '
 
 const { Subject } = require('await-notify');
 
-/**
- * This interface describes the mock-debug specific launch attributes
- * (which are not part of the Debug Adapter Protocol).
- * The schema for these attributes lives in the package.json of the mock-debug extension.
- * The interface should always match this schema.
- */
 interface ILaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
 	/** An absolute path to the "program" to debug. */
 	program: string;
@@ -45,7 +27,7 @@ interface ILaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
 interface IAttachRequestArguments extends ILaunchRequestArguments { }
 
 
-export class MockDebugSession extends LoggingDebugSession {
+export class ReTIDebugSession extends LoggingDebugSession {
 
 	// we don't support multiple threads, so we can use a hardcoded ID for the default thread
 	private static threadID = 1;
@@ -74,7 +56,7 @@ export class MockDebugSession extends LoggingDebugSession {
 	 * We configure the default implementation of a debug adapter here.
 	 */
 	public constructor(fileAccessor: FileAccessor) {
-		super("mock-debug.txt");
+		super("reti-debug.txt");
 
 		// this debugger uses zero-based lines and columns
 		this.setDebuggerLinesStartAt1(false);
@@ -84,27 +66,27 @@ export class MockDebugSession extends LoggingDebugSession {
 
 		// setup event handlers
 		this._runtime.on('stopOnEntry', () => {
-			this.sendEvent(new StoppedEvent('entry', MockDebugSession.threadID));
+			this.sendEvent(new StoppedEvent('entry', ReTIDebugSession.threadID));
 		});
 		this._runtime.on('stopOnStep', () => {
-			this.sendEvent(new StoppedEvent('step', MockDebugSession.threadID));
+			this.sendEvent(new StoppedEvent('step', ReTIDebugSession.threadID));
 		});
 
 		this._runtime.on('stopOnBreakpoint', () => {
-			this.sendEvent(new StoppedEvent('breakpoint', MockDebugSession.threadID));
+			this.sendEvent(new StoppedEvent('breakpoint', ReTIDebugSession.threadID));
 		});
 		this._runtime.on('stopOnDataBreakpoint', () => {
-			this.sendEvent(new StoppedEvent('data breakpoint', MockDebugSession.threadID));
+			this.sendEvent(new StoppedEvent('data breakpoint', ReTIDebugSession.threadID));
 		});
 		this._runtime.on('stopOnInstructionBreakpoint', () => {
-			this.sendEvent(new StoppedEvent('instruction breakpoint', MockDebugSession.threadID));
+			this.sendEvent(new StoppedEvent('instruction breakpoint', ReTIDebugSession.threadID));
 		});
 
 		this._runtime.on('stopOnException', (exception) => {
 			if (exception) {
-				this.sendEvent(new StoppedEvent(`exception(${exception})`, MockDebugSession.threadID));
+				this.sendEvent(new StoppedEvent(`exception(${exception})`, ReTIDebugSession.threadID));
 			} else {
-				this.sendEvent(new StoppedEvent('exception', MockDebugSession.threadID));
+				this.sendEvent(new StoppedEvent('exception', ReTIDebugSession.threadID));
 			}
 		});
 
@@ -371,8 +353,8 @@ export class MockDebugSession extends LoggingDebugSession {
 		// runtime supports no threads so just return a default thread.
 		response.body = {
 			threads: [
-				new Thread(MockDebugSession.threadID, "thread 1"),
-				new Thread(MockDebugSession.threadID + 1, "thread 2"),
+				new Thread(ReTIDebugSession.threadID, "thread 1"),
+				new Thread(ReTIDebugSession.threadID + 1, "thread 2"),
 			]
 		};
 		this.sendResponse(response);
