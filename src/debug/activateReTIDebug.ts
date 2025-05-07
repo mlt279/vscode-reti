@@ -9,7 +9,7 @@
 
 import * as vscode from 'vscode';
 import { WorkspaceFolder, DebugConfiguration, ProviderResult, CancellationToken } from 'vscode';
-import { ReTIDebugSession } from './retiDebug';
+import { ReTIDebugSession } from './retiDebugSession';
 import { FileAccessor } from './mockRuntime';
 
 export function activateReTIDebug(context: vscode.ExtensionContext, factory?: vscode.DebugAdapterDescriptorFactory) {

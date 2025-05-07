@@ -18,7 +18,7 @@ import { tmpdir } from 'os';
 import { join } from 'path';
 import { platform } from 'process';
 import { ProviderResult } from 'vscode';
-import { ReTIDebugSession } from './debug/retiDebug';
+import { ReTIDebugSession } from './debug/retiDebugSession';
 import { activateReTIDebug, workspaceFileAccessor } from './debug/activateReTIDebug';
 
 

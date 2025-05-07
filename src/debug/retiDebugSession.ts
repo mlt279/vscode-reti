@@ -469,6 +469,7 @@ export class ReTIDebugSession extends LoggingDebugSession {
 		this.sendResponse(response);
 	}
 
+	// TODO: Implement if time
 	// protected setVariableRequest(response: DebugProtocol.SetVariableResponse, args: DebugProtocol.SetVariableArguments): void {
 	// 	const container = this._variableHandles.get(args.variablesReference);
 	// 	const rv = container === 'locals'
@@ -494,30 +495,10 @@ export class ReTIDebugSession extends LoggingDebugSession {
 		this.sendResponse(response);
 	}
 
-	// protected reverseContinueRequest(response: DebugProtocol.ReverseContinueResponse, args: DebugProtocol.ReverseContinueArguments): void {
-	// 	this._runtime.continue(true);
-	// 	this.sendResponse(response);
- 	// }
-
 	protected nextRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments): void {
 		this._runtime.step(args.granularity === 'instruction', false);
 		this.sendResponse(response);
 	}
-
-	// protected stepBackRequest(response: DebugProtocol.StepBackResponse, args: DebugProtocol.StepBackArguments): void {
-	// 	this._runtime.step(args.granularity === 'instruction', true);
-	// 	this.sendResponse(response);
-	// }
-
-	// protected stepInTargetsRequest(response: DebugProtocol.StepInTargetsResponse, args: DebugProtocol.StepInTargetsArguments) {
-	// 	const targets = this._runtime.getStepInTargets(args.frameId);
-	// 	response.body = {
-	// 		targets: targets.map(t => {
-	// 			return { id: t.id, label: t.label };
-	// 		})
-	// 	};
-	// 	this.sendResponse(response);
-	// }
 
 	// Implemented as no-ops because they can't be deactivated.
 	protected stepInRequest(response: DebugProtocol.StepInResponse, args: DebugProtocol.StepInArguments): void {

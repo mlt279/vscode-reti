@@ -2,7 +2,7 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import { ReTIDebugSession } from './retiDebug';
+import { ReTIDebugSession } from './retiDebugSession';
 
 import { promises as fs } from 'fs';
 import * as Net from 'net';
