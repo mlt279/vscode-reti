@@ -1,0 +1,1 @@
+extension <-> activateReTIDebug <-> debugAdapter <-> retiDebugSession <-> retiDebugger (runtime)
