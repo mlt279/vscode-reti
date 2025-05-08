@@ -2,7 +2,6 @@ ReTIDebugger {
     1. constructor
     2. loadSource
     -> initializeContents -> Assemble if text, parse comment lines, read data file possibly
-
     3. run() aber erst nur über step funktion (always stopping on entry)
     -> step()
     4. setBreakPoints()
