@@ -58,10 +58,15 @@ export class ReTIDebugger extends EventEmitter {
 		}, 0);
 	}
 
-    public async setBreakPoint(path: string, line: number): Promise<IRetiBreakpoint> {
+    public async setBreakPoint(path: string, line: number):
+    Promise<IRetiBreakpoint> {
         path = this.normalizePathAndCasing(path);
 
-        const bp: IRetiBreakpoint = { line: line, id: this._breakPointsID++, instruction: 0 };
+        const bp: IRetiBreakpoint = {
+            line: line, 
+            id: this._breakPointsID++, 
+            instruction: 0 
+        };
         let bps = this._breakPoints.get(path);
         if (!bps) {
             bps = new Array<IRetiBreakpoint>();
@@ -92,6 +97,7 @@ export class ReTIDebugger extends EventEmitter {
 
     }
 
+    // _______________________________________________________________________
     private async loadSource(file: string): Promise<void> {
 		if (this._sourceFile !== file) {
 			this._sourceFile = this.normalizePathAndCasing(file);
