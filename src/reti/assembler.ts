@@ -21,6 +21,8 @@ export async function assembleFile(code: string[][]): Promise<Array<[number, str
 
 // Assemble a line of ReTI code. Returns an integer to indicate success, the resulting binInstruction,
 // as well as a string containing possible error messages or explanation for assembly.
+// Returns: [feedback int, instruction, explanation/error message]
+// feedback int will be -1 for any error.
 export function assembleLine(line: string[]): [number, number, string] {
     let binInstruction: number = 0;    
     const explanationString = "";
@@ -241,6 +243,9 @@ export function assembleLine(line: string[]): [number, number, string] {
             } else {
                 return [-1, binInstruction, `Error: Invalid oplus instruction '${instruction}'.`];
             }
+        }
+        else {
+            return [-1, binInstruction, `Error: Invalid instruction '${instruction}'.`];
         }
         // #endregion
         let registerType = 0;

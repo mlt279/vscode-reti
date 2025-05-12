@@ -3,6 +3,9 @@
  *--------------------------------------------------------*/
 
 import { EventEmitter } from 'events';
+import { Emulator } from '../reti/emulator';
+import { assembleLine } from '../reti/assembler';
+import { parseString } from '../util/parser';
 
 export interface FileAccessor {
 	isWindows: boolean;
@@ -10,12 +13,20 @@ export interface FileAccessor {
 	writeFile(path: string, contents: Uint8Array): Promise<void>;
 }
 
+// TODO: Remove
 export interface IRuntimeBreakpoint {
 	id: number;
 	line: number;
 	verified: boolean;
 }
+export interface IRetiBreakpoint {
+    id: number;
+	line: number;
+	verified: boolean;
+    instruction: number;
+}
 
+// #region not needed
 interface IRuntimeStepInTargets {
 	id: number;
 	label: string;
@@ -40,7 +51,6 @@ interface RuntimeDisassembledInstruction {
 	instruction: string;
 	line?: number;
 }
-
 export type IRuntimeVariableType = number | boolean | string | RuntimeVariable[];
 
 export class RuntimeVariable {
@@ -84,40 +94,35 @@ interface Word {
 	index: number;
 }
 
+// #endregion
+
 export function timeout(ms: number) {
 	return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-/**
- * A Mock runtime with minimal debugger functionality.
- * MockRuntime is a hypothetical (aka "Mock") "execution engine with debugging support":
- * it takes a Markdown (*.md) file and "executes" it by "running" through the text lines
- * and searching for "command" patterns that trigger some debugger related functionality (e.g. exceptions).
- * When it finds a command it typically emits an event.
- * The runtime can not only run through the whole file but also executes one line at a time
- * and stops on lines for which a breakpoint has been registered. This functionality is the
- * core of the "debugging support".
- * Since the MockRuntime is completely independent from VS Code or the Debug Adapter Protocol,
- * it can be viewed as a simplified representation of a real "execution engine" (e.g. node.js)
- * or debugger (e.g. gdb).
- * When implementing your own debugger extension for VS Code, you probably don't need this
- * class because you can rely on some existing debugger or runtime.
- */
 export class MockRuntime extends EventEmitter {
 
 	// the initial (and one and only) file we are 'debugging'
-	private _sourceFile: string = '';
-	public get sourceFile() {
-		return this._sourceFile;
-	}
+
 
 	private variables = new Map<string, RuntimeVariable>();
 
 	// the contents (= lines) of the one and only file
 	private sourceLines: string[] = [];
-	private instructions: Word[] = [];
-	private starts: number[] = [];
-	private ends: number[] = [];
+
+	// #region ReTI
+	private _sourceFile: string = '';
+	public get sourceFile() {
+		return this._sourceFile;
+	}
+
+	private _sourceLines: string[] = [];
+	private _instructions: string[][] = [];
+	private _linesToInstructions: number[] = [];
+	
+	private _emulator: Emulator = new Emulator([], []);
+
+	private _breakPoints = new Map<string, IRetiBreakpoint[]>;
 
 	// This is the next line that will be 'executed'
 	private _currentLine = 0;
@@ -128,6 +133,16 @@ export class MockRuntime extends EventEmitter {
 		this._currentLine = x;
 		this.instruction = this.starts[x];
 	}
+
+	private _breakPointsID = 0;
+	// #endregion
+
+	// Todo: Remove
+	private instructions: Word[] = [];
+	private starts: number[] = [];
+	private ends: number[] = [];
+
+
 	private currentColumn: number | undefined;
 
 	// This is the next instruction that will be 'executed'
@@ -158,7 +173,10 @@ export class MockRuntime extends EventEmitter {
 	 */
 	public async start(program: string, stopOnEntry: boolean, debug: boolean): Promise<void> {
 
+		// Emulator is created here.
 		await this.loadSource(this.normalizePathAndCasing(program));
+
+
 
 		if (debug) {
 			await this.verifyBreakpoints(this._sourceFile);
@@ -476,6 +494,7 @@ export class MockRuntime extends EventEmitter {
 	}
 
 	private initializeContents(memory: Uint8Array) {
+		// TODO: Remove
 		this.sourceLines = new TextDecoder().decode(memory).split(/\r?\n/);
 
 		this.instructions = [];
@@ -492,6 +511,33 @@ export class MockRuntime extends EventEmitter {
 			}
 			this.ends.push(this.instructions.length);
 		}
+		// ReTI
+		this._instructions = parseString(new TextDecoder().decode(memory));
+		this._sourceLines = new TextDecoder().decode(memory).split(/\r?\n/);
+
+		let instructions: number[] = [];
+		let num_instr = 0;
+		for (let i = 0; i < this._sourceLines.length; i++) {
+			// If its a comment only the line count is updated.
+			if (this._sourceLines[i].startsWith(";")) {
+				this._linesToInstructions.push(-1);
+				continue;
+			}
+			let [err, instr, msg] = assembleLine(this._instructions[num_instr]);
+			if (err !== -1) {
+				instructions.push(instr);
+				num_instr++;
+				this._linesToInstructions.push(num_instr);
+			}
+			else {
+				// TODO: What to do with unparsable code?
+				// How to send error message?
+				this.sendEvent("stopOnException", msg);
+				return;
+			}
+		}
+		// TODO: Add way to parse data or ReTI-State.
+		this._emulator = new Emulator(instructions, []);
 	}
 
 	/**
@@ -666,6 +712,8 @@ export class MockRuntime extends EventEmitter {
 				}
 			});
 		}
+
+		// Todo: Add ReTI logic
 	}
 
 	private sendEvent(event: string, ... args: any[]): void {

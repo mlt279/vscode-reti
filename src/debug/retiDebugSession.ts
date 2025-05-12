@@ -65,6 +65,7 @@ export class ReTIDebugSession extends LoggingDebugSession {
 		this._runtime = new MockRuntime(fileAccessor);
 
 		// setup event handlers
+
 		this._runtime.on('stopOnEntry', () => {
 			this.sendEvent(new StoppedEvent('entry', ReTIDebugSession.threadID));
 		});
@@ -82,17 +83,19 @@ export class ReTIDebugSession extends LoggingDebugSession {
 			this.sendEvent(new StoppedEvent('instruction breakpoint', ReTIDebugSession.threadID));
 		});
 
-		this._runtime.on('stopOnException', (exception) => {
-			if (exception) {
-				this.sendEvent(new StoppedEvent(`exception(${exception})`, ReTIDebugSession.threadID));
+		this._runtime.on('breakpointValidated', (bp: IRuntimeBreakpoint) => {
+			this.sendEvent(new BreakpointEvent('changed', { verified: bp.verified, id: bp.id } as DebugProtocol.Breakpoint));
+		});
+
+		// TODO: What to do with not parsable code?
+		this._runtime.on('stopOnException', (msg) => {
+			if (msg) {
+				this.sendEvent(new StoppedEvent(`exception(${msg})`, ReTIDebugSession.threadID));
 			} else {
 				this.sendEvent(new StoppedEvent('exception', ReTIDebugSession.threadID));
 			}
 		});
 
-		this._runtime.on('breakpointValidated', (bp: IRuntimeBreakpoint) => {
-			this.sendEvent(new BreakpointEvent('changed', { verified: bp.verified, id: bp.id } as DebugProtocol.Breakpoint));
-		});
 		this._runtime.on('output', (type, text, filePath, line, column) => {
 
 			let category: string;
@@ -682,40 +685,6 @@ export class ReTIDebugSession extends LoggingDebugSession {
 
 		this.sendResponse(response);
 	}
-
-	// protected completionsRequest(response: DebugProtocol.CompletionsResponse, args: DebugProtocol.CompletionsArguments): void {
-
-	// 	response.body = {
-	// 		targets: [
-	// 			{
-	// 				label: "item 10",
-	// 				sortText: "10"
-	// 			},
-	// 			{
-	// 				label: "item 1",
-	// 				sortText: "01",
-	// 				detail: "detail 1"
-	// 			},
-	// 			{
-	// 				label: "item 2",
-	// 				sortText: "02",
-	// 				detail: "detail 2"
-	// 			},
-	// 			{
-	// 				label: "array[]",
-	// 				selectionStart: 6,
-	// 				sortText: "03"
-	// 			},
-	// 			{
-	// 				label: "func(arg)",
-	// 				selectionStart: 5,
-	// 				selectionLength: 3,
-	// 				sortText: "04"
-	// 			}
-	// 		]
-	// 	};
-	// 	this.sendResponse(response);
-	// }
 
 	protected cancelRequest(response: DebugProtocol.CancelResponse, args: DebugProtocol.CancelArguments) {
 		if (args.requestId) {

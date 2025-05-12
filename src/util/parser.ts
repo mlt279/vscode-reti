@@ -18,13 +18,19 @@ import * as path from 'path';
 
 // Takes a valid .reti document and returns an array containing each instruction split into its components.
 export function parseDotReti(document: vscode.TextDocument): string[][] {
-    document.getText();
-    let instructionStrings: string[] = document.getText()
-                                                .split(/\r?\n/)
-                                                .map(line => line.split(';')[0].trim())
-                                                .filter(instruction => instruction !== '');  
+    return parseString(document.getText());
+}
+
+export function parseString(code: string): string[][] {
+    let instructionStrings: string[] = code.split(/\r?\n/).map(line => line.split(';')[0].trim()).filter(instruction => instruction !== '');  
     let instructionsSplit: string[][] = instructionStrings.map(instruction => instruction.split(' ').map(component => component.trim()).filter(component => component !== ""));
-    return instructionsSplit;
+    return instructionsSplit;   
+}
+
+export function parseLine(line: string): string[] {
+    let instruction = line.split(';')[0].trim();
+    let split = instruction.split(' ').map(component => component.trim()).filter(component => component !== "");
+    return split;
 }
 
 export function parseDotRetiAs(document: vscode.TextDocument): number[] {

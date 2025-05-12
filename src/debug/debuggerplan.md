@@ -1,3 +1,5 @@
+extension <-> activateReTIDebug <-> retiDebugSession <-> retiDebugger (runtime)
+
 ReTIDebugger {
     1. constructor
     2. loadSource
@@ -47,7 +49,6 @@ ReTIDebugger {
 
 
 
-extension <-> activateReTIDebug <-> retiDebugSession <-> retiDebugger (runtime)
 
 TODO:
 retiDebugger:

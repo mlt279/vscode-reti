@@ -1,5 +1,8 @@
 import EventEmitter from "events";
 import { Emulator } from "../reti/emulator";
+import { assembleFile, assembleLine } from "../reti/assembler";
+import { parseString } from "../util/parser";
+import { registerCode } from "../reti/retiStructure";
 
 export interface FileAccessor {
 	isWindows: boolean;
@@ -9,13 +12,14 @@ export interface FileAccessor {
 
 export interface IRetiBreakpoint {
     id: number;
-    line: number;
+	line: number;
+	verified: boolean;
     instruction: number;
 }
 
 export class ReTIDebugger extends EventEmitter {
     private _sourceFile: string = "";
-    private _lines: string[] = [];
+    private _lines: string[][] = [];
     
     private _emulator: Emulator = new Emulator([], []);
 
@@ -30,7 +34,9 @@ export class ReTIDebugger extends EventEmitter {
     }
 
     public async run() {
-
+        await this.loadSource(this._sourceFile);
+        this._currentline = 0;
+        this.sendEvent("stopOnEntry");
     }
 
     public continue() {
@@ -38,7 +44,13 @@ export class ReTIDebugger extends EventEmitter {
     }
 
     public step() {
-
+        let pc = this._emulator.getRegister(registerCode.PC);
+        // TODO: Make sure this works with the actual instructions.
+        if (pc < this._lines.length) {
+            this._emulator.step();
+            this.sendEvent('stopOnStep');
+            this._currentline++;
+        }
     }
 
     private updateCurrentLine(): boolean {
@@ -63,6 +75,7 @@ export class ReTIDebugger extends EventEmitter {
         path = this.normalizePathAndCasing(path);
 
         const bp: IRetiBreakpoint = {
+            verified: false,
             line: line, 
             id: this._breakPointsID++, 
             instruction: 0 
@@ -77,6 +90,10 @@ export class ReTIDebugger extends EventEmitter {
         await this.verifyBreakpoints(path);
 
         return bp;
+    }
+
+    public getBreakpoints(path: string, line: number): number[] {
+        return [];
     }
 
 	public clearBreakpoints(path: string): void {
@@ -97,7 +114,7 @@ export class ReTIDebugger extends EventEmitter {
 
     }
 
-    // _______________________________________________________________________
+    // ________________________________________________________________________
     private async loadSource(file: string): Promise<void> {
 		if (this._sourceFile !== file) {
 			this._sourceFile = this.normalizePathAndCasing(file);
@@ -105,10 +122,27 @@ export class ReTIDebugger extends EventEmitter {
 		}
 	}
 
-    private initializeContents(something: any) {
-
+    // ________________________________________________________________________
+    private async initializeContents(memory: Uint8Array): Promise<void> {
+        this._lines = parseString(new TextDecoder().decode(memory));
+        let instructions: number[] = [];
+        for (let i = 0; i < this._lines.length; i++) {
+            /**
+             * TODO: Whats with comments?
+             */
+            let [err, instr, msg] = assembleLine(this._lines[i]);
+            if (err !== -1) {
+                instructions.push(instr);
+            }
+            else {
+                this.sendEvent("Assembly error", msg);
+                return;
+            }
+        }
+        this._emulator = new Emulator(instructions, []);
     }
 
+    // ________________________________________________________________________
     private async verifyBreakpoints(path: string): Promise<void> {
 
     }
