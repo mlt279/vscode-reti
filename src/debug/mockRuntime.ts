@@ -228,11 +228,9 @@ export class MockRuntime extends EventEmitter {
 	}
 
 	private updateCurrentLine(): boolean {
-		if (this.currentLine < this.sourceLines.length-1) {
+		if (this.currentLine < this._sourceLines.length - 1) {
 			this.currentLine++;
 		} else {
-			// no more lines: run to end
-			this.currentColumn = undefined;
 			this.sendEvent('end');
 			return true;
 		}
