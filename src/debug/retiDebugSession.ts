@@ -471,12 +471,12 @@ export class ReTIDebugSession extends LoggingDebugSession {
 	// }
 
 	protected continueRequest(response: DebugProtocol.ContinueResponse, args: DebugProtocol.ContinueArguments): void {
-		this._runtime.continue(false);
+		this._runtime.continue();
 		this.sendResponse(response);
 	}
 
 	protected nextRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments): void {
-		this._runtime.step(args.granularity === 'instruction', false);
+		this._runtime.step(args.granularity === 'instruction');
 		this.sendResponse(response);
 	}
 
