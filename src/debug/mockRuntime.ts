@@ -171,25 +171,28 @@ export class MockRuntime extends EventEmitter {
 	/**
 	 * Start executing the given program.
 	 */
-	public async start(program: string, stopOnEntry: boolean, debug: boolean): Promise<void> {
+	public async start(program: string, stopOnEntry: boolean, debug: boolean): Promise<boolean> {
 
 		// Emulator is created here.
-		await this.loadSource(this.normalizePathAndCasing(program));
+		if (await this.loadSource(this.normalizePathAndCasing(program))) {
+			if (debug) {
+				await this.verifyBreakpoints(this._sourceFile);
 
-
-
-		if (debug) {
-			await this.verifyBreakpoints(this._sourceFile);
-
-			if (stopOnEntry) {
-				this.findNextStatement(false, 'stopOnEntry');
+				if (stopOnEntry) {
+					this.findNextStatement(false, 'stopOnEntry');
+				} else {
+					// we just start to run until we hit a breakpoint, an exception, or the end of the program
+					this.continue(false);
+				}
 			} else {
-				// we just start to run until we hit a breakpoint, an exception, or the end of the program
 				this.continue(false);
 			}
+			return true;
 		} else {
-			this.continue(false);
+			return false;
 		}
+
+
 	}
 
 	/**
@@ -486,14 +489,15 @@ export class MockRuntime extends EventEmitter {
 		return words;
 	}
 
-	private async loadSource(file: string): Promise<void> {
+	private async loadSource(file: string): Promise<boolean> {
 		if (this._sourceFile !== file) {
 			this._sourceFile = this.normalizePathAndCasing(file);
-			this.initializeContents(await this.fileAccessor.readFile(file));
+			return this.initializeContents(await this.fileAccessor.readFile(file));
 		}
+		return true;
 	}
 
-	private initializeContents(memory: Uint8Array) {
+	private initializeContents(memory: Uint8Array): boolean {
 		// TODO: Remove
 		this.sourceLines = new TextDecoder().decode(memory).split(/\r?\n/);
 
@@ -530,14 +534,12 @@ export class MockRuntime extends EventEmitter {
 				this._linesToInstructions.push(num_instr);
 			}
 			else {
-				// TODO: What to do with unparsable code?
-				// How to send error message?
-				this.sendEvent("stopOnException", msg);
-				return;
+				return false;
 			}
 		}
 		// TODO: Add way to parse data or ReTI-State.
 		this._emulator = new Emulator(instructions, []);
+		return true;
 	}
 
 	/**
@@ -695,17 +697,13 @@ export class MockRuntime extends EventEmitter {
 				if (!bp.verified && bp.line < this.sourceLines.length) {
 					const srcLine = this.getLine(bp.line);
 
-					// if a line is empty or starts with '+' we don't allow to set a breakpoint but move the breakpoint down
-					if (srcLine.length === 0 || srcLine.indexOf('+') === 0) {
+					// if a line is empty or starts with ';' we don't allow to set a breakpoint but move the breakpoint down
+					if (srcLine.length === 0 || srcLine.indexOf(';') === 0) {
 						bp.line++;
-					}
-					// if a line starts with '-' we don't allow to set a breakpoint but move the breakpoint up
-					if (srcLine.indexOf('-') === 0) {
-						bp.line--;
 					}
 					// don't set 'verified' to true if the line contains the word 'lazy'
 					// in this case the breakpoint will be verified 'lazy' after hitting it once.
-					if (srcLine.indexOf('lazy') < 0) {
+					if (srcLine.indexOf('lazy') / 0 < 0) {
 						bp.verified = true;
 						this.sendEvent('breakpointValidated', bp);
 					}

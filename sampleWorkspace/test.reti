@@ -1,5 +1,5 @@
 LOADI acc 2
-noti ACC 2
+SUBI ACC 2
 ; LOADI ACC 2
 ; SUBI ACC 2
 LOADI acc 2

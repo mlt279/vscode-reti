@@ -87,15 +87,6 @@ export class ReTIDebugSession extends LoggingDebugSession {
 			this.sendEvent(new BreakpointEvent('changed', { verified: bp.verified, id: bp.id } as DebugProtocol.Breakpoint));
 		});
 
-		// TODO: What to do with not parsable code?
-		this._runtime.on('stopOnException', (msg) => {
-			if (msg) {
-				this.sendEvent(new StoppedEvent(`exception(${msg})`, ReTIDebugSession.threadID));
-			} else {
-				this.sendEvent(new StoppedEvent('exception', ReTIDebugSession.threadID));
-			}
-		});
-
 		this._runtime.on('output', (type, text, filePath, line, column) => {
 
 			let category: string;
@@ -161,9 +152,6 @@ export class ReTIDebugSession extends LoggingDebugSession {
 		// make VS Code send the breakpointLocations request
 		response.body.supportsBreakpointLocationsRequest = true;
 
-		// // make VS Code provide "Step in Target" functionality
-		// response.body.supportsStepInTargetsRequest = true;
-
 		// // the adapter defines two exceptions filters, one with support for conditions.
 		// response.body.supportsExceptionFilterOptions = true;
 		// response.body.exceptionBreakpointFilters = [
@@ -207,14 +195,8 @@ export class ReTIDebugSession extends LoggingDebugSession {
 
 		response.body.supportSuspendDebuggee = true;
 		response.body.supportTerminateDebuggee = true;
-		// response.body.supportsFunctionBreakpoints = true;
-		// response.body.supportsDelayedStackTraceLoading = true;
 
 		this.sendResponse(response);
-
-		// since this debug adapter can accept configuration requests like 'setBreakpoint' at any time,
-		// we request them early by sending an 'initializeRequest' to the frontend.
-		// The frontend will end the configuration sequence by calling 'configurationDone' request.
 		this.sendEvent(new InitializedEvent());
 	}
 
@@ -246,18 +228,13 @@ export class ReTIDebugSession extends LoggingDebugSession {
 		await this._configurationDone.wait(1000);
 
 		// start the program in the runtime
-		await this._runtime.start(args.program, !!args.stopOnEntry, !args.noDebug);
-
-		if (args.compileError) {
-			// simulate a compile/build error in "launch" request:
-			// the error should not result in a modal dialog since 'showUser' is set to false.
-			// A missing 'showUser' should result in a modal dialog.
+		if (!await this._runtime.start(args.program, !!args.stopOnEntry, !args.noDebug)) {
 			this.sendErrorResponse(response, {
 				id: 1001,
-				format: `compile error: some fake error.`,
+				format: `assemble error`,
 				showUser: args.compileError === 'show' ? true : (args.compileError === 'hide' ? false : undefined)
 			});
-		} else {
+		}else {
 			this.sendResponse(response);
 		}
 	}
