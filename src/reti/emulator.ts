@@ -74,12 +74,12 @@ export class Emulator{
         }
     }
 
-    public step() {
+    public step(): number {
         const instruction = this.reti.getCode(this.reti.getRegister(registerCode.PC));
-        this.execute(instruction);
+        return this.execute(instruction);
     }
 
-    private execute(instruction: number | string[]): number {
+    public execute(instruction: number | string[]): number {
         if (typeof instruction !== 'number') {
             let errCode = 0;
             let errMessage = "";

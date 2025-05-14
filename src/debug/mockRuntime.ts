@@ -6,6 +6,7 @@ import { EventEmitter } from 'events';
 import { Emulator } from '../reti/emulator';
 import { assembleLine } from '../reti/assembler';
 import { parseString } from '../util/parser';
+import { registerCode } from '../reti/retiStructure';
 
 export interface FileAccessor {
 	isWindows: boolean;
@@ -119,6 +120,7 @@ export class MockRuntime extends EventEmitter {
 	private _sourceLines: string[] = [];
 	private _instructions: string[][] = [];
 	private _linesToInstructions: number[] = [];
+	private _instrToLines: number[] = [];
 	
 	private _emulator: Emulator = new Emulator([], []);
 
@@ -134,7 +136,7 @@ export class MockRuntime extends EventEmitter {
 		this.instruction = this.starts[x];
 	}
 
-	private _breakPointsID = 0;
+	private _breakPointsID = 1;
 	// #endregion
 
 	// Todo: Remove
@@ -229,12 +231,11 @@ export class MockRuntime extends EventEmitter {
 
 	private updateCurrentLine(): boolean {
 		if (this.currentLine < this._sourceLines.length - 1) {
-			this.currentLine++;
+			return false;
 		} else {
 			this.sendEvent('end');
 			return true;
 		}
-		return false;
 	}
 
 	/**
@@ -512,8 +513,9 @@ export class MockRuntime extends EventEmitter {
 			let [err, instr, msg] = assembleLine(this._instructions[num_instr]);
 			if (err !== -1) {
 				instructions.push(instr);
-				num_instr++;
 				this._linesToInstructions.push(num_instr);
+				this._instrToLines.push(i);
+				num_instr++;
 			}
 			else {
 				return false;
@@ -564,14 +566,26 @@ export class MockRuntime extends EventEmitter {
 	}
 
 	/**
-	 * "execute a line" of the readme markdown.
+	 * "execute a line" of the ReTI Code.
 	 * Returns true if execution sent out a stopped event and needs to stop.
 	 */
 	private executeLine(ln: number): boolean {
 		// TODO:
 		// 1. Map  line to corresponding instruction in emulator.
+		let instr_number = this._linesToInstructions[ln];
+		// If it is -1 the line is a comment.
+		if (instr_number === -1) { return false; }
 		// 2. Execute said line
+		let err_code = this._emulator.step();
+		if (err_code === 1) {
+			return true;
+		}
+		let new_pc = this._emulator.getRegister(registerCode.PC);
 
+		if (instr_number > this._instrToLines.length - 1) {
+			return true;
+		}
+		this.currentLine = this._instrToLines[new_pc];
 		// nothing interesting found -> continue
 		return false;
 	}
