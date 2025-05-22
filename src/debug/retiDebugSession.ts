@@ -377,8 +377,8 @@ export class ReTIDebugSession extends LoggingDebugSession {
 
 		response.body = {
 			scopes: [
-				new Scope("Locals", this._variableHandles.create('locals'), false),
-				new Scope("Globals", this._variableHandles.create('globals'), true)
+				new Scope("Registers", this._variableHandles.create('locals'), false),
+				// new Scope("Globals", this._variableHandles.create('globals'), true)
 			]
 		};
 		this.sendResponse(response);
@@ -495,67 +495,28 @@ export class ReTIDebugSession extends LoggingDebugSession {
 	}
 
 	protected async evaluateRequest(response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments): Promise<void> {
-		// let reply: string | undefined;
-		// let rv: RuntimeVariable | undefined;
+		let reply: string | undefined;
+		let rv: RuntimeVariable | undefined;
 
-		// switch (args.context) {
-		// 	case 'repl':
-		// 		// handle some REPL commands:
-		// 		// 'evaluate' supports to create and delete breakpoints from the 'repl':
-		// 		const matches = /new +([0-9]+)/.exec(args.expression);
-		// 		if (matches && matches.length === 2) {
-		// 			const mbp = await this._runtime.setBreakPoint(this._runtime.sourceFile, this.convertClientLineToDebugger(parseInt(matches[1])));
-		// 			const bp = new Breakpoint(mbp.verified, this.convertDebuggerLineToClient(mbp.line), undefined, this.createSource(this._runtime.sourceFile)) as DebugProtocol.Breakpoint;
-		// 			bp.id= mbp.id;
-		// 			this.sendEvent(new BreakpointEvent('new', bp));
-		// 			reply = `breakpoint created`;
-		// 		} else {
-		// 			const matches = /del +([0-9]+)/.exec(args.expression);
-		// 			if (matches && matches.length === 2) {
-		// 				const mbp = this._runtime.clearBreakPoint(this._runtime.sourceFile, this.convertClientLineToDebugger(parseInt(matches[1])));
-		// 				if (mbp) {
-		// 					const bp = new Breakpoint(false) as DebugProtocol.Breakpoint;
-		// 					bp.id= mbp.id;
-		// 					this.sendEvent(new BreakpointEvent('removed', bp));
-		// 					reply = `breakpoint deleted`;
-		// 				}
-		// 			} else {
-		// 				const matches = /progress/.exec(args.expression);
-		// 				if (matches && matches.length === 1) {
-		// 					if (this._reportProgress) {
-		// 						reply = `progress started`;
-		// 						this.progressSequence();
-		// 					} else {
-		// 						reply = `frontend doesn't support progress (capability 'supportsProgressReporting' not set)`;
-		// 					}
-		// 				}
-		// 			}
-		// 		}
-		// 		// fall through
-
-		// 	default:
-		// 		if (args.expression.startsWith('$')) {
-		// 			rv = this._runtime.getLocalVariable(args.expression.substr(1));
-		// 		} else {
-		// 			rv = new RuntimeVariable('eval', this.convertToRuntime(args.expression));
-		// 		}
-		// 		break;
-		// }
-
-		// if (rv) {
-		// 	const v = this.convertFromRuntime(rv);
-		// 	response.body = {
-		// 		result: v.value,
-		// 		type: v.type,
-		// 		variablesReference: v.variablesReference,
-		// 		presentationHint: v.presentationHint
-		// 	};
-		// } else {
-		// 	response.body = {
-		// 		result: reply ? reply : `evaluate(context: '${args.context}', '${args.expression}')`,
-		// 		variablesReference: 0
-		// 	};
-		// }
+		if (args.expression.startsWith('$')) {
+			rv = this._runtime.getLocalVariable(args.expression.substr(1));
+		} else {
+			rv = new RuntimeVariable('eval', 2);
+		}
+		if (rv) {
+			const v = this.convertFromRuntime(rv);
+			response.body = {
+				result: v.value,
+				type: v.type,
+				variablesReference: v.variablesReference,
+				presentationHint: v.presentationHint
+			};
+		} else {
+			response.body = {
+				result: reply ? reply : `evaluate(context: '${args.context}', '${args.expression}')`,
+				variablesReference: 0
+			};
+		}
 
 		this.sendResponse(response);
 	}

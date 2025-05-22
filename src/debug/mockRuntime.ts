@@ -52,6 +52,7 @@ interface RuntimeDisassembledInstruction {
 	instruction: string;
 	line?: number;
 }
+// TODO: Clean up
 export type IRuntimeVariableType = number | boolean | string | RuntimeVariable[];
 
 export class RuntimeVariable {
@@ -423,7 +424,15 @@ export class MockRuntime extends EventEmitter {
 	}
 
 	public getLocalVariables(): RuntimeVariable[] {
-		return Array.from(this.variables, ([name, value]) => value);
+		let ACC = new RuntimeVariable(
+			"ACC", this._emulator.getRegister(registerCode.ACC));
+		let IN1 = new RuntimeVariable(
+			"IN1", this._emulator.getRegister(registerCode.IN1));
+		let IN2 = new RuntimeVariable(
+			"IN2", this._emulator.getRegister(registerCode.IN2));
+		let PC = new RuntimeVariable(
+			"PC", this._emulator.getRegister(registerCode.PC));
+		return [ACC, IN1, IN2, PC];
 	}
 
 	public getLocalVariable(name: string): RuntimeVariable | undefined {
