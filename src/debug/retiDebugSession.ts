@@ -8,6 +8,7 @@ import {
 import { DebugProtocol } from '@vscode/debugprotocol';
 import { basename } from 'path-browserify';
 import { MockRuntime, IRuntimeBreakpoint, FileAccessor, RuntimeVariable } from './mockRuntime'; // timeout, IRuntimeVariableType
+import { parse } from 'path';
 
 const { Subject } = require('await-notify');
 
@@ -190,7 +191,7 @@ export class ReTIDebugSession extends LoggingDebugSession {
 
 		// Implement if time
 		// // make VS Code able to read and write variable memory
-		// response.body.supportsReadMemoryRequest = true;
+		response.body.supportsReadMemoryRequest = true;
 		// response.body.supportsWriteMemoryRequest = true;
 
 		response.body.supportSuspendDebuggee = true;
@@ -399,30 +400,38 @@ export class ReTIDebugSession extends LoggingDebugSession {
 	// 	this.sendEvent(new InvalidatedEvent(['variables']));
 	// }
 
-	// TODO: Implement if time
-	// protected async readMemoryRequest(response: DebugProtocol.ReadMemoryResponse, { offset = 0, count, memoryReference }: DebugProtocol.ReadMemoryArguments) {
-	// 	const variable = this._variableHandles.get(Number(memoryReference));
-	// 	if (typeof variable === 'object' && variable.memory) {
-	// 		const memory = variable.memory.subarray(
-	// 			Math.min(offset, variable.memory.length),
-	// 			Math.min(offset + count, variable.memory.length),
-	// 		);
+	protected async readMemoryRequest(
+		response: DebugProtocol.ReadMemoryResponse, 
+		{ offset = 0, count, memoryReference }: DebugProtocol.ReadMemoryArguments)
+	{
+		// const variable = this._variableHandles.get(Number(memoryReference));
+		// if (typeof variable === 'object' && variable.memory) {
+		// 	const memory = variable.memory.subarray(
+		// 		Math.min(offset, variable.memory.length),
+		// 		Math.min(offset + count, variable.memory.length),
+		// 	);
 
-	// 		response.body = {
-	// 			address: offset.toString(),
-	// 			data: base64.fromByteArray(memory),
-	// 			unreadableBytes: count - memory.length
-	// 		};
-	// 	} else {
-	// 		response.body = {
-	// 			address: offset.toString(),
-	// 			data: '',
-	// 			unreadableBytes: count
-	// 		};
-	// 	}
+		// 	response.body = {
+		// 		address: offset.toString(),
+		// 		data: base64.fromByteArray(memory),
+		// 		unreadableBytes: count - memory.length
+		// 	};
+		// } else {
+		// 	response.body = {
+		// 		address: offset.toString(),
+		// 		data: '',
+		// 		unreadableBytes: count
+		// 	};
+		// }
 
-	// 	this.sendResponse(response);
-	// }
+		response.body = {
+			address: memoryReference,
+			data: memoryReference,
+			unreadableBytes: count + offset
+		};
+
+		this.sendResponse(response);
+	}
 
 	protected async variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments, request?: DebugProtocol.Request): Promise<void> {
 
@@ -495,25 +504,19 @@ export class ReTIDebugSession extends LoggingDebugSession {
 	}
 
 	protected async evaluateRequest(response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments): Promise<void> {
-		let reply: string | undefined;
 		let rv: RuntimeVariable | undefined;
 
-		if (args.expression.startsWith('$')) {
-			rv = this._runtime.getLocalVariable(args.expression.substr(1));
-		} else {
-			rv = new RuntimeVariable('eval', 2);
-		}
+		rv = this._runtime.evaluate(args.expression);
+
 		if (rv) {
-			const v = this.convertFromRuntime(rv);
 			response.body = {
-				result: v.value,
-				type: v.type,
-				variablesReference: v.variablesReference,
-				presentationHint: v.presentationHint
+				result: rv.value.toString(),
+				variablesReference: 0,
+				presentationHint: {kind: 'data'},
 			};
 		} else {
 			response.body = {
-				result: reply ? reply : `evaluate(context: '${args.context}', '${args.expression}')`,
+				result: 'Invalid register or address.',
 				variablesReference: 0
 			};
 		}

@@ -328,6 +328,48 @@ export class MockRuntime extends EventEmitter {
 		};
 	}
 
+	public evaluate(expression: string): RuntimeVariable | undefined {
+		expression = expression.toLowerCase();
+		let value = 0;
+		switch (expression) {
+			case 'acc':
+				value = this._emulator.getRegister(registerCode.ACC);
+				break;
+			case 'in1':
+				value = this._emulator.getRegister(registerCode.IN1);
+				break;
+			case 'in2':
+				value = this._emulator.getRegister(registerCode.IN2);
+				break;
+			case 'pc':
+				value = this._emulator.getRegister(registerCode.PC);
+				break;
+			default:
+				if (expression.startsWith('0x')) {
+					try {
+						let address = parseInt(expression, 16);
+						if (Number.isNaN(address)) {
+							return undefined;
+						}
+						value = this._emulator.getData(address);
+					} catch(e) {
+						return undefined;
+					}
+				} else {
+					try {
+						let address = parseInt(expression, 10);
+						if (Number.isNaN(address)) {
+							return undefined;
+						}
+						value = this._emulator.getData(address);
+					} catch(e) {
+						return undefined;
+					}
+				}
+		}
+		return new RuntimeVariable(expression, value);
+	}
+
 	/*
 	 * Determine possible column breakpoint positions for the given line.
 	 * Here we return the start location of words with more than 8 characters.
