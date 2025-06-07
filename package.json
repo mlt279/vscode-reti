@@ -200,7 +200,7 @@
           "command": "reti.assemble",
           "when": "editorLangId == 'reti'",
           "group": "navigation@4",
-          "tooltip": "Emulate ReTI Code, Ctrl+Alt+E."
+          "tooltip": "Emulate ReTI Code, Ctrl+Alt+A."
         },
         {
           "command": "reti.stopEmulation",
@@ -220,12 +220,13 @@
           "command": "reti.emulate",
           "when": "editorLangId == 'reti' || editorLangId == 'retias'",
           "group": "navigation@2",
-          "tooltip": "Assemble ReTI Code, Ctrl+Alt+A."
+          "tooltip": "Emulate ReTI Code, Ctrl+Alt+E."
         },
         {
-          "command": "reti.debug.debugEditorContents",
+          "command": "reti.debug",
           "when": "resourceLangId == reti",
-          "group": "navigation@2"
+          "group": "navigation@2",
+          "tooltip": "Debug ReTI Code, Ctrl+Alt+D."
         }        
       ]
     },
@@ -239,6 +240,16 @@
         "command": "reti.assemble",
         "key": "ctrl+alt+a",
         "when": "editorLangId == 'reti'"
+      },
+      {
+        "command": "reti.disassemble",
+        "key": "ctrl+alt+a",
+        "when": "editorLangId == 'retias'"
+      },
+      {
+        "command": "reti.debug",
+        "key": "ctrl+alt+d",
+        "when": "resourceLangId == reti"
       }
     ]
   },
