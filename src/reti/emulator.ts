@@ -14,6 +14,12 @@ export class Emulator{
         this.outPutChannel = outPutChannel;
     }
 
+    public isValidPC(pc: number): boolean {
+        // Turn pc into unsigned number.
+        pc = immediateUnsigned(pc);
+        return pc < this.reti.shadow.codeSize;
+    }
+
     public async emulate(token: vscode.CancellationToken, breakpoints?: Set<number>): Promise<ReTIState> {
         let end_cnd = "";
         while (true) {
@@ -106,6 +112,7 @@ export class Emulator{
     }
 
     // TODO: What should the real behaviour be when an invalid compute code is given? Abort or NOP?
+    // Idea: 00000 would be the end of code so stop the execution.
     private executeCompute(instruction: number): number {
         let mi = instruction >> 29 & 0b1;
         let f = instruction >> 26 & 0b111;

@@ -486,14 +486,12 @@ export class ReTIDebugSession extends LoggingDebugSession {
 
 	// Implemented as no-ops because they can't be deactivated.
 	protected stepInRequest(response: DebugProtocol.StepInResponse, args: DebugProtocol.StepInArguments): void {
-		this.nextRequest(response, args);
 		// this._runtime.stepIn(args.targetId);
 		// this.sendResponse(response);
 	}
 
 	// Implemented as no-ops because they can't be deactivated.
 	protected stepOutRequest(response: DebugProtocol.StepOutResponse, args: DebugProtocol.StepOutArguments): void {
-		this.nextRequest(response, args);
 		// this._runtime.stepOut();
 		// this.sendResponse(response);
 	}

@@ -8,7 +8,7 @@
 			"type": "reti",
 			"request": "launch",
 			"name": "Debug test.reti",
-			"program": "${workspaceFolder}/test3.reti",
+			"program": "${workspaceFolder}/test.reti",
 			"stopOnEntry": true,
 			"trace": false
 		},
@@ -16,7 +16,7 @@
 			"type": "reti",
 			"request": "attach",
 			"name": "Attach test.reti",
-			"program": "${workspaceFolder}/test3.reti",
+			"program": "${workspaceFolder}/test.reti",
 			"stopOnEntry": true,
 			"trace": false
 		}
