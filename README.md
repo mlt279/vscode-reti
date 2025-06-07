@@ -7,7 +7,20 @@ This is the README for your extension "reti-tools". After writing up a brief des
 
 ### Emulator
 
+### Disassembler
+
+### Assembler
+
 ### ReTI-Quiz
+
+### Debugger
+#### Breakpoints, Step, Continue
+
+#### Step In, Step Out
+
+#### Read (and Set) Registers
+
+#### Watch memory
 
 ## ReTI
 ### Commands
