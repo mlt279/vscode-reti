@@ -234,6 +234,10 @@ export class Emulator{
         return this.reti.getRegister(register);
     }
 
+    public setRegister(register: registerCode, value: number) {
+        this.reti.setRegister(register, value);
+    }
+
     public getData(address: number): number {
         return this.reti.getData(address);
     }

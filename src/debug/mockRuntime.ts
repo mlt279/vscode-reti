@@ -477,6 +477,25 @@ export class MockRuntime extends EventEmitter {
 		return [ACC, IN1, IN2, PC];
 	}
 
+	public setLocalVariables(name: string, value: number): RuntimeVariable | undefined {
+		switch (name.toLowerCase()) {
+			case "acc":
+				this._emulator.setRegister(registerCode.ACC, value);
+				break;
+			case "in1":
+				this._emulator.setRegister(registerCode.IN1, value);
+				break;
+			case "in2":
+				this._emulator.setRegister(registerCode.IN2, value);
+				break;
+			case "pc":
+				this._emulator.setRegister(registerCode.PC, value);
+				break;
+			default:
+				return undefined;
+		}
+	}
+
 	public getLocalVariable(name: string): RuntimeVariable | undefined {
 		return this.variables.get(name);
 	}

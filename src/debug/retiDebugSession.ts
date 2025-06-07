@@ -458,26 +458,21 @@ export class ReTIDebugSession extends LoggingDebugSession {
 		this.sendResponse(response);
 	}
 
-	// TODO: Implement if time
-	// protected setVariableRequest(response: DebugProtocol.SetVariableResponse, args: DebugProtocol.SetVariableArguments): void {
-	// 	const container = this._variableHandles.get(args.variablesReference);
-	// 	const rv = container === 'locals'
-	// 		? this._runtime.getLocalVariable(args.name)
-	// 		: container instanceof RuntimeVariable && container.value instanceof Array
-	// 		? container.value.find(v => v.name === args.name)
-	// 		: undefined;
+	protected setVariableRequest(response: DebugProtocol.SetVariableResponse, args: DebugProtocol.SetVariableArguments): void {
+		const container = this._variableHandles.get(args.variablesReference);
+		const rv = container === 'locals'
+			? this._runtime.getLocalVariable(args.name)
+			: container instanceof RuntimeVariable && container.value instanceof Array
+			? container.value.find(v => v.name === args.name)
+			: undefined;
 
-	// 	if (rv) {
-	// 		rv.value = this.convertToRuntime(args.value);
-	// 		response.body = this.convertFromRuntime(rv);
+		if (rv) {
+			rv.value = args.value;
+			response.body = this.convertFromRuntime(rv);
+		}
 
-	// 		if (rv.memory && rv.reference) {
-	// 			this.sendEvent(new MemoryEvent(String(rv.reference), 0, rv.memory.length));
-	// 		}
-	// 	}
-
-	// 	this.sendResponse(response);
-	// }
+		this.sendResponse(response);
+	}
 
 	protected continueRequest(response: DebugProtocol.ContinueResponse, args: DebugProtocol.ContinueArguments): void {
 		this._runtime.continue();
