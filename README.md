@@ -12,7 +12,7 @@ This is the README for your extension "reti-tools". After writing up a brief des
 ### Assembler
 
 ### ReTI-Quiz
-
+https://github.com/mlt279/reti-tools/blob/main/reti.md
 ### Debugger
 #### Breakpoints, Step, Continue
 
@@ -21,6 +21,8 @@ This is the README for your extension "reti-tools". After writing up a brief des
 #### Read (and Set) Registers
 
 #### Watch memory
+## ReTI
+
 
 ## Requirements
 
