@@ -4,7 +4,7 @@ This is the README for your extension "reti-tools". After writing up a brief des
 ## Features
 
 ## ReTI
-https://github.com/mlt279/reti-tools/blob/main/reti.md
+https://github.com/mlt279/reti-tools/wiki/Features
 
 ## Requirements
 
