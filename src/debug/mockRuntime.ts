@@ -224,7 +224,6 @@ export class MockRuntime extends EventEmitter {
 	}
 
 	private updateCurrentLine(): boolean {
-		// TODO: Make this use the reti pc length/ending instead
 		if (this._emulator.isValidPC(this._linesToInstructions[this.currentLine])) {
 			return false;
 		} else {
