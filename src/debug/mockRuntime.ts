@@ -329,6 +329,28 @@ export class MockRuntime extends EventEmitter {
 		};
 	}
 
+	public setRegister(name: string, value: number): RuntimeVariable | undefined {
+		switch (name.toLowerCase()) {
+			case 'acc':
+				this._emulator.setRegister(registerCode.ACC, value);
+				break;
+			case 'in1':
+				this._emulator.setRegister(registerCode.IN1, value);
+				break;
+			case 'in2':
+				this._emulator.setRegister(registerCode.IN2, value);
+				break;
+			case 'pc':
+				this._emulator.setRegister(registerCode.PC, value);
+				this.currentLine = this._instrToLines[this._emulator.getRegister(registerCode.PC)];
+				this.sendEvent('stopOnStep');
+				break;
+			default:
+				return undefined;
+		}
+		return new RuntimeVariable(name, value);
+	}
+
 	public evaluate(expression: string): RuntimeVariable | undefined {
 		expression = expression.toLowerCase();
 		let value = 0;
@@ -495,10 +517,6 @@ export class MockRuntime extends EventEmitter {
 			default:
 				return undefined;
 		}
-	}
-
-	public getLocalVariable(name: string): RuntimeVariable | undefined {
-		return this.variables.get(name);
 	}
 
 	/**

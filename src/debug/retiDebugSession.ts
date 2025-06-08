@@ -177,7 +177,7 @@ export class ReTIDebugSession extends LoggingDebugSession {
 		response.body.supportsExceptionInfoRequest = true;
 
 		// // make VS Code send setVariable request
-		// response.body.supportsSetVariable = true;
+		response.body.supportsSetVariable = true;
 
 		// Implement if time
 		// // make VS Code send setExpression request
@@ -461,13 +461,11 @@ export class ReTIDebugSession extends LoggingDebugSession {
 	protected setVariableRequest(response: DebugProtocol.SetVariableResponse, args: DebugProtocol.SetVariableArguments): void {
 		const container = this._variableHandles.get(args.variablesReference);
 		const rv = container === 'locals'
-			? this._runtime.getLocalVariable(args.name)
+			? this._runtime.setRegister(args.name, Number(args.value))
 			: container instanceof RuntimeVariable && container.value instanceof Array
 			? container.value.find(v => v.name === args.name)
 			: undefined;
-
 		if (rv) {
-			rv.value = args.value;
 			response.body = this.convertFromRuntime(rv);
 		}
 
