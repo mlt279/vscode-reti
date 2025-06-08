@@ -202,7 +202,6 @@ export class MockRuntime extends EventEmitter {
 	 * Continue execution to the end/beginning.
 	 */
 	public continue() {
-
 		while (!this.executeLine(this.currentLine)) {
 			if (this.updateCurrentLine()) {
 				break;
@@ -216,16 +215,10 @@ export class MockRuntime extends EventEmitter {
 	/**
 	 * Step to the next/previous non empty line.
 	 */
-	public step(instruction: boolean) {
-
-		if (instruction) {
-			this.instruction++;
-			this.sendEvent('stopOnStep');
-		} else {
-			if (!this.executeLine(this.currentLine)) {
-				if (!this.updateCurrentLine()) {
-					this.findNextStatement('stopOnStep');
-				}
+	public step() {
+		if (!this.executeLine(this.currentLine)) {
+			if (!this.updateCurrentLine()) {
+				this.findNextStatement('stopOnStep');
 			}
 		}
 	}

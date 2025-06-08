@@ -478,7 +478,7 @@ export class ReTIDebugSession extends LoggingDebugSession {
 	}
 
 	protected nextRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments): void {
-		this._runtime.step(args.granularity === 'instruction');
+		this._runtime.step();
 		this.sendResponse(response);
 	}
 
@@ -625,6 +625,11 @@ export class ReTIDebugSession extends LoggingDebugSession {
 		// if (args.progressId) {
 		// 	this._cancelledProgressId= args.progressId;
 		// }
+	}
+
+	protected pauseRequest(response: DebugProtocol.PauseResponse, args: DebugProtocol.PauseArguments): void {
+		// this._runtime.pause();
+		this.sendResponse(response);
 	}
 
 	// protected disassembleRequest(response: DebugProtocol.DisassembleResponse, args: DebugProtocol.DisassembleArguments) {
