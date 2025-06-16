@@ -10,7 +10,7 @@
 import * as vscode from 'vscode';
 import { WorkspaceFolder, DebugConfiguration, ProviderResult, CancellationToken } from 'vscode';
 import { ReTIDebugSession } from './retiDebugSession';
-import { FileAccessor } from './mockRuntime';
+import { FileAccessor } from './retiRuntime';
 
 export function activateReTIDebug(context: vscode.ExtensionContext, factory?: vscode.DebugAdapterDescriptorFactory) {
 
@@ -56,7 +56,7 @@ export function activateReTIDebug(context: vscode.ExtensionContext, factory?: vs
 
 	context.subscriptions.push(vscode.commands.registerCommand('reti.debug.getProgramName', config => {
 		return vscode.window.showInputBox({
-			placeHolder: "Please enter the name of a markdown file in the workspace folder",
+			placeHolder: "Please enter the name of a reti file in the workspace folder",
 			value: "readme.md"
 		});
 	}));
@@ -101,7 +101,7 @@ export function activateReTIDebug(context: vscode.ExtensionContext, factory?: vs
 
 	// override VS Code's default implementation of the debug hover
 	// here we match only Mock "variables", that are words starting with an '$'
-	context.subscriptions.push(vscode.languages.registerEvaluatableExpressionProvider('markdown', {
+	context.subscriptions.push(vscode.languages.registerEvaluatableExpressionProvider('reti', {
 		provideEvaluatableExpression(document: vscode.TextDocument, position: vscode.Position): vscode.ProviderResult<vscode.EvaluatableExpression> {
 
 			const VARIABLE_REGEXP = /\$[a-z][a-z0-9]*/ig;

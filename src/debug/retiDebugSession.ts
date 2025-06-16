@@ -7,7 +7,7 @@ import {
 } from '@vscode/debugadapter'; // MemoryEvent (setVariableRequest) ProgressStartEvent, ProgressUpdateEvent, ProgressEndEvent, 
 import { DebugProtocol } from '@vscode/debugprotocol';
 import { basename } from 'path-browserify';
-import { MockRuntime, IRuntimeBreakpoint, FileAccessor, RuntimeVariable } from './mockRuntime'; // timeout, IRuntimeVariableType
+import { MockRuntime, IRuntimeBreakpoint, FileAccessor, RuntimeVariable } from './retiRuntime'; // timeout, IRuntimeVariableType
 import { parse } from 'path';
 
 const { Subject } = require('await-notify');
@@ -70,10 +70,15 @@ export class ReTIDebugSession extends LoggingDebugSession {
 		this._runtime.on('stopOnEntry', () => {
 			this.sendEvent(new StoppedEvent('entry', ReTIDebugSession.threadID));
 		});
-		this._runtime.on('stopOnStep', () => {
-			this.sendEvent(new StoppedEvent('step', ReTIDebugSession.threadID));
+		this._runtime.on('stopOnStepIn', () => {
+			this.sendEvent(new StoppedEvent('stepIn', ReTIDebugSession.threadID));
 		});
-
+		this._runtime.on('stopOnStepOver', () => {
+			this.sendEvent(new StoppedEvent('stepOver', ReTIDebugSession.threadID));
+		});
+		this._runtime.on('stopOnStepOut', () => {
+			this.sendEvent(new StoppedEvent('stepOut', ReTIDebugSession.threadID));
+		});
 		this._runtime.on('stopOnBreakpoint', () => {
 			this.sendEvent(new StoppedEvent('breakpoint', ReTIDebugSession.threadID));
 		});
@@ -88,27 +93,6 @@ export class ReTIDebugSession extends LoggingDebugSession {
 			this.sendEvent(new BreakpointEvent('changed', { verified: bp.verified, id: bp.id } as DebugProtocol.Breakpoint));
 		});
 
-		this._runtime.on('output', (type, text, filePath, line, column) => {
-
-			let category: string;
-			switch(type) {
-				case 'prio': category = 'important'; break;
-				case 'out': category = 'stdout'; break;
-				case 'err': category = 'stderr'; break;
-				default: category = 'console'; break;
-			}
-			const e: DebugProtocol.OutputEvent = new OutputEvent(`${text}\n`, category);
-
-			if (text === 'start' || text === 'startCollapsed' || text === 'end') {
-				e.body.group = text;
-				e.body.output = `group-${text}\n`;
-			}
-
-			e.body.source = this.createSource(filePath);
-			e.body.line = this.convertDebuggerLineToClient(line);
-			e.body.column = this.convertDebuggerColumnToClient(column);
-			this.sendEvent(e);
-		});
 		this._runtime.on('end', () => {
 			this.sendEvent(new TerminatedEvent());
 		});
@@ -119,14 +103,6 @@ export class ReTIDebugSession extends LoggingDebugSession {
 	 * to interrogate the features the debug adapter provides.
 	 */
 	protected initializeRequest(response: DebugProtocol.InitializeResponse, args: DebugProtocol.InitializeRequestArguments): void {
-
-		// if (args.supportsProgressReporting) {
-		// 	this._reportProgress = true;
-		// }
-		// if (args.supportsInvalidatedEvent) {
-		// 	this._useInvalidatedEvent = true;
-		// }
-
 		// build and return the capabilities of this debug adapter:
 		response.body = response.body || {};
 
@@ -136,9 +112,6 @@ export class ReTIDebugSession extends LoggingDebugSession {
 		// Deactivated for now, would be interesting for registers.
 		// // make VS Code use 'evaluate' when hovering over source
 		// response.body.supportsEvaluateForHovers = true;
-
-		// make VS Code show a 'step back' button
-		// response.body.supportsStepBack = true;
 
 		// make VS Code support data breakpoints
 		response.body.supportsDataBreakpoints = true;
@@ -284,36 +257,6 @@ export class ReTIDebugSession extends LoggingDebugSession {
 		this.sendResponse(response);
 	}
 
-	// Implement maybe
-	// protected async setExceptionBreakPointsRequest(response: DebugProtocol.SetExceptionBreakpointsResponse, args: DebugProtocol.SetExceptionBreakpointsArguments): Promise<void> {
-
-	// 	let namedException: string | undefined = undefined;
-	// 	let otherExceptions = false;
-
-	// 	if (args.filterOptions) {
-	// 		for (const filterOption of args.filterOptions) {
-	// 			switch (filterOption.filterId) {
-	// 				case 'namedException':
-	// 					namedException = args.filterOptions[0].condition;
-	// 					break;
-	// 				case 'otherExceptions':
-	// 					otherExceptions = true;
-	// 					break;
-	// 			}
-	// 		}
-	// 	}
-
-	// 	if (args.filters) {
-	// 		if (args.filters.indexOf('otherExceptions') >= 0) {
-	// 			otherExceptions = true;
-	// 		}
-	// 	}
-
-	// 	this._runtime.setExceptionsFilters(namedException, otherExceptions);
-
-	// 	this.sendResponse(response);
-	// }
-
 	protected exceptionInfoRequest(response: DebugProtocol.ExceptionInfoResponse, args: DebugProtocol.ExceptionInfoArguments) {
 		response.body = {
 			exceptionId: 'Exception ID',
@@ -373,13 +316,12 @@ export class ReTIDebugSession extends LoggingDebugSession {
 		this.sendResponse(response);
 	}
 
-	// Likely can't be deactivated. Idea: Return "locals" ~ "registers" and "data" ~ "globals"
+	// Likely can't be deactivated. Return "locals" ~ "registers"
 	protected scopesRequest(response: DebugProtocol.ScopesResponse, args: DebugProtocol.ScopesArguments): void {
 
 		response.body = {
 			scopes: [
-				new Scope("Registers", this._variableHandles.create('locals'), false),
-				// new Scope("Globals", this._variableHandles.create('globals'), true)
+				new Scope("Registers", this._variableHandles.create('locals'), false)
 			]
 		};
 		this.sendResponse(response);
@@ -478,20 +420,20 @@ export class ReTIDebugSession extends LoggingDebugSession {
 	}
 
 	protected nextRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments): void {
-		this._runtime.step();
+		this._runtime.stepOver();
 		this.sendResponse(response);
 	}
 
 	// Implemented as no-ops because they can't be deactivated.
 	protected stepInRequest(response: DebugProtocol.StepInResponse, args: DebugProtocol.StepInArguments): void {
-		// this._runtime.stepIn(args.targetId);
-		// this.sendResponse(response);
+		this._runtime.stepIn();
+		this.sendResponse(response);
 	}
 
 	// Implemented as no-ops because they can't be deactivated.
 	protected stepOutRequest(response: DebugProtocol.StepOutResponse, args: DebugProtocol.StepOutArguments): void {
-		// this._runtime.stepOut();
-		// this.sendResponse(response);
+		this._runtime.stepOut();
+		this.sendResponse(response);
 	}
 
 	protected async evaluateRequest(response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments): Promise<void> {
@@ -514,63 +456,6 @@ export class ReTIDebugSession extends LoggingDebugSession {
 
 		this.sendResponse(response);
 	}
-
-	// TODO: Implement if time
-	// protected setExpressionRequest(response: DebugProtocol.SetExpressionResponse, args: DebugProtocol.SetExpressionArguments): void {
-
-	// 	if (args.expression.startsWith('$')) {
-	// 		const rv = this._runtime.getLocalVariable(args.expression.substr(1));
-	// 		if (rv) {
-	// 			rv.value = this.convertToRuntime(args.value);
-	// 			response.body = this.convertFromRuntime(rv);
-	// 			this.sendResponse(response);
-	// 		} else {
-	// 			this.sendErrorResponse(response, {
-	// 				id: 1002,
-	// 				format: `variable '{lexpr}' not found`,
-	// 				variables: { lexpr: args.expression },
-	// 				showUser: true
-	// 			});
-	// 		}
-	// 	} else {
-	// 		this.sendErrorResponse(response, {
-	// 			id: 1003,
-	// 			format: `'{lexpr}' not an assignable expression`,
-	// 			variables: { lexpr: args.expression },
-	// 			showUser: true
-	// 		});
-	// 	}
-	// }
-
-	// private async progressSequence() {
-		// const ID = '' + this._progressId++;
-
-		// await timeout(100);
-
-		// const title = this._isProgressCancellable ? 'Cancellable operation' : 'Long running operation';
-		// const startEvent: DebugProtocol.ProgressStartEvent = new ProgressStartEvent(ID, title);
-		// startEvent.body.cancellable = this._isProgressCancellable;
-		// this._isProgressCancellable = !this._isProgressCancellable;
-		// this.sendEvent(startEvent);
-		// this.sendEvent(new OutputEvent(`start progress: ${ID}\n`));
-
-		// let endMessage = 'progress ended';
-
-		// for (let i = 0; i < 100; i++) {
-		// 	await timeout(500);
-		// 	this.sendEvent(new ProgressUpdateEvent(ID, `progress: ${i}`));
-		// 	if (this._cancelledProgressId === ID) {
-		// 		endMessage = 'progress cancelled';
-		// 		this._cancelledProgressId = undefined;
-		// 		this.sendEvent(new OutputEvent(`cancel progress: ${ID}\n`));
-		// 		break;
-		// 	}
-		// }
-		// this.sendEvent(new ProgressEndEvent(ID, endMessage));
-		// this.sendEvent(new OutputEvent(`end progress: ${ID}\n`));
-
-		// this._cancelledProgressId = undefined;
-	// }
 
 	protected dataBreakpointInfoRequest(response: DebugProtocol.DataBreakpointInfoResponse, args: DebugProtocol.DataBreakpointInfoArguments): void {
 

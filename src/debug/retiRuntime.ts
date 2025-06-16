@@ -14,7 +14,6 @@ export interface FileAccessor {
 	writeFile(path: string, contents: Uint8Array): Promise<void>;
 }
 
-// TODO: Remove
 export interface IRuntimeBreakpoint {
 	id: number;
 	line: number;
@@ -126,6 +125,7 @@ export class MockRuntime extends EventEmitter {
 	private _emulator: Emulator = new Emulator([], []);
 
 	private _breakPoints = new Map<string, IRetiBreakpoint[]>;
+	private _returnStack: number[] = [];
 
 	// This is the next line that will be 'executed'
 	private _currentLine = 0;
@@ -198,6 +198,17 @@ export class MockRuntime extends EventEmitter {
 
 	}
 
+
+
+	private updateCurrentLine(): boolean {
+		if (this._emulator.isValidPC(this._linesToInstructions[this.currentLine])) {
+			return false;
+		} else {
+			this.sendEvent('end');
+			return true;
+		}
+	}
+
 	/**
 	 * Continue execution to the end/beginning.
 	 */
@@ -212,56 +223,76 @@ export class MockRuntime extends EventEmitter {
 		}
 	}
 
+
 	/**
-	 * Step to the next/previous non empty line.
+	 * "Step into" means step to the next instruction.
 	 */
-	public step() {
+	public stepIn() {
 		if (!this.executeLine(this.currentLine)) {
 			if (!this.updateCurrentLine()) {
-				this.findNextStatement('stopOnStep');
+				this.findNextStatement('stopOnStepIn');
 			}
 		}
 	}
-
-	private updateCurrentLine(): boolean {
-		if (this._emulator.isValidPC(this._linesToInstructions[this.currentLine])) {
-			return false;
+	/**
+	 * "Step over" for ReTI means: If PC is the address of the JUMP instruction
+	 * execute code until PC + 1 is reached.
+	 */
+	public stepOver() {
+		if (this.isJumpInstruction()) {
+			let pc = this._emulator.getRegister(registerCode.PC);
+			while (true) {
+				if (this.executeLine(this.currentLine)) {
+					break;
+				}
+				if (this.updateCurrentLine()) {
+					break;
+				}
+				if (this.findNextStatement()) {
+					break;
+				}
+				let nextPc = this._emulator.getRegister(registerCode.PC);
+				if (nextPc === pc + 1) {
+					this.sendEvent('stopOnStepOver');
+					break;
+				}
+			}
 		} else {
-			this.sendEvent('end');
+			this.stepIn();
+		}
+	}
+
+	private isJumpInstruction(): boolean {
+		let line = this.getLine().toLowerCase().split(' ');
+		if (line[0].startsWith('jump')) {
 			return true;
 		}
-	}
-
-	/**
-	 * "Step into" for Mock debug means: go to next character
-	 */
-	public stepIn(targetId: number | undefined) {
-		if (typeof targetId === 'number') {
-			this.currentColumn = targetId;
-			this.sendEvent('stopOnStep');
-		} else {
-			if (typeof this.currentColumn === 'number') {
-				if (this.currentColumn <= this.sourceLines[this.currentLine].length) {
-					this.currentColumn += 1;
-				}
-			} else {
-				this.currentColumn = 1;
+		if (line[0].startsWith('move') && line.length > 2) {
+			if (line[2] === 'pc') {
+				return true;
 			}
-			this.sendEvent('stopOnStep');
 		}
+		return false;
 	}
 
 	/**
-	 * "Step out" for Mock debug means: go to previous character
+	 * "Step out" for Mock debug means: 
+	 * 1. If the stack is empty behaves like normal "continue"
+	 * 2. If the stack is not empty, we continue until the PC saved in
+	 *   the return stack is reached.
 	 */
 	public stepOut() {
-		if (typeof this.currentColumn === 'number') {
-			this.currentColumn -= 1;
-			if (this.currentColumn === 0) {
-				this.currentColumn = undefined;
+		while (true) {
+			if (this.executeLine(this.currentLine)) {
+				break;
+			}
+			if (this.updateCurrentLine()) {
+				break;
+			}
+			if (this.findNextStatement()) {
+				break;
 			}
 		}
-		this.sendEvent('stopOnStep');
 	}
 
 	public getStepInTargets(frameId: number): IRuntimeStepInTargets[] {
@@ -579,6 +610,12 @@ export class MockRuntime extends EventEmitter {
 		// ReTI
 		this._instructions = parseString(new TextDecoder().decode(memory));
 		this._sourceLines = new TextDecoder().decode(memory).split(/\r?\n/);
+		if (this._linesToInstructions.length > 0) {
+			this._linesToInstructions = [];
+		}
+		if (this._instrToLines.length > 0) {
+			this._instrToLines = [];
+		}
 
 		let instructions: number[] = [];
 		let num_instr = 0;
@@ -617,9 +654,6 @@ export class MockRuntime extends EventEmitter {
 
 					// send 'stopped' event
 					this.sendEvent('stopOnBreakpoint');
-
-					// the following shows the use of 'breakpoint' events to update properties of a breakpoint in the UI
-					// if breakpoint is not yet verified, verify it now and send a 'breakpoint' update event
 					if (!bps[0].verified) {
 						bps[0].verified = true;
 						this.sendEvent('breakpointValidated', bps[0]);
@@ -648,7 +682,6 @@ export class MockRuntime extends EventEmitter {
 	 * Returns true if execution sent out a stopped event and needs to stop.
 	 */
 	private executeLine(ln: number): boolean {
-		// TODO:
 		// 1. Map  line to corresponding instruction in emulator.
 		let instr_number = this._linesToInstructions[ln];
 		// If it is -1 the line is a comment.
