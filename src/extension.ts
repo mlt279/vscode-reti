@@ -228,7 +228,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	const DebugCommand = vscode.commands.registerCommand('reti.debug', async(resource: vscode.Uri) => {
 		vscode.debug.startDebugging( undefined, {
-			type: 'reti-debug',
+			type: 'reti',
 			name: "Debug ReTI",
 			request: "launch",
 			program: resource.fsPath,

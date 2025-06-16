@@ -285,9 +285,6 @@ export class MockRuntime extends EventEmitter {
 		});
 	}
 
-	/**
-	 * Returns a fake 'stacktrace' where every 'stackframe' is a word from the current line.
-	 */
 	public stack(startFrame: number, endFrame: number): IRuntimeStack {
 
 		const line = this.getLine();
