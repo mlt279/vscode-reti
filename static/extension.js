@@ -1,6 +1,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { Emulator } from './reti/emulator';
 import { parseDotReti, parseDotRetiAs } from './util/parser';
 import { showQuizPanel } from './ui/quizPanel';
@@ -9,13 +10,34 @@ import { decodeInstruction } from './reti/disassembler';
 import { binToHex, hexToBin } from './util/retiUtility';
 import { assembleFile, assembleLine } from './reti/assembler';
 import { stateToString } from './reti/retiStructure';
-import { ReTILanguageClient } from './language-server/client';
-let languageClient;
+import { LanguageClient, TransportKind } from 'vscode-languageclient/node';
+import * as Net from 'net';
+import { randomBytes } from 'crypto';
+import { tmpdir } from 'os';
+import { join } from 'path';
+import { platform } from 'process';
+import { ReTIDebugSession } from './debug/retiDebugSession';
+import { activateReTIDebug, workspaceFileAccessor } from './debug/activateReTIDebug';
+const runMode = 'inline';
+let languageClient = undefined;
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context) {
+    const serverModule = context.asAbsolutePath(path.join('out', 'language-server', 'server.js'));
+    let debugOptions = { execArgv: ['--nolazy', '--inspect=6009'] };
+    let serverOptions = {
+        run: { module: serverModule, transport: TransportKind.ipc },
+        debug: { module: serverModule, transport: TransportKind.ipc, options: debugOptions }
+    };
+    let clientOptions = {
+        documentSelector: [{ scheme: 'file', language: 'reti' }],
+        synchronize: {
+            fileEvents: vscode.workspace.createFileSystemWatcher('**/.clientrc')
+        }
+    };
+    languageClient = new LanguageClient('ReTI', 'ReTI Language Server', serverOptions, clientOptions);
+    languageClient.start();
     let emulateTokenSource = undefined;
-    languageClient = new ReTILanguageClient(context);
     const EmulateCommand = vscode.commands.registerCommand('reti.emulate', async () => {
         if (emulateTokenSource) {
             vscode.window.showErrorMessage("Emulation already in progress.");
@@ -170,11 +192,106 @@ export function activate(context) {
             await vscode.window.showTextDocument(tempFile);
         }
     });
-    context.subscriptions.push(EmulateCommand, QuizCommand, RandomCommand, AssembleCommand, StopEmulationCommand, DisassembleCommand);
+    const DebugCommand = vscode.commands.registerCommand('reti.debug', async (resource) => {
+        vscode.debug.startDebugging(undefined, {
+            type: 'reti',
+            name: "Debug ReTI",
+            request: "launch",
+            program: resource.fsPath,
+            stopOnEntry: true
+        });
+    });
+    context.subscriptions.push(EmulateCommand, QuizCommand, RandomCommand, AssembleCommand, StopEmulationCommand, DisassembleCommand, DebugCommand);
+    switch (runMode) {
+        case 'server':
+            // run the debug adapter as a server inside the extension and communicate via a socket
+            activateReTIDebug(context, new ReTIDebugAdapterServerDescriptorFactory());
+            break;
+        case 'namedPipeServer':
+            // run the debug adapter as a server inside the extension and communicate via a named pipe (Windows) or UNIX domain socket (non-Windows)
+            activateReTIDebug(context, new ReTIDebugAdapterNamedPipeServerDescriptorFactory());
+            break;
+        case 'external':
+        default:
+            // run the debug adapter as a separate process
+            activateReTIDebug(context, new DebugAdapterExecutableFactory());
+            break;
+        case 'inline':
+            // run the debug adapter inside the extension and directly talk to it
+            activateReTIDebug(context);
+            break;
+    }
+}
+class DebugAdapterExecutableFactory {
+    // The following use of a DebugAdapter factory shows how to control what debug adapter executable is used.
+    // Since the code implements the default behavior, it is absolutely not neccessary and we show it here only for educational purpose.
+    createDebugAdapterDescriptor(_session, executable) {
+        // param "executable" contains the executable optionally specified in the package.json (if any)
+        // use the executable specified in the package.json if it exists or determine it based on some other information (e.g. the session)
+        if (!executable) {
+            const command = "absolute path to my DA executable";
+            const args = [
+                "some args",
+                "another arg"
+            ];
+            const options = {
+                cwd: "working directory for executable",
+                env: { "envVariable": "some value" }
+            };
+            executable = new vscode.DebugAdapterExecutable(command, args, options);
+        }
+        // make VS Code launch the DA executable
+        return executable;
+    }
+}
+class ReTIDebugAdapterServerDescriptorFactory {
+    server;
+    createDebugAdapterDescriptor(session, executable) {
+        if (!this.server) {
+            // start listening on a random port
+            this.server = Net.createServer(socket => {
+                const session = new ReTIDebugSession(workspaceFileAccessor);
+                session.setRunAsServer(true);
+                session.start(socket, socket);
+            }).listen(0);
+        }
+        // make VS Code connect to debug server
+        return new vscode.DebugAdapterServer(this.server.address().port);
+    }
+    dispose() {
+        if (this.server) {
+            this.server.close();
+        }
+    }
+}
+class ReTIDebugAdapterNamedPipeServerDescriptorFactory {
+    server;
+    createDebugAdapterDescriptor(session, executable) {
+        if (!this.server) {
+            // start listening on a random named pipe path
+            const pipeName = randomBytes(10).toString('utf8');
+            const pipePath = platform === "win32" ? join('\\\\.\\pipe\\', pipeName) : join(tmpdir(), pipeName);
+            this.server = Net.createServer(socket => {
+                const session = new ReTIDebugSession(workspaceFileAccessor);
+                session.setRunAsServer(true);
+                session.start(socket, socket);
+            }).listen(pipePath);
+        }
+        // make VS Code connect to debug server
+        return new vscode.DebugAdapterNamedPipeServer(this.server.address());
+    }
+    dispose() {
+        if (this.server) {
+            this.server.close();
+        }
+    }
 }
 // This method is called when your extension is deactivated
 export function deactivate() {
     // Deactivate the language client
-    languageClient.deactivate();
+    if (!languageClient) {
+        return undefined;
+    }
+    return languageClient.stop();
 }
 //# sourceMappingURL=extension.js.map

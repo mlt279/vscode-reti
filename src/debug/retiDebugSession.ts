@@ -7,7 +7,7 @@ import {
 } from '@vscode/debugadapter'; // MemoryEvent (setVariableRequest) ProgressStartEvent, ProgressUpdateEvent, ProgressEndEvent, 
 import { DebugProtocol } from '@vscode/debugprotocol';
 import { basename } from 'path-browserify';
-import { MockRuntime, IRuntimeBreakpoint, FileAccessor, RuntimeVariable } from './retiRuntime'; // timeout, IRuntimeVariableType
+import { ReTIRuntime, IRuntimeBreakpoint, FileAccessor, RuntimeVariable } from './retiRuntime'; // timeout, IRuntimeVariableType
 import { parse } from 'path';
 
 const { Subject } = require('await-notify');
@@ -33,8 +33,7 @@ export class ReTIDebugSession extends LoggingDebugSession {
 	// we don't support multiple threads, so we can use a hardcoded ID for the default thread
 	private static threadID = 1;
 
-	// a Mock runtime (or debugger)
-	private _runtime: MockRuntime;
+	private _runtime: ReTIRuntime;
 
 	private _variableHandles = new Handles<'locals' | 'globals' | RuntimeVariable>();
 
@@ -63,7 +62,7 @@ export class ReTIDebugSession extends LoggingDebugSession {
 		this.setDebuggerLinesStartAt1(false);
 		this.setDebuggerColumnsStartAt1(false);
 
-		this._runtime = new MockRuntime(fileAccessor);
+		this._runtime = new ReTIRuntime(fileAccessor);
 
 		// setup event handlers
 
@@ -672,7 +671,7 @@ export class ReTIDebugSession extends LoggingDebugSession {
 	}
 
 	private createSource(filePath: string): Source {
-		return new Source(basename(filePath), this.convertDebuggerPathToClient(filePath), undefined, undefined, 'mock-adapter-data');
+		return new Source(basename(filePath), this.convertDebuggerPathToClient(filePath), undefined, undefined, 'reti-adapter-data');
 	}
 }
 

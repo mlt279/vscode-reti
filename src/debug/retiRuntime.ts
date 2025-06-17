@@ -101,7 +101,7 @@ export function timeout(ms: number) {
 	return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-export class MockRuntime extends EventEmitter {
+export class ReTIRuntime extends EventEmitter {
 
 	// the initial (and one and only) file we are 'debugging'
 
@@ -198,25 +198,11 @@ export class MockRuntime extends EventEmitter {
 
 	}
 
-
-
-	private updateCurrentLine(): boolean {
-		if (this._emulator.isValidPC(this._linesToInstructions[this.currentLine])) {
-			return false;
-		} else {
-			this.sendEvent('end');
-			return true;
-		}
-	}
-
 	/**
 	 * Continue execution to the end/beginning.
 	 */
 	public continue() {
 		while (!this.executeLine(this.currentLine)) {
-			if (this.updateCurrentLine()) {
-				break;
-			}
 			if (this.findNextStatement()) {
 				break;
 			}
@@ -229,10 +215,8 @@ export class MockRuntime extends EventEmitter {
 	 */
 	public stepIn() {
 		if (!this.executeLine(this.currentLine)) {
-			if (!this.updateCurrentLine()) {
-				this.findNextStatement('stopOnStepIn');
-			}
-		}
+			this.findNextStatement('stopOnStepIn');
+		}		
 	}
 	/**
 	 * "Step over" for ReTI means: If PC is the address of the JUMP instruction
@@ -245,7 +229,8 @@ export class MockRuntime extends EventEmitter {
 				if (this.executeLine(this.currentLine)) {
 					break;
 				}
-				if (this.updateCurrentLine()) {
+				if (!this._emulator.isValidPC(this._linesToInstructions[this.currentLine])) {
+					this.sendEvent('end');
 					break;
 				}
 				if (this.findNextStatement()) {
@@ -258,7 +243,9 @@ export class MockRuntime extends EventEmitter {
 				}
 			}
 		} else {
-			this.stepIn();
+			if (!this.executeLine(this.currentLine)) {
+				this.findNextStatement('stopOnStepOver');
+			}		
 		}
 	}
 
@@ -282,11 +269,23 @@ export class MockRuntime extends EventEmitter {
 	 *   the return stack is reached.
 	 */
 	public stepOut() {
+		// If the return stack is empty there will be no JUMP waiting. Step Out
+		// executes the "main" program.
+		// So we just continue.
+		if (this._returnStack.length === 0) {
+			this.continue();
+			return;
+		}
+
+		let returnPc = this._returnStack[this._returnStack.length - 1];
+		
 		while (true) {
-			if (this.executeLine(this.currentLine)) {
+			if (this._linesToInstructions[this.currentLine] === returnPc) {
+				this.sendEvent('stopOnStepOut');
+				this._returnStack.pop();
 				break;
 			}
-			if (this.updateCurrentLine()) {
+			if (this.executeLine(this.currentLine)) {
 				break;
 			}
 			if (this.findNextStatement()) {
@@ -686,6 +685,11 @@ export class MockRuntime extends EventEmitter {
 		let instr_number = this._linesToInstructions[ln];
 		// If it is -1 the line is a comment.
 		if (instr_number === -1) { return false; }
+
+		// Save for Check if it is a jump instruction to push on the return stack.
+		let is_jumpInstruction = this.isJumpInstruction();
+		let old_pc = this._emulator.getRegister(registerCode.PC);
+
 		// 2. Execute said line
 		let err_code = this._emulator.step();
 		if (err_code === 1) {
@@ -693,10 +697,23 @@ export class MockRuntime extends EventEmitter {
 		}
 		let new_pc = this._emulator.getRegister(registerCode.PC);
 
+		// If it is a jump instruction and the new PC is on the return
+		// stack the jump call would just be a step out.
+		if (this.isJumpInstruction() && this._returnStack[this._returnStack.length - 1] !== new_pc) {
+			// Only push if the new PC is not already on the return stack as the JUMP calls may be called
+			// multiple times.
+			if (this._returnStack[this._returnStack.length - 1] !== old_pc + 1) {
+				this._returnStack.push(old_pc + 1);
+			}
+		}
 		if (instr_number > this._instrToLines.length - 1) {
 			return true;
 		}
 		this.currentLine = this._instrToLines[new_pc];
+		if (this.currentLine === undefined || !this._emulator.isValidPC(this._linesToInstructions[this.currentLine])) {
+			this.sendEvent('end');
+			return true;
+		}
 		// nothing interesting found -> continue
 		return false;
 	}

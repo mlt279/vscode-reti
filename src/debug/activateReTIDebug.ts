@@ -61,11 +61,9 @@ export function activateReTIDebug(context: vscode.ExtensionContext, factory?: vs
 		});
 	}));
 
-	// register a configuration provider for 'mock' debug type
 	const provider = new ReTIConfigurationProvider();
 	context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('reti', provider));
 
-	// register a dynamic configuration provider for 'mock' debug type
 	context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('reti', {
 		provideDebugConfigurations(folder: WorkspaceFolder | undefined): ProviderResult<DebugConfiguration[]> {
 			return [
