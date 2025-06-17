@@ -39,14 +39,37 @@ body, html {
 }
 
 .check-button, #button-reload {
-  padding: 10px 20px;
-  font-size: 16px;
+  font-size: 1.15rem;
+  padding: 0.5em 0.5em;
   margin: 5px;
   background-color: #0b3c5d;
   color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
+}
+
+select.custom-select {
+  width: auto;
+  font-size: 1.15rem;
+  padding: 0.5em 0.5em;
+  background-color: #0b3c5d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  background-repeat: no-repeat;
+  background-position: right 0.7em top 50%;
+  background-size: 1em;
+}
+
+select.custom-select:hover {
+  opacity: 0.8;
+}
+
+select.custom-select option {
+  background-color: #3f3f3f;
+  color: white;
 }
 
 #quizTable tr:hover, .table-explanation tr:hover, .check-button:hover, #button-reload:hover {

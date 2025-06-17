@@ -14,6 +14,20 @@
 <body>
     <h1>&#x1f4a1ReTI Quiz</h1>
     <button id="button-reload" onclick="reloadQuiz()">Reload</button>
+    <select class="custom-select" id="questionCountSelect" style="margin-left: 8px;" onchange="reloadQuiz()">
+        <option value="1">1 Questions</option>
+        <option value="5">5 Questions</option>
+        <option value="10" selected>10 Questions</option>
+        <option value="20">20 Questions</option>
+    </select>
+    <select class="custom-select" id="bitsImmediateSelect" style="margin-left: 8px;" onchange="reloadQuiz()">
+        <option value="4">4 Bit</option>
+        <option value="8">8 Bit</option>
+        <option value="12">12 Bit</option>
+        <option value="16">16 Bit</option>
+        <option value="20">20 Bit</option>
+        <option value="24" selected>24 Bit</option>
+    </select>
     <div id="timer" style="margin-top: 10px;">Time: 00:00</div>
     <table id="quizTable" class="quiz-table">
         <tr>
@@ -35,7 +49,7 @@
 
         let questionsAnswered = 0;
         let correctAnswers = 0;
-        let numQuestions = 10;
+        let numQuestions = document.getElementById('questionCountSelect').value;
         let startTime;
         let timerInterval;
         let finished = false;
@@ -43,6 +57,7 @@
 
         function reloadQuiz() {
             const quizTable = document.getElementById('quizTable');
+            numQuestions = document.getElementById('questionCountSelect').value;
             while (quizTable.rows.length > 1) {
                 quizTable.deleteRow(1);
             }
@@ -115,7 +130,7 @@
             const quizTable = document.getElementById('quizTable');
             const questions = [];
 
-            for (let i = 0; i < 10; i++) {
+            for (let i = 0; i < numQuestions; i++) {
                 const row = document.createElement('tr');
                 const instruction = randomInstruction();
                 const [code, explanation] = decodeInstruction(instruction);
