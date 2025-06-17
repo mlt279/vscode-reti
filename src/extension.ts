@@ -226,17 +226,19 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	});
 
-	const DebugCommand = vscode.commands.registerCommand('reti.debug', async(resource: vscode.Uri) => {
-		vscode.debug.startDebugging( undefined, {
-			type: 'reti',
-			name: "Debug ReTI",
-			request: "launch",
-			program: resource.fsPath,
-			stopOnEntry: true
-		});
-	});
+	// const DebugCommand = vscode.commands.registerCommand('reti.debug', async() => {
+	// 	const editor = vscode.window.activeTextEditor;
+	// 	const document = editor?.document;
+	// 	vscode.debug.startDebugging( undefined, {
+	// 		type: 'reti',
+	// 		name: "Debug ReTI",
+	// 		request: "launch",
+	// 		program: document?.uri.fsPath,
+	// 		stopOnEntry: true
+	// 	});
+	// });
 
-	context.subscriptions.push(EmulateCommand, QuizCommand, RandomCommand, AssembleCommand, StopEmulationCommand, DisassembleCommand, DebugCommand);
+	context.subscriptions.push(EmulateCommand, QuizCommand, RandomCommand, AssembleCommand, StopEmulationCommand, DisassembleCommand);
 
 	switch (runMode) {
 		case 'server':

@@ -1,0 +1,24 @@
+; Initial Loading of values
+LOADI ACC 10
+; IN1 will save the count down
+MOVE ACC IN1
+LOADI ACC 1000
+; IN2 will save the values to write
+MOVE ACC IN2
+; Loop to write 10 numbers
+; Write the number in the IN1-th position
+MOVE IN2 ACC
+STOREIN1 0
+; Increment the value in IN2
+ADDI ACC 1
+; Store the incremented value back in IN2
+STOREIN2 0
+; Counting down the condition saved in IN1
+MOVE IN1 ACC
+SUBI ACC 1
+MOVE ACC IN1
+NOP
+; Check if IN1 = ACC = 0, if so exit the loop
+JUMP= 2
+; Go back to the start of the loop
+JUMP -10

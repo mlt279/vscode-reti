@@ -57,7 +57,7 @@ export function activateReTIDebug(context: vscode.ExtensionContext, factory?: vs
 	context.subscriptions.push(vscode.commands.registerCommand('reti.debug.getProgramName', config => {
 		return vscode.window.showInputBox({
 			placeHolder: "Please enter the name of a reti file in the workspace folder",
-			value: "readme.md"
+			value: "test.reti"
 		});
 	}));
 

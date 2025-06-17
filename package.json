@@ -145,7 +145,7 @@
         "icon": "$(reti-disassemble)"
       },
       {
-        "command": "reti.debug",
+        "command": "reti.debug.debugEditorContents",
         "title": "Debug ReTI",
         "icon": "$(debug-alt)"
       }
@@ -223,7 +223,7 @@
           "tooltip": "Emulate ReTI Code, Ctrl+Alt+E."
         },
         {
-          "command": "reti.debug",
+          "command": "reti.debug.debugEditorContents",
           "when": "resourceLangId == reti",
           "group": "navigation@2",
           "tooltip": "Debug ReTI Code, Ctrl+Alt+D."
@@ -247,7 +247,7 @@
         "when": "editorLangId == 'retias'"
       },
       {
-        "command": "reti.debug",
+        "command": "reti.debug.debugEditorContents",
         "key": "ctrl+alt+d",
         "when": "resourceLangId == reti"
       }

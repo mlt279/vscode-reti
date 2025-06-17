@@ -699,7 +699,7 @@ export class ReTIRuntime extends EventEmitter {
 
 		// If it is a jump instruction and the new PC is on the return
 		// stack the jump call would just be a step out.
-		if (this.isJumpInstruction() && this._returnStack[this._returnStack.length - 1] !== new_pc) {
+		if (is_jumpInstruction && this._returnStack[this._returnStack.length - 1] !== new_pc) {
 			// Only push if the new PC is not already on the return stack as the JUMP calls may be called
 			// multiple times.
 			if (this._returnStack[this._returnStack.length - 1] !== old_pc + 1) {
