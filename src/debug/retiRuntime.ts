@@ -205,6 +205,7 @@ export class ReTIRuntime extends EventEmitter {
 				this.sendEvent('stopOnPause');
 				break;
 			}
+			// Needed to allow other events to be processed.
 			await new Promise((resolve) => setImmediate(resolve, 0));
 			if (this.findNextStatement()) {
 				break;
@@ -232,6 +233,9 @@ export class ReTIRuntime extends EventEmitter {
 					this.sendEvent('stopOnPause');
 					break;
 				}
+				// Needed to allow other events to be processed.
+				await new Promise((resolve) => setImmediate(resolve, 0));
+
 				if (this.executeLine(this.currentLine)) {
 					break;
 				}
@@ -290,6 +294,9 @@ export class ReTIRuntime extends EventEmitter {
 				this.sendEvent('stopOnPause');
 				break;
 			}
+			// Needed to allow other events to be processed.
+			await new Promise((resolve) => setImmediate(resolve, 0));
+
 			if (this._linesToInstructions[this.currentLine] === returnPc) {
 				this.sendEvent('stopOnStepOut');
 				this._returnStack.pop();
