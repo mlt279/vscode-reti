@@ -219,7 +219,7 @@
         {
           "command": "reti.emulate",
           "when": "editorLangId == 'reti' || editorLangId == 'retias'",
-          "group": "navigation@2",
+          "group": "navigation@1",
           "tooltip": "Emulate ReTI Code, Ctrl+Alt+E."
         },
         {
