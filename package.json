@@ -267,6 +267,7 @@
     "lint": "eslint src",
     "test": "vscode-test",
     "test-c": "npm run compile-tests && npm run test",
+    "bundle-quiz": "esbuild src/reti.ts --bundle --outfile=static/reti.js --format=esm --sourcemap",
     "compile-web": "tsc --build tsconfig.web.json"
   },
   "devDependencies": {

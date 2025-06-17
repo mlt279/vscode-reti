@@ -11,7 +11,7 @@ import { binToHex, hexToBin } from '../util/retiUtility';
 suite('assembler Test Suite', async () => {
     test('Testing Assembly for 100 randomly generated instructions.', async () => {
         for (let i = 0; i < 100; i++) {
-            let instruction = randomInstruction();
+            let instruction = randomInstruction(24);
             let code = decodeInstruction(instruction)[0];
             let result = assembleLine(code.split(' '));
             let assembledCode = result[1];

@@ -3,29 +3,33 @@ import { generateBitMask } from "./retiUtility.js";
 // Function generates a random ReTI code in binary form,
 // If length if given it genereates length number of instructions,
 // else it will return n € {0, ..., 32} instructions.
-export function randomReti(length: number | null): number[] {
+export function randomReti(length: number | null, bitSizeImmediate: number): number[] {
     if (typeof length !== 'number') {
         length = ranFromRangeInt(1, 32);
     }
+    if (typeof bitSizeImmediate !== 'number') {
+        bitSizeImmediate = 24; // Default to 24 bits if not specified
+    }
     let code: number[] = [];
     for (let i = 0; i < length; i++) {
-        code.push(randomInstruction());
+        code.push(randomInstruction(bitSizeImmediate));
     }
     return code;
 }
 
 // Function generates a random ReTI instruction in binary form.
-export function randomInstruction():number {
+// Takes the size of the immediate value in bits as an optional parameter.
+export function randomInstruction(bitSizeImmediate: number):number {
     let opCode = ranFromRangeInt(0b00, 0b11);
     switch (opCode) {
         case 0b00:
-            return randomComputeInstruction();
+            return randomComputeInstruction(bitSizeImmediate);
         case 0b01:
-            return randomLoadInstruction();
+            return randomLoadInstruction(bitSizeImmediate);
         case 0b10:
-            return randomStoreInstruction();
+            return randomStoreInstruction(bitSizeImmediate);
         case 0b11:
-            return randomJumpInstruction();
+            return randomJumpInstruction(bitSizeImmediate);
         default:
             return 0;
     }
@@ -33,29 +37,38 @@ export function randomInstruction():number {
 }
 
 // Function generates a random Compute instruction in binary form.
-function randomComputeInstruction():number {
+function randomComputeInstruction(bitSizeImmediate: number):number {
+    if (typeof bitSizeImmediate !== 'number') {
+        bitSizeImmediate = 24; // Default to 24 bits if not specified
+    }
     let mi = ranFromRangeInt(0, 1);
     let f = ranFromRangeInt(0b010, 0b110);
     let register = ranFromRangeInt(0b00, 0b11);
-    let immediate = ranFromRangeInt(0, generateBitMask(24)) & generateBitMask(24);
+    let immediate = ranFromRangeInt(0, generateBitMask(bitSizeImmediate)) & generateBitMask(24);
     let instruction = 0b00 << 30 | mi << 29 | f << 26 | register << 24 | immediate;
     return instruction;
 }
 
 // Function generates a random Load instruction in binary form.
-function randomLoadInstruction(): number {
+function randomLoadInstruction(bitSizeImmediate: number): number {
+    if (typeof bitSizeImmediate !== 'number' || bitSizeImmediate < 0 || bitSizeImmediate > 24) {
+        bitSizeImmediate = 24; // Default to 24 bits if not specified
+    }
     let mode = ranFromRangeInt(0b00, 0b11);
     let destination = ranFromRangeInt(0b00, 0b11);
-    let immediate = ranFromRangeInt(0, generateBitMask(24)) & generateBitMask(24);
+    let immediate = ranFromRangeInt(0, generateBitMask(bitSizeImmediate)) & generateBitMask(24);
     return 0b01 << 30 | mode << 28 | destination << 24 | immediate;
 }
 
 // Function generates a random Store instruction in binary form.
-function randomStoreInstruction():number {
+function randomStoreInstruction(bitSizeImmediate: number):number {
+    if (typeof bitSizeImmediate !== 'number') {
+        bitSizeImmediate = 24; // Default to 24 bits if not specified
+    }
     let mode = ranFromRangeInt(0b00, 0b11);
     let source = 0;
     let destination = 0;
-    let immediate = ranFromRangeInt(0, generateBitMask(24)) & generateBitMask(24);
+    let immediate = ranFromRangeInt(0, generateBitMask(bitSizeImmediate)) & generateBitMask(24);
 
     // This handles the special case for move instructions.
     if (mode === 0b11) { 
@@ -67,9 +80,12 @@ function randomStoreInstruction():number {
 }
 
 // Function generates a random Jump instruction in binary form.
-function randomJumpInstruction():number {
+function randomJumpInstruction(bitSizeImmediate: number):number {
+    if (typeof bitSizeImmediate !== 'number') {
+        bitSizeImmediate = 24; // Default to 24 bits if not specified
+    }
     let condition = ranFromRangeInt(0b000, 0b111);
-    let immediate = ranFromRangeInt(0, generateBitMask(24)) & generateBitMask(24);
+    let immediate = ranFromRangeInt(0, generateBitMask(bitSizeImmediate)) & generateBitMask(24);
 
     // This handles the special case for NOP instructions.
     if (condition === 0b000) {

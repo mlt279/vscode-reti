@@ -132,7 +132,8 @@
 
             for (let i = 0; i < numQuestions; i++) {
                 const row = document.createElement('tr');
-                const instruction = randomInstruction();
+                const immediateSize = parseInt(document.getElementById('bitsImmediateSelect').value, 10);
+                const instruction = randomInstruction(immediateSize);
                 const [code, explanation] = decodeInstruction(instruction);
 
                 const codehex = binToHex(instruction).toUpperCase();

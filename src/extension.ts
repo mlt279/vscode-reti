@@ -117,13 +117,24 @@ export function activate(context: vscode.ExtensionContext) {
 	// TODO: Move into a seperate function
 	const RandomCommand = vscode.commands.registerCommand('reti.generate', async () => {
 		const val = await vscode.window.showInputBox({ prompt: "Enter desired length of random code (Max 4096). If left empty, a random length will be chosen." });
-
+		
+		const iSize = await vscode.window.showInputBox({ prompt: "Enter desired bitsize of the immediate value (Max 24). If left empty, the max size (24) will be chosen." });
+		let iSizeVal = parseInt(iSize || "24");
+		if (iSizeVal < 0) {
+			iSizeVal = 0;
+		}
+		if (iSizeVal > 24) {
+			iSizeVal = 24;
+		}
+		if (isNaN(iSizeVal)) {
+			iSizeVal = 24; // Default to 24 bits if not specified
+		}
 		let code : number[] = [];
 		if (val === undefined) {
 			return;
 		}
 		else if (val === "") {
-			code = randomReti(null);
+			code = randomReti(null, iSizeVal);
 		}
 		else {
 			let value = parseInt(val);
@@ -132,7 +143,7 @@ export function activate(context: vscode.ExtensionContext) {
 			if (value > 4096) { value = 4096; }
 			vscode.window.showInformationMessage(`Generating ${value} random instructions...`);
 			for (let i = 0; i < value; i++) {
-				code.push(randomInstruction());
+				code.push(randomInstruction(iSizeVal));
 			}
 		}
 

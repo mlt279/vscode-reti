@@ -8,7 +8,7 @@
 			"ES2022"
 		],
 		"sourceMap": true,
-		"rootDir": "src",
+		"rootDir": "src/reti.ts",
 		"outDir": "./static", 
 		"strict": true,   /* enable all strict type-checking options */
 		/* Additional Checks */
