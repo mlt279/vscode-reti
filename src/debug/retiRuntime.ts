@@ -637,7 +637,7 @@ export class ReTIRuntime extends EventEmitter {
 		let num_instr = 0;
 		for (let i = 0; i < this._sourceLines.length; i++) {
 			// If its a comment only the line count is updated.
-			if (this._sourceLines[i].startsWith(";")) {
+			if (this._sourceLines[i].startsWith(";") || this._sourceLines[i].length === 0) {
 				this._linesToInstructions.push(-1);
 				continue;
 			}

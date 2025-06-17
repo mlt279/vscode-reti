@@ -4,7 +4,7 @@ MOVE ACC IN1 ; IN1 will save the count down
 LOADI ACC 1000
 MOVE ACC IN2 ; IN2 will save the values to write
 ;
-;
+
 ; Start of the Loop to write 10 numbers
 ; Getting the Value to write
 MOVE IN2 ACC
@@ -22,3 +22,4 @@ NOP
 ; Check if the countdown is finished
 JUMP= 2 ; Check if IN1 = ACC = 0, if so exit the loop (Jump to end)
 JUMP -10 ; Go back to the start of the loop
+NOP

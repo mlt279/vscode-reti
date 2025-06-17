@@ -33,6 +33,10 @@ export function assembleLine(line: string[]): [number, number, string] {
     let instruction: string;
 
     // This is needed to ensure correct comparisons later on.
+    if (line.length === 0) {
+        return [-1, binInstruction, "Error: Empty line."];
+    }
+
     line = line.map((word) => word.toLowerCase().trim());
 
     // #region Parse the instruction
