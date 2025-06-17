@@ -681,7 +681,7 @@ export class ReTIRuntime extends EventEmitter {
 			}
 
 			const line = this.getLine(ln);
-			if (line.length > 0) {
+			if (line.length > 0 && line.indexOf(';') !== 0) {
 				this.currentLine = ln;
 				break;
 			}
