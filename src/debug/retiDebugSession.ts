@@ -9,6 +9,7 @@ import { DebugProtocol } from '@vscode/debugprotocol';
 import { basename } from 'path-browserify';
 import { ReTIRuntime, IRuntimeBreakpoint, FileAccessor, RuntimeVariable } from './retiRuntime'; // timeout, IRuntimeVariableType
 import { parse } from 'path';
+import { CancellationTokenSource, CancellationToken } from 'vscode';
 
 const { Subject } = require('await-notify');
 
@@ -41,6 +42,9 @@ export class ReTIDebugSession extends LoggingDebugSession {
 
 	private _cancellationTokens = new Map<number, boolean>();
 
+	private _runtimeCancellationTokenSource: CancellationTokenSource = new CancellationTokenSource();
+	private _runtimeCancellationToken: CancellationToken;
+
 	// private _reportProgress = false;
 	// private _progressId = 10000;
 	// private _cancelledProgressId: string | undefined = undefined;
@@ -58,6 +62,7 @@ export class ReTIDebugSession extends LoggingDebugSession {
 	public constructor(fileAccessor: FileAccessor) {
 		super("reti-debug.txt");
 
+		this._runtimeCancellationToken = this._runtimeCancellationTokenSource.token;
 		// this debugger uses zero-based lines and columns
 		this.setDebuggerLinesStartAt1(false);
 		this.setDebuggerColumnsStartAt1(false);
@@ -87,7 +92,9 @@ export class ReTIDebugSession extends LoggingDebugSession {
 		this._runtime.on('stopOnInstructionBreakpoint', () => {
 			this.sendEvent(new StoppedEvent('instruction breakpoint', ReTIDebugSession.threadID));
 		});
-
+		this._runtime.on('stopOnPause', () => {
+			this.sendEvent(new StoppedEvent('pause', ReTIDebugSession.threadID));
+		});
 		this._runtime.on('breakpointValidated', (bp: IRuntimeBreakpoint) => {
 			this.sendEvent(new BreakpointEvent('changed', { verified: bp.verified, id: bp.id } as DebugProtocol.Breakpoint));
 		});
@@ -201,7 +208,7 @@ export class ReTIDebugSession extends LoggingDebugSession {
 		await this._configurationDone.wait(1000);
 
 		// start the program in the runtime
-		if (!await this._runtime.start(args.program, !!args.stopOnEntry, !args.noDebug)) {
+		if (!await this._runtime.start(args.program, !!args.stopOnEntry, !args.noDebug, this._runtimeCancellationToken)) {
 			this.sendErrorResponse(response, {
 				id: 1001,
 				format: `assemble error`,
@@ -414,12 +421,12 @@ export class ReTIDebugSession extends LoggingDebugSession {
 	}
 
 	protected continueRequest(response: DebugProtocol.ContinueResponse, args: DebugProtocol.ContinueArguments): void {
-		this._runtime.continue();
+		this._runtime.continue(this._runtimeCancellationToken);
 		this.sendResponse(response);
 	}
 
 	protected nextRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments): void {
-		this._runtime.stepOver();
+		this._runtime.stepOver(this._runtimeCancellationToken);
 		this.sendResponse(response);
 	}
 
@@ -431,7 +438,7 @@ export class ReTIDebugSession extends LoggingDebugSession {
 
 	// Implemented as no-ops because they can't be deactivated.
 	protected stepOutRequest(response: DebugProtocol.StepOutResponse, args: DebugProtocol.StepOutArguments): void {
-		this._runtime.stepOut();
+		this._runtime.stepOut(this._runtimeCancellationToken);
 		this.sendResponse(response);
 	}
 
@@ -503,16 +510,22 @@ export class ReTIDebugSession extends LoggingDebugSession {
 	}
 
 	protected cancelRequest(response: DebugProtocol.CancelResponse, args: DebugProtocol.CancelArguments) {
-		if (args.requestId) {
-			this._cancellationTokens.set(args.requestId, true);
-		}
-		// if (args.progressId) {
-		// 	this._cancelledProgressId= args.progressId;
+		this._runtimeCancellationTokenSource.cancel();
+		this._runtimeCancellationTokenSource = new CancellationTokenSource();
+		this._runtimeCancellationToken = this._runtimeCancellationTokenSource.token;
+		this.sendResponse(response);
+		// if (args.requestId) {
+		// 	this._cancellationTokens.set(args.requestId, true);
 		// }
+		// // if (args.progressId) {
+		// // 	this._cancelledProgressId= args.progressId;
+		// // }
 	}
 
 	protected pauseRequest(response: DebugProtocol.PauseResponse, args: DebugProtocol.PauseArguments): void {
-		// this._runtime.pause();
+		this._runtimeCancellationTokenSource.cancel();
+		this._runtimeCancellationTokenSource = new CancellationTokenSource();
+		this._runtimeCancellationToken = this._runtimeCancellationTokenSource.token;
 		this.sendResponse(response);
 	}
 

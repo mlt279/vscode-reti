@@ -7,6 +7,7 @@ import { Emulator } from '../reti/emulator';
 import { assembleLine } from '../reti/assembler';
 import { parseString } from '../util/parser';
 import { registerCode } from '../reti/retiStructure';
+import { CancellationTokenSource, CancellationToken } from 'vscode';
 
 export interface FileAccessor {
 	isWindows: boolean;
@@ -103,10 +104,7 @@ export function timeout(ms: number) {
 
 export class ReTIRuntime extends EventEmitter {
 
-	// the initial (and one and only) file we are 'debugging'
-
-
-	private variables = new Map<string, RuntimeVariable>();
+	private cancellationToken: CancellationToken | undefined;
 
 	// the contents (= lines) of the one and only file
 	private sourceLines: string[] = [];
@@ -174,7 +172,7 @@ export class ReTIRuntime extends EventEmitter {
 	/**
 	 * Start executing the given program.
 	 */
-	public async start(program: string, stopOnEntry: boolean, debug: boolean): Promise<boolean> {
+	public async start(program: string, stopOnEntry: boolean, debug: boolean, cancellationToken: CancellationToken): Promise<boolean> {
 
 		// Emulator is created here.
 		if (await this.loadSource(this.normalizePathAndCasing(program))) {
@@ -185,10 +183,10 @@ export class ReTIRuntime extends EventEmitter {
 					this.findNextStatement('stopOnEntry');
 				} else {
 					// we just start to run until we hit a breakpoint, an exception, or the end of the program
-					this.continue();
+					this.continue(cancellationToken);
 				}
 			} else {
-				this.continue();
+				this.continue(cancellationToken);
 			}
 			return true;
 		} else {
@@ -201,14 +199,18 @@ export class ReTIRuntime extends EventEmitter {
 	/**
 	 * Continue execution to the end/beginning.
 	 */
-	public continue() {
+	public async continue(cancellationToken: CancellationToken): Promise<void> {
 		while (!this.executeLine(this.currentLine)) {
+			if (cancellationToken.isCancellationRequested) {
+				this.sendEvent('stopOnPause');
+				break;
+			}
+			await new Promise((resolve) => setImmediate(resolve, 0));
 			if (this.findNextStatement()) {
 				break;
 			}
 		}
 	}
-
 
 	/**
 	 * "Step into" means step to the next instruction.
@@ -222,10 +224,14 @@ export class ReTIRuntime extends EventEmitter {
 	 * "Step over" for ReTI means: If PC is the address of the JUMP instruction
 	 * execute code until PC + 1 is reached.
 	 */
-	public stepOver() {
+	public async stepOver(cancellationToken: CancellationToken) {
 		if (this.isJumpInstruction()) {
 			let pc = this._emulator.getRegister(registerCode.PC);
 			while (true) {
+				if (cancellationToken.isCancellationRequested) {
+					this.sendEvent('stopOnPause');
+					break;
+				}
 				if (this.executeLine(this.currentLine)) {
 					break;
 				}
@@ -268,18 +274,22 @@ export class ReTIRuntime extends EventEmitter {
 	 * 2. If the stack is not empty, we continue until the PC saved in
 	 *   the return stack is reached.
 	 */
-	public stepOut() {
+	public async stepOut(cancellationToken: CancellationToken) {
 		// If the return stack is empty there will be no JUMP waiting. Step Out
 		// executes the "main" program.
 		// So we just continue.
 		if (this._returnStack.length === 0) {
-			this.continue();
+			this.continue(cancellationToken);
 			return;
 		}
 
 		let returnPc = this._returnStack[this._returnStack.length - 1];
 		
 		while (true) {
+			if (cancellationToken.isCancellationRequested) {
+				this.sendEvent('stopOnPause');
+				break;
+			}
 			if (this._linesToInstructions[this.currentLine] === returnPc) {
 				this.sendEvent('stopOnStepOut');
 				this._returnStack.pop();
