@@ -336,8 +336,6 @@ connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
     };
 });
 
-// TODO (Optional): Implement a hover provider that shows the actual effect of the instruction. 
-// (e.g. MOVE IN1 IN2 -> IN2 := IN1 instead of D := S)
 connection.onHover((textDocumentposition: TextDocumentPositionParams) => {
     const document = documents.get(textDocumentposition.textDocument.uri);
     if (document) {
