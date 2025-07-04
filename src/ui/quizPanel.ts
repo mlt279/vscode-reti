@@ -16,11 +16,11 @@ export function showQuizPanel(context: vscode.ExtensionContext) {
         vscode.ViewColumn.One,
         {
             enableScripts: true,
-            localResourceRoots: [vscode.Uri.joinPath(context.extensionUri, 'static')]
+            localResourceRoots: [vscode.Uri.joinPath(context.extensionUri, 'static/quiz_website')],
         }
     );
 
-    const htmlPath = vscode.Uri.joinPath(context.extensionUri, 'static', 'quizPanel.html');
+    const htmlPath = vscode.Uri.joinPath(context.extensionUri, 'static/quiz_website', 'quizPanel.html');
 
     fs.readFile(htmlPath.fsPath, 'utf8', (err, htmlContent) => {
         if (err) {
@@ -29,10 +29,10 @@ export function showQuizPanel(context: vscode.ExtensionContext) {
         }
 
         // Generate secure URIs for the JavaScript and CSS import to enable them to load in the webview.
-        const retiUri = panel.webview.asWebviewUri(vscode.Uri.joinPath(context.extensionUri, 'static', 'reti.js'));
+        const retiUri = panel.webview.asWebviewUri(vscode.Uri.joinPath(context.extensionUri, 'static/quiz_website', 'reti.js'));
 
-        const cssUri = panel.webview.asWebviewUri(vscode.Uri.joinPath(context.extensionUri, 'static', 'quizPanelvs.css'));
-        const faviconUri = panel.webview.asWebviewUri(vscode.Uri.joinPath(context.extensionUri, 'static', 'favicon.ico'));
+        const cssUri = panel.webview.asWebviewUri(vscode.Uri.joinPath(context.extensionUri, 'static/quiz_website', 'quizPanelvs.css'));
+        const faviconUri = panel.webview.asWebviewUri(vscode.Uri.joinPath(context.extensionUri, 'static/quiz_website', 'favicon.ico'));
 
         htmlContent = htmlContent
             .replace('quizPanel.css', cssUri.toString())

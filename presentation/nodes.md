@@ -1,4 +1,9 @@
 # Motivation:
+Aus sicht von student der reti lernen will
+beispiel bringen
+was ist der aktuelle stand?
+was soll verbessert werden? -> Dann in Result/Evaluation
+
 ReTI language commonly used in Lehrbetrieb
 ## Emulator:
 When learning a language trying something out can be very important so to learn reti writing programms in assembly can help improve the understanding of low level languages
@@ -18,12 +23,17 @@ All of those are already provided by Armin Biere at [insert Github Link] except 
 ## VS Code Extension development process
 
 # Results:
+Lehrfrag erfüllt?
 ## Quiz:
+Can students learn instructions?
 ## Language Server:
+
+## Debugger:
+
 ## Assembler:
 ## Disassembler:
 ## Emulator:
-## Debugger:
+
 
 # Implementation
 ## Tools used:

@@ -103,14 +103,14 @@
       "reti-assemble": {
         "description": "Assemble icon",
         "default": {
-          "fontPath": "./fonts/icomoon.woff",
+          "fontPath": "./static/fonts/icomoon.woff",
           "fontCharacter": "\\EA5B"
         }
       },
       "reti-disassemble": {
         "description": "Disassemble icon",
         "default": {
-          "fontPath": "./fonts/icomoon.woff",
+          "fontPath": "./static/fonts/icomoon.woff",
           "fontCharacter": "\\EA81"
         }
       }
