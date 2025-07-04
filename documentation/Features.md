@@ -3,7 +3,7 @@ This extension incorporates a language server that provides several functionalit
 ## Syntax Highlighting
 The extension provides syntax highlighting differentiating colors for instructions, registers, numbers and comments depending on the chosen color theme.
 
-![Example for syntax highlighting](documentation\img\language_server\syntax_highlighting_example.png)
+![Example for syntax highlighting](img\language_server\syntax_highlighting_example.png)
 
 ## Errors and warnings
 When editing a reti file the extension provides diagnostics in form or errors and warnings.
