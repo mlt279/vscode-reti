@@ -1,0 +1,21 @@
+; A simple program that multiplies two numbers saved in IN1 and IN2
+; Initialization
+    LOADI IN1 9     ; Initialize m and save in IN1
+    LOADI IN2 10    ; Initialize n and save in IN2
+    ; Result will be stored in M<1>, Expected: 90
+    MOVE IN2 ACC
+
+; i will be stored in M<0>
+; LOOP
+JUMP<= 10
+    MOVE IN1 ACC    ; ACC = m
+    ADD ACC 1       ; ACC := m + m * (i - 1)
+    STORE 1
+    ; Increasing the counter variable
+    LOAD ACC 0      ; ACC := i
+    ADDI ACC 1
+    STORE 0
+    MOVE IN2 ACC    ; ACC := IN2 := n
+    SUB ACC 0       ; ACC := n - i
+JUMP -9
+JUMP 0
