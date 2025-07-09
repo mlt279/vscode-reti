@@ -2,7 +2,7 @@
 
 The simple computer architecture ReTI is used to teach the fundamentals of computer systems. Existing teaching tools, developed by Prof. Dr. Armin Biere, include a command-line-based emulator and a quiz to test understanding of assembler and machine code translation.
 This project improves accessibility and usability by integrating these tools into Visual Studio Code, the most widely used development environment. A web-based version of the quiz was developed, and a VS Code extension was created that includes a Webview interface, an emulator, an assembler, and a disassembler.
-Additionally, features such as a debugger and a Language Server with syntax highlighting, tooltips, and inline error reporting were implemented to support the learning process.
+Additionally, features such as a debugger and a Language Server w vvvith syntax highlighting, tooltips, and inline error reporting were implemented to support the learning process.
 The resulting tool enhances the educational experience and provides a more intuitive way for students to interact with the ReTI language and architecture.
 
 

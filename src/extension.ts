@@ -26,8 +26,6 @@ const runMode: 'external' | 'server' | 'namedPipeServer' | 'inline' = 'inline';
 
 let languageClient: LanguageClient | undefined = undefined;
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {	
 
 	const serverModule = context.asAbsolutePath(path.join('out', 'language-server', 'server.js'));
@@ -114,7 +112,6 @@ export function activate(context: vscode.ExtensionContext) {
 		showQuizPanel(context);
 	});
 
-	// TODO: Move into a seperate function
 	const RandomCommand = vscode.commands.registerCommand('reti.generate', async () => {
 		const val = await vscode.window.showInputBox({ prompt: "Enter desired length of random code (Max 4096). If left empty, a random length will be chosen." });
 		
@@ -236,18 +233,6 @@ export function activate(context: vscode.ExtensionContext) {
 			await vscode.window.showTextDocument(tempFile);
 		}
 	});
-
-	// const DebugCommand = vscode.commands.registerCommand('reti.debug', async() => {
-	// 	const editor = vscode.window.activeTextEditor;
-	// 	const document = editor?.document;
-	// 	vscode.debug.startDebugging( undefined, {
-	// 		type: 'reti',
-	// 		name: "Debug ReTI",
-	// 		request: "launch",
-	// 		program: document?.uri.fsPath,
-	// 		stopOnEntry: true
-	// 	});
-	// });
 
 	context.subscriptions.push(EmulateCommand, QuizCommand, RandomCommand, AssembleCommand, StopEmulationCommand, DisassembleCommand);
 
