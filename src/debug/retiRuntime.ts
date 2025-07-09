@@ -606,23 +606,6 @@ export class ReTIRuntime extends EventEmitter {
 	}
 
 	private initializeContents(memory: Uint8Array): boolean {
-		// TODO: Remove
-		this.sourceLines = new TextDecoder().decode(memory).split(/\r?\n/);
-
-		this.instructions = [];
-
-		this.starts = [];
-		this.instructions = [];
-		this.ends = [];
-
-		for (let l = 0; l < this.sourceLines.length; l++) {
-			this.starts.push(this.instructions.length);
-			const words = this.getWords(l, this.sourceLines[l]);
-			for (let word of words) {
-				this.instructions.push(word);
-			}
-			this.ends.push(this.instructions.length);
-		}
 		// ReTI
 		this._instructions = parseString(new TextDecoder().decode(memory));
 		this._sourceLines = new TextDecoder().decode(memory).split(/\r?\n/);
@@ -637,7 +620,7 @@ export class ReTIRuntime extends EventEmitter {
 		let num_instr = 0;
 		for (let i = 0; i < this._sourceLines.length; i++) {
 			// If its a comment only the line count is updated.
-			if (this._sourceLines[i].startsWith(";") || this._sourceLines[i].length === 0) {
+			if (this._sourceLines[i].trim().startsWith(";") || this._sourceLines[i].length === 0) {
 				this._linesToInstructions.push(-1);
 				continue;
 			}
