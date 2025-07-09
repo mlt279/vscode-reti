@@ -8,6 +8,7 @@ import { assembleLine } from '../reti/assembler';
 import { parseString } from '../util/parser';
 import { registerCode } from '../reti/retiStructure';
 import { CancellationTokenSource, CancellationToken } from 'vscode';
+import { generateBitMask, immediateAsTwoc } from '../util/retiUtility';
 
 export interface FileAccessor {
 	isWindows: boolean;
@@ -227,7 +228,7 @@ export class ReTIRuntime extends EventEmitter {
 	 */
 	public async stepOver(cancellationToken: CancellationToken) {
 		if (this.isJumpInstruction()) {
-			let pc = this._emulator.getRegister(registerCode.PC);
+			let target_pc = this.getTargetPC();
 			while (true) {
 				if (cancellationToken.isCancellationRequested) {
 					this.sendEvent('stopOnPause');
@@ -247,7 +248,7 @@ export class ReTIRuntime extends EventEmitter {
 					break;
 				}
 				let nextPc = this._emulator.getRegister(registerCode.PC);
-				if (nextPc === pc + 1) {
+				if (nextPc === target_pc) {
 					this.sendEvent('stopOnStepOver');
 					break;
 				}
@@ -257,6 +258,36 @@ export class ReTIRuntime extends EventEmitter {
 				this.findNextStatement('stopOnStepOver');
 			}		
 		}
+	}
+
+	private getTargetPC(): number {
+		let instruction = this._emulator.getCurrentInstruction();
+
+		let line = this.getLine().toLowerCase().split(' ');
+		if (line[0].startsWith('jump')) {
+			let immediate = immediateAsTwoc(instruction & generateBitMask(24));
+			let pc = this._emulator.getRegister(registerCode.PC);
+			let target_pc = pc + immediate;
+			immediate = immediate;
+			return target_pc;
+					
+		}
+		if (line[0].startsWith('move') && line.length > 2) {
+			if (line[2] === 'pc') {
+				let source = line[1];
+				switch (source.toLocaleLowerCase()) {
+					case "acc":
+						return this._emulator.getRegister(registerCode.ACC);
+					case "in1":
+						return this._emulator.getRegister(registerCode.IN1);
+					case "in2":
+						return this._emulator.getRegister(registerCode.IN2);
+					case "pc":
+						return this._emulator.getRegister(registerCode.PC);	
+				}
+			}
+		}
+		return this._emulator.getRegister(registerCode.PC) + 1;
 	}
 
 	private isJumpInstruction(): boolean {
@@ -688,7 +719,7 @@ export class ReTIRuntime extends EventEmitter {
 
 		// Save for Check if it is a jump instruction to push on the return stack.
 		let is_jumpInstruction = this.isJumpInstruction();
-		let old_pc = this._emulator.getRegister(registerCode.PC);
+		let target_pc = this.getTargetPC();
 
 		// 2. Execute said line
 		let err_code = this._emulator.step();
@@ -702,8 +733,8 @@ export class ReTIRuntime extends EventEmitter {
 		if (is_jumpInstruction && this._returnStack[this._returnStack.length - 1] !== new_pc) {
 			// Only push if the new PC is not already on the return stack as the JUMP calls may be called
 			// multiple times.
-			if (this._returnStack[this._returnStack.length - 1] !== old_pc + 1) {
-				this._returnStack.push(old_pc + 1);
+			if (this._returnStack[this._returnStack.length - 1] !== target_pc) {
+				this._returnStack.push(target_pc);
 			}
 		}
 		if (instr_number > this._instrToLines.length - 1) {
