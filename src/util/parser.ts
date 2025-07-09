@@ -34,11 +34,16 @@ export function parseLine(line: string): string[] {
 }
 
 export function parseDotRetiAs(document: vscode.TextDocument): number[] {
-    document.getText();
-    let code: string[] = document.getText().split(/\r?\n/);
-    let instructions: number[] = [];
-    for (let i = 0; i < code.length; i++) {
-        instructions[i] = parseInt(code[i].split(';')[0].trim(), 16);
+    const raw = document.getText().replace(/\s+/g, '');
+    const instructions: number[] = [];
+
+    for (let i = 0; i < raw.length; i += 8) {
+        let chunk = raw.slice(i, i + 8);
+        if (chunk.length < 8) {
+            chunk = chunk.padEnd(8, '0');
+        }
+        instructions.push(parseInt(chunk, 16));
     }
+
     return instructions;
 }

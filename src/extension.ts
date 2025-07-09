@@ -88,11 +88,19 @@ export function activate(context: vscode.ExtensionContext) {
 			try {
 				vscode.window.showInformationMessage("Emulation started.");
 				const finalState = await emulator.emulate(emulateTokenSource.token);
+				outputChannel.appendLine(`Emulation finished. Final state: ${stateToString(finalState)}`);
+				if (emulateTokenSource) {
+					emulateTokenSource.cancel();
+					emulateTokenSource.dispose();
+					emulateTokenSource = undefined;
+				}
 				outputChannel.show();
 				vscode.window.showInformationMessage(`Emulation finished. Final state: ${stateToString(finalState)}`);
 			}
 			catch (e) {
-				vscode.window.showErrorMessage(`Error when emulating: ${e}`);
+				// vscode.window.showErrorMessage(`Error when emulating: ${e}`);
+				outputChannel.appendLine(`Error when emulating: ${e}`);
+				outputChannel.show();
 			}
 		}
 	});
@@ -196,7 +204,7 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 
 			const assembled = await assembleFile(code);
-			const formatted = assembled.map(([instruction, message]) => `${binToHex(instruction)} ; ${message}`).join('\n');
+			const formatted = assembled.map(([instruction, message]) => `${binToHex(instruction)}`).join('\n');
 			const tempFile = await vscode.workspace.openTextDocument({ content: formatted, language: 'retias' });
 			await vscode.window.showTextDocument(tempFile);
 		}
