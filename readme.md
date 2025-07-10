@@ -11,7 +11,7 @@
     <br />
     <a href="">Presentation Video</a>
     ·
-    <a href="./presentation/presentation.odp">Presentation Slides</a>
+    <a href="./presentation/presentation.pptx">Presentation Slides</a>
     ·
     <a href="./documentation/Home.md">Extension Readme</a>
     .
