@@ -83,16 +83,16 @@ While running, the set of control buttons changes to include a *Pause* button, w
 ![Image of the pause button](img/debugger/pause.png)
 
 ## Step Over  
-If the program counter (PC) is at a jump instruction, *Step Over* will continue execution until the instruction at PC + 1 (the instruction immediately following the jump) is reached. Note that this behavior may vary depending on the program—execution may continue until the end if the target instruction is not reached.
-
 ![Image of the step over button](img/debugger/step_over.png)
+
+If the program counter (PC) is at a jump instruction, *Step Over* will continue execution until the instruction at PC + 1 (the instruction immediately following the jump) is reached. Note that this behavior may vary depending on the program—execution may continue until the end if the target instruction is not reached.
 
 ![Imagine visualizing the functionality of the step out button.](img/debugger/step_over_functionality.png)
 
 ## Step In  
-*Step In* executes the next instruction unconditionally. It acts as a simple single-step operation.
-
 ![Image of the step in button](img/debugger/step_in.png)
+
+*Step In* executes the next instruction unconditionally. It acts as a simple single-step operation.
 
 ## Step Out
 
