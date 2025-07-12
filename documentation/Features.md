@@ -83,7 +83,7 @@ While running, the set of control buttons changes to include a *Pause* button, w
 ![Image of the pause button](img/debugger/pause.png)
 
 ## Step Over  
-If the program counter (PC) is at a jump instruction, *Step Over* will continue execution until the instruction at PC + 1 (the instruction immediately following the jump) is reached. Note that this behavior may vary depending on the program—execution may continue until the end if the target instruction is not reached.
+If the program counter (PC) is at a jump instruction, *Step Over* will continue execution until the instruction the target PC of the jump is reached. Note that this behavior may vary depending on the program—execution may continue until the end if the target instruction is not reached.
 
 ![Image of the step over button](img/debugger/step_over.png)
 
@@ -98,7 +98,7 @@ If the program counter (PC) is at a jump instruction, *Step Over* will continue 
 
 ![Image of the step out button](img/debugger/step_out.png)
 
-When a jump is encountered at a given PC, a "callback" (i.e., the instruction at PC + 1) is saved. *Step Out* will then execute until this callback is reached. If no jump has occurred previously (and thus no callback is saved), *Step Out* will behave like *Continue*, running until the end of the program.
+When a jump is encountered at a given PC, a "callback" (i.e., the instruction target pc of the jump) is saved. *Step Out* will then execute until this callback is reached. If no jump has occurred previously (and thus no callback is saved), *Step Out* will behave like *Continue*, running until the end of the program.
 
 ![Imagine visualizing the functionality of the step out button.](img/debugger/step_out_functionality.png)
 
