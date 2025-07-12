@@ -8,6 +8,7 @@ The extension provides syntax highlighting differentiating colors for instructio
 ## Errors and warnings
 When editing a reti file the extension provides diagnostics in form or errors and warnings.
 Warnings are shown in yellow...
+
 ![Example of a warning being shown.](img/language_server/warnings_example.png)
 
 ... and errors in red.
@@ -17,6 +18,7 @@ Warnings are shown in yellow...
 Errors highlight mistakes that will cause the code to be unable to compile and warnings highlight code that might lead to unexpected behaviours.
 ## Tooltips
 When hovering over valid instructions or registers the language server provides tooltips that can be shown by the IDE. 
+
 ![Example of a tooltip shown when hovering.](img/language_server/tooltips_example.png)
 
 These tooltips will explain the instruction and it's effect and also give usage advice.
@@ -83,16 +85,15 @@ While running, the set of control buttons changes to include a *Pause* button, w
 ![Image of the pause button](img/debugger/pause.png)
 
 ## Step Over  
-If the program counter (PC) is at a jump instruction, *Step Over* will continue execution until the instruction the target PC of the jump is reached. Note that this behavior may vary depending on the program—execution may continue until the end if the target instruction is not reached.
 
-![Image of the step over button](img/debugger/step_over.png)
+If the program counter (PC) is at a jump instruction, *Step Over* will continue execution until the instruction of the target PC of the jump is reached. Note that this behavior may vary depending on the program—execution may continue until the end if the target instruction is not reached.
 
 ![Imagine visualizing the functionality of the step out button.](img/debugger/step_over_functionality.png)
 
 ## Step In  
-*Step In* executes the next instruction unconditionally. It acts as a simple single-step operation.
-
 ![Image of the step in button](img/debugger/step_in.png)
+
+*Step In* executes the next instruction unconditionally. It acts as a simple single-step operation.
 
 ## Step Out
 
