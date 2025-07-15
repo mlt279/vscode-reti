@@ -86,9 +86,13 @@ While running, the set of control buttons changes to include a *Pause* button, w
 
 ## Step Over  
 
-If the program counter (PC) is at a jump instruction, *Step Over* will continue execution until the instruction of the target PC of the jump is reached. Note that this behavior may vary depending on the program—execution may continue until the end if the target instruction is not reached.
+ReTI does not support function calls so for the functionality of the *Step-Over*-button we chose to interpret this action as skipping a Loop.
 
-![Imagine visualizing the functionality of the step out button.](img/debugger/step_over_functionality.png)
+If the program counter (PC) is at a jump instruction, *Step Over* will continue execution until the instruction of the target PC of said jump is reached. Note that this behavior may vary depending on the program—execution and may continue until the end if the target instruction is not reached.
+
+In the example below a `JUMP` is encountered in line 13 corresponding to PC 7. The target PC is calculated *(7+12=19)*, this corresponds to line 26. After pressing the *Step-Over*-button execution continues until reaching line 26.
+
+![Image visualizing the functionality of the step out button.](img/debugger/step_over_functionality.png)
 
 ## Step In  
 ![Image of the step in button](img/debugger/step_in.png)
@@ -99,9 +103,23 @@ If the program counter (PC) is at a jump instruction, *Step Over* will continue 
 
 ![Image of the step out button](img/debugger/step_out.png)
 
-When a jump is encountered at a given PC, a "callback" (i.e., the instruction target pc of the jump) is saved. *Step Out* will then execute until this callback is reached. If no jump has occurred previously (and thus no callback is saved), *Step Out* will behave like *Continue*, running until the end of the program.
+Since ReTI does not support actual call backs, a custom interpretation for the *Step Out* functinality was chosen that allows the user to exit the current loop. To this end the target-pc of each encountered `JUMP` is saved in a list that functions as the call stack. *Step Out* will then execute until the last item of the stack is reached. If the stack is empty *Step Out* will behave like *Continue*.
 
-![Imagine visualizing the functionality of the step out button.](img/debugger/step_out_functionality.png)
+See below for an example of this behaviour.
+
+In this example the current PC of line 13 is 7. With *Step In* a single exection is performed. Since the call-stack is empty *Step Out* would run until the end of the program is reached.
+
+![Imagine visualizing the functionality of the step out button.](img/debugger/step_out_functionality_1.png)
+
+Now that the `JUMP` instruction is passed the target PC **(12+7=19)** is saved to the call stack. PC 19 corresponds to line 26 in the code.
+
+![Imagine visualizing the functionality of the step out button.](img/debugger/step_out_functionality_2.png)
+
+Now inside of the loop when pressing the *Step-Out*-button  execution will continue until being halted in line 26 when PC 19 is reached.
+
+![Imagine visualizing the functionality of the step out button.](img/debugger/step_out_functionality_3.png)
+
+Upon reaching the target-pc it is removed from the call stack leaving it empty.
 
 ## Read and Set Registers  
 Registers are displayed like variables and can be edited directly in the same interface. Simply modify the value of any register as needed.
