@@ -18,6 +18,3 @@
     <a href="./documentation/ReTI-Architecture.md">ReTI Overview</a>
   </p>
 </div>
-
-<p align="center">
-<em> Note. </em> Image generated using ChatGPT. The image was generated from a give sketch in response to this prompt: 'Turn this sketch into a logo for my vscode extension'. 
