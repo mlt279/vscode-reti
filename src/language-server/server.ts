@@ -59,6 +59,18 @@ const validInstructions: { [key: string]: { documentation: string, usage: string
     "ORI": { documentation: "Bitwise OR of the value of i and the value of the destination register.", usage: "ORI D i", result: "D := D ∨ i" }
 };
 
+const operatorAliases: {[key: string] : string} = {
+    "lt": "<",
+    "eq": "=",
+    "gt": ">",
+    "leq": "≤",
+    "geq": "≥",
+    "neq": "≠",
+    "<=": "≤",
+    ">=": "≥",
+    "!=": "≠"
+}
+
 const validTokens = Object.keys(validRegisters).concat(Object.keys(validInstructions));
 
 const validRegisterPattern = /(?<=(^|\s))(ACC|IN1|IN2|PC)(?!(\w|>|=|≥|<|≠|≤))/i;
@@ -109,176 +121,232 @@ function validateTextDocument(textDocument: TextDocument) {
             // MOVE Instruction, should be followed by two registers.
             // MOVE S D
             if (/(?<=(^|\s))MOVE(?!(\w|>|=|≥|<|≠|≤))/i.test(tokens[0])) {
-                if (!validRegisterPattern.test(tokens[1])) {
+                if (tokens.length < 3) {
                     diagnostics.push({
                         severity: DiagnosticSeverity.Error,
                         range: {
-                            start: { line: index, character: tokens[0].length + 1 },
-                            end: { line: index, character: tokens[0].length + tokens[1].length + 1  }
+                            start: { line: index, character: 0 },
+                            end: { line: index, character: instruction.length }
                         },
-                        message: `MOVE should be followed by a register. ${tokens[1]} is not a valid source register.`,
+                        message: `MOVE instructions require two operands.`,
                         source: 'reti'
-                    });
-                }
+                    });   
+                } else {
+                    if (!validRegisterPattern.test(tokens[1])) {
+                        diagnostics.push({
+                            severity: DiagnosticSeverity.Error,
+                            range: {
+                                start: { line: index, character: tokens[0].length + 1 },
+                                end: { line: index, character: tokens[0].length + tokens[1].length + 1  }
+                            },
+                            message: `MOVE should be followed by a register. ${tokens[1]} is not a valid source register.`,
+                            source: 'reti'
+                        });
+                    }
 
-                if (!validRegisterPattern.test(tokens[2])) {
-                    diagnostics.push({
-                        severity: DiagnosticSeverity.Error,
-                        range: {
-                            start: { line: index, character: tokens[0].length + tokens[1].length + 2 },
-                            end: { line: index, character: tokens[0].length + tokens[1].length + tokens[2].length + 2 }
-                        },
-                        message: `${tokens[2]} is not a valid destination register.`,
-                        source: 'reti'
-                    });
+                    if (!validRegisterPattern.test(tokens[2])) {
+                        diagnostics.push({
+                            severity: DiagnosticSeverity.Error,
+                            range: {
+                                start: { line: index, character: tokens[0].length + tokens[1].length + 2 },
+                                end: { line: index, character: tokens[0].length + tokens[1].length + tokens[2].length + 2 }
+                            },
+                            message: `${tokens[2]} is not a valid destination register.`,
+                            source: 'reti'
+                        });
+                    }
                 }
             }
 
             // STORE Instruction, should be followed by exactly one register.
             // STORE* I
             else if (/(?<=(^|\s))STORE(IN[12])?(?!(\w|>|=|≥|<|≠|≤))/i.test(tokens[0])) {
-                if (tokens.length > 2) {
+                if (tokens.length < 2) {
                     diagnostics.push({
                         severity: DiagnosticSeverity.Error,
                         range: {
-                            start: { line: index, character: tokens[0].length + 1 },
-                            end: { line: index, character: tokens[0].length + tokens[1].length + 1 }
+                            start: { line: index, character: 0 },
+                            end: { line: index, character: instruction.length }
                         },
-                        message: `Too many operands. STORE instruction only takes one operand.`,
+                        message: `STORE instructions require one operand.`,
                         source: 'reti'
-                    });
-                }
-
-                if (!validNumberPattern.test(tokens[1])) {
-                    diagnostics.push({
-                        severity: DiagnosticSeverity.Error,
-                        range: {
-                            start: { line: index, character: tokens[0].length + 1 },
-                            end: { line: index, character: tokens[0].length + tokens[1].length + 1 }
-                        },
-                        message: `${tokens[1]} is not a valid number.`,
-                        source: 'reti'
-                    });
-                }
-                else {
-                    if(tokens[1].startsWith('-')) {
+                    });   
+                } else {
+                    if (tokens.length > 2) {
                         diagnostics.push({
-                            severity: DiagnosticSeverity.Warning,
+                            severity: DiagnosticSeverity.Error,
                             range: {
                                 start: { line: index, character: tokens[0].length + 1 },
                                 end: { line: index, character: tokens[0].length + tokens[1].length + 1 }
                             },
-                            message: `Immediate will be treated as unsigned. Negative numbers might not behave as expected.`,
+                            message: `Too many operands. STORE instruction only takes one operand.`,
                             source: 'reti'
                         });
                     }
-                }
+
+                    if (!validNumberPattern.test(tokens[1])) {
+                        diagnostics.push({
+                            severity: DiagnosticSeverity.Error,
+                            range: {
+                                start: { line: index, character: tokens[0].length + 1 },
+                                end: { line: index, character: tokens[0].length + tokens[1].length + 1 }
+                            },
+                            message: `${tokens[1]} is not a valid number.`,
+                            source: 'reti'
+                        });
+                    }
+                    else {
+                        if(tokens[1].startsWith('-')) {
+                            diagnostics.push({
+                                severity: DiagnosticSeverity.Warning,
+                                range: {
+                                    start: { line: index, character: tokens[0].length + 1 },
+                                    end: { line: index, character: tokens[0].length + tokens[1].length + 1 }
+                                },
+                                message: `Immediate will be treated as unsigned. Negative numbers might not behave as expected.`,
+                                source: 'reti'
+                            });
+                        }
+                    }}
             }
 
             // LOAD Instruction, should be followed by exactly one register and a number.
             // LOAD* D I
             else if (/(?<=(^|\s))LOAD(I|IN[12])?(?!(\w|>|=|≥|<|≠|≤))/i.test(tokens[0])) {
-                if (!validRegisterPattern.test(tokens[1])) {
+                if (tokens.length < 3) {
                     diagnostics.push({
                         severity: DiagnosticSeverity.Error,
                         range: {
-                            start: { line: index, character: tokens[0].length + 1 },
-                            end: { line: index, character: tokens[0].length + tokens[1].length + 1 }
+                            start: { line: index, character: 0 },
+                            end: { line: index, character: instruction.length }
                         },
-                        message: `${tokens[1]} is not a valid register.`,
+                        message: `LOAD instructions require two operands.`,
                         source: 'reti'
-                    });
-                }
-
-                if (!validNumberPattern.test(tokens[2])) {
-                    diagnostics.push({
-                        severity: DiagnosticSeverity.Error,
-                        range: {
-                            start: { line: index, character: tokens[0].length + tokens[1].length + 2 },
-                            end: { line: index, character: tokens[0].length + tokens[1].length + tokens[2].length + 2 }
-                        },
-                        message: `${tokens[2]} is not a known number.`,
-                        source: 'reti'
-                    });
-
-                    if(tokens[1].startsWith('-') && !(tokens[0]).toLowerCase().endsWith('i')) {
+                    });   
+                } else {
+                    if (!validRegisterPattern.test(tokens[1])) {
                         diagnostics.push({
-                            severity: DiagnosticSeverity.Warning,
+                            severity: DiagnosticSeverity.Error,
                             range: {
-                                start: { line: index, character: tokens[0].length + tokens[1].length + 2 },
-                                end: { line: index, character: tokens[0].length + tokens[1].length + tokens[2].length + 3 }
+                                start: { line: index, character: tokens[0].length + 1 },
+                                end: { line: index, character: tokens[0].length + tokens[1].length + 1 }
                             },
-                            message: `Immediate will be treated as unsigned. Negative numbers might not behave as expected.`,
+                            message: `${tokens[1]} is not a valid register.`,
                             source: 'reti'
                         });
                     }
-                }
+
+                    if (!validNumberPattern.test(tokens[2])) {
+                        diagnostics.push({
+                            severity: DiagnosticSeverity.Error,
+                            range: {
+                                start: { line: index, character: tokens[0].length + tokens[1].length + 2 },
+                                end: { line: index, character: tokens[0].length + tokens[1].length + tokens[2].length + 2 }
+                            },
+                            message: `${tokens[2]} is not a known number.`,
+                            source: 'reti'
+                        });
+
+                        if(tokens[1].startsWith('-') && !(tokens[0]).toLowerCase().endsWith('i')) {
+                            diagnostics.push({
+                                severity: DiagnosticSeverity.Warning,
+                                range: {
+                                    start: { line: index, character: tokens[0].length + tokens[1].length + 2 },
+                                    end: { line: index, character: tokens[0].length + tokens[1].length + tokens[2].length + 3 }
+                                },
+                                message: `Immediate will be treated as unsigned. Negative numbers might not behave as expected.`,
+                                source: 'reti'
+                            });
+                        }
+                    }}
             }
 
             // COMPUTE Instructions, should be followed by a valid register and a number.
             // COMPUTE D I
             else if (/(?<=(^|\s))(ADD|SUB|OPLUS|AND|OR)(?:I)?(?!(\w|>|=|≥|<|≠|≤))/i.test(tokens[0])) {
-                if (!validRegisterPattern.test(tokens[1])) {
+                if (tokens.length < 3) {
                     diagnostics.push({
                         severity: DiagnosticSeverity.Error,
                         range: {
-                            start: { line: index, character: tokens[0].length + tokens[1].length + 2 },
-                            end: { line: index, character: tokens[0].length + tokens[1].length + tokens[2].length + 2 }
+                            start: { line: index, character: 0 },
+                            end: { line: index, character: instruction.length }
                         },
-                        message: `${tokens[1]} is not a valid register.`,
+                        message: `COMPUTE instructions require two operands.`,
                         source: 'reti'
-                    });
-                }
-
-                if (!validNumberPattern.test(tokens[2])) {
-                    diagnostics.push({
-                        severity: DiagnosticSeverity.Error,
-                        range: {
-                            start: { line: index, character: tokens[0].length + tokens[1].length + 2 },
-                            end: { line: index, character: tokens[0].length + tokens[1].length + tokens[2].length + 2 }
-                        },
-                        message: `${tokens[2]} is not a known number.`,
-                        source: 'reti'
-                    });
-
-                    if(tokens[1].startsWith('-') && !(tokens[0]).toLowerCase().endsWith('i')) {
+                    });   
+                } else { 
+                    if (!validRegisterPattern.test(tokens[1])) {
                         diagnostics.push({
-                            severity: DiagnosticSeverity.Warning,
+                            severity: DiagnosticSeverity.Error,
                             range: {
                                 start: { line: index, character: tokens[0].length + tokens[1].length + 2 },
-                                end: { line: index, character: tokens[0].length + tokens[1].length + tokens[2].length + 3 }
+                                end: { line: index, character: tokens[0].length + tokens[1].length + tokens[2].length + 2 }
                             },
-                            message: `Immediate will be treated as unsigned. Negative numbers might not behave as expected.`,
+                            message: `${tokens[1]} is not a valid register.`,
                             source: 'reti'
                         });
                     }
-                }
+
+                    if (!validNumberPattern.test(tokens[2])) {
+                        diagnostics.push({
+                            severity: DiagnosticSeverity.Error,
+                            range: {
+                                start: { line: index, character: tokens[0].length + tokens[1].length + 2 },
+                                end: { line: index, character: tokens[0].length + tokens[1].length + tokens[2].length + 2 }
+                            },
+                            message: `${tokens[2]} is not a known number.`,
+                            source: 'reti'
+                        });
+
+                        if(tokens[1].startsWith('-') && !(tokens[0]).toLowerCase().endsWith('i')) {
+                            diagnostics.push({
+                                severity: DiagnosticSeverity.Warning,
+                                range: {
+                                    start: { line: index, character: tokens[0].length + tokens[1].length + 2 },
+                                    end: { line: index, character: tokens[0].length + tokens[1].length + tokens[2].length + 3 }
+                                },
+                                message: `Immediate will be treated as unsigned. Negative numbers might not behave as expected.`,
+                                source: 'reti'
+                            });
+                        }
+                    }}
             }
 
             else if (/(?<=(^|\s))JUMP(?:!=|<=|>=|>|=|≥|<|≠|≤|lt|eq|leq|gt|geq|neq)?(?!(\w|>|=|≥|<|≠|≤))/i.test(tokens[0])) {
-                if (!validNumberPattern.test(tokens[1])) {
+                if (tokens.length < 2) {
                     diagnostics.push({
                         severity: DiagnosticSeverity.Error,
                         range: {
-                            start: { line: index, character: tokens[0].length + 1 },
-                            end: { line: index, character: tokens[0].length + tokens[1].length + 1 }
+                            start: { line: index, character: 0 },
+                            end: { line: index, character: instruction.length }
                         },
-                        message: `${tokens[1]} is not a known number.`,
+                        message: `JUMP instructions require one operand.`,
                         source: 'reti'
-                    });
-
-                    if(tokens[1].startsWith('-')) {
+                    });   
+                } else { 
+                    if (!validNumberPattern.test(tokens[1])) {
                         diagnostics.push({
-                            severity: DiagnosticSeverity.Warning,
+                            severity: DiagnosticSeverity.Error,
                             range: {
                                 start: { line: index, character: tokens[0].length + 1 },
                                 end: { line: index, character: tokens[0].length + tokens[1].length + 1 }
                             },
-                            message: `If PC should fall < 0 unexpected behaviour might happen.`,
+                            message: `${tokens[1]} is not a known number.`,
                             source: 'reti'
                         });
-                    }
-                }
+
+                        if(tokens[1].startsWith('-')) {
+                            diagnostics.push({
+                                severity: DiagnosticSeverity.Warning,
+                                range: {
+                                    start: { line: index, character: tokens[0].length + 1 },
+                                    end: { line: index, character: tokens[0].length + tokens[1].length + 1 }
+                                },
+                                message: `If PC should fall < 0 unexpected behaviour might happen.`,
+                                source: 'reti'
+                            });
+                        }
+                    }}
             }
 
             else if (/(?<=(^|\s))NOP(?!(\w|>|=|≥|<|≠|≤))/i.test(tokens[0])) {
@@ -333,47 +401,59 @@ connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
     };
 });
 
-connection.onHover((textDocumentposition: TextDocumentPositionParams) => {
-    const document = documents.get(textDocumentposition.textDocument.uri);
-    if (document) {
-        const lines = document.getText().split(/\r?\n/);
-        const line = lines[textDocumentposition.position.line];
-        const instruction = line.split(";")[0].trim();
-        const tokens = instruction.split(/\s+/);
+connection.onHover((textDocumentPosition: TextDocumentPositionParams) => {
+    const document = documents.get(textDocumentPosition.textDocument.uri);
+    if (!document) return null;
 
-        if (tokens.length > 0) {
-            let tokenIndex = textDocumentposition.position.character;
-            for (let i = 0; i < tokens.length; i++) {
-                // Idea: Remove length from each token. Should the tokenindex become smaller than zero
-                // we know that the character is between the start and the end of the current token.
-                tokenIndex -= tokens[i].length;
-                if (tokenIndex <= 0) {
-                    tokenIndex = i;
-                    break;
-                }
-                // Needed to account for the whitespaces between each token.
-                tokenIndex -= 1;
-            }
-            if (validRegisters[tokens[tokenIndex]]) {
-                return {
-                    contents: {
-                        kind: "markdown",
-                        value: `**${tokens[tokenIndex]}**\n\n${validRegisters[tokens[tokenIndex]]}`
-                    }
-                };
-            }
+    const lineText = document.getText().split(/\r?\n/)[textDocumentPosition.position.line];
+    const instructionText = lineText.split(";")[0];
 
-            if (validInstructions[tokens[tokenIndex]]) {
-                return {
-                    contents: {
-                        kind: "markdown",
-                        value: `**${tokens[tokenIndex]}**\n\nUsage: ${validInstructions[tokens[tokenIndex]].usage}\n\n\n\nResult: ${validInstructions[tokens[tokenIndex]].result} \n\n${validInstructions[tokens[tokenIndex]].documentation}`
-                    }
-                };
-            }
+    const tokens = instructionText.match(/\S+/g) || [];
+
+    const charPos = textDocumentPosition.position.character;
+    let tokenUnderCursor: string | undefined;
+    let currentIndex = 0;
+
+    for (let token of tokens) {
+        const start = instructionText.indexOf(token, currentIndex);
+        const end = start + token.length;
+        if (charPos >= start && charPos <= end) {
+            tokenUnderCursor = normalizeInstruction(token);
+            break;
         }
+        currentIndex = end;
     }
+
+    if (!tokenUnderCursor) return null;
+
+    if (validRegisters[tokenUnderCursor]) {
+        return {
+            contents: {
+                kind: "markdown",
+                value: `**${tokenUnderCursor}**\n\n${validRegisters[tokenUnderCursor]}`
+            }
+        };
+    }
+
+    if (validInstructions[tokenUnderCursor]) {
+        return {
+            contents: {
+                kind: "markdown",
+                value: `**${tokenUnderCursor}**\n\nUsage: ${validInstructions[tokenUnderCursor].usage}\n\nResult: ${validInstructions[tokenUnderCursor].result}\n\n${validInstructions[tokenUnderCursor].documentation}`
+            }
+        };
+    }
+
     return null;
 });
 
+
 connection.listen();
+
+// Function takes a token and replaces each operator that has an alias
+// with its canonical form.
+function normalizeInstruction(token: string): string {
+    return Object.keys(operatorAliases).reduce((acc, alias) => {
+        return acc.split(alias).join(operatorAliases[alias]);
+    }, token);
+}
