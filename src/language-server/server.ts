@@ -69,7 +69,7 @@ const operatorAliases: {[key: string] : string} = {
     "<=": "≤",
     ">=": "≥",
     "!=": "≠"
-}
+};
 
 const validTokens = Object.keys(validRegisters).concat(Object.keys(validInstructions));
 
@@ -403,7 +403,7 @@ connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
 
 connection.onHover((textDocumentPosition: TextDocumentPositionParams) => {
     const document = documents.get(textDocumentPosition.textDocument.uri);
-    if (!document) return null;
+    if (!document) {return null;}
 
     const lineText = document.getText().split(/\r?\n/)[textDocumentPosition.position.line];
     const instructionText = lineText.split(";")[0];
@@ -424,7 +424,7 @@ connection.onHover((textDocumentPosition: TextDocumentPositionParams) => {
         currentIndex = end;
     }
 
-    if (!tokenUnderCursor) return null;
+    if (!tokenUnderCursor) {return null;}
 
     if (validRegisters[tokenUnderCursor]) {
         return {

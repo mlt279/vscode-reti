@@ -1,5 +1,6 @@
 import { opType } from "./retiStructure.js";
 import { generateBitMask } from "../util/retiUtility.js";
+import { ReTIConfig } from "../config.js";
 
 const Registers: { [key: number]: string } = {
     0b00: "PC",
@@ -74,8 +75,8 @@ function decodeComputeInstruction(instruction: number): [string, [string, number
     }
     instructionString += Registers[destination] + " ";
     explanationList[3] = ["Destination", 2, Registers[destination]];
-    instructionString += immediate.toString();
-    explanationList[4] = ["Immediate", 24, immediate.toString()];
+    instructionString += formatNumberString(immediate);
+    explanationList[4] = ["Immediate", 24, formatNumberString(immediate)];
     return [instructionString, explanationList];
 }
 
@@ -108,8 +109,8 @@ function decodeLoadInstruction(instruction: number): [string, [string, number, s
     }
     instructionString += Registers[destination] + " ";
     explanationList[3] = ["Destination", 2, Registers[destination]];
-    instructionString += immediate.toString();
-    explanationList[4] = ["Immediate", 24, immediate.toString()];
+    instructionString += formatNumberString(immediate);
+    explanationList[4] = ["Immediate", 24, formatNumberString(immediate)];
     return [instructionString, explanationList];
 }
 
@@ -146,8 +147,8 @@ function decodeStoreInstruction(instruction: number): [string, [string, number, 
     explanationList[2] = ["*", 2, ""];
     explanationList[3] = ["*", 2, ""];
 
-    instructionString += immediate.toString();
-    explanationList[4] = ["Immediate", 24, immediate.toString()];
+    instructionString += formatNumberString(immediate);
+    explanationList[4] = ["Immediate", 24, formatNumberString(immediate)];
     return [instructionString, explanationList];
 }
 
@@ -161,7 +162,7 @@ function decodeJumpInstruction(instruction: number): [string, [string, number, s
 
     // Handling immediate as a twoc
     immediate = immediateAsTwoc(immediate);
-    explanationList[3] = ["Immediate", 24, immediate.toString()];
+    explanationList[3] = ["Immediate", 24, formatNumberString(immediate)];
 
     // Not needed for know. Later on this ideally could be used to better explain how the jump conditions work.
     // let gt = condition >> 2 & 0b1;
@@ -173,7 +174,7 @@ function decodeJumpInstruction(instruction: number): [string, [string, number, s
     if (condition !== 0) {
         instructionString = "JUMP" + jumpConditionSymbols[condition] + " ";
         explanationList[1] = ["Condition", 3, jumpConditionSymbols[condition]];
-        instructionString += immediate.toString();
+        instructionString += formatNumberString(immediate);
         explanation += `Remaining bits 23 to 0 = ${immediate} = immediate value;`;
     }
     else {
@@ -189,3 +190,38 @@ function immediateAsTwoc(immediate: number): number {
     }
     return immediate;
 }
+
+function formatNumberString(immediate: number): string {
+    const radix = ReTIConfig.radix; // 2, 10, 16
+    const bitWidth = 24;
+    const mask = (1 << bitWidth) - 1;
+
+    let prefix = "";
+    let numStr = "";
+
+    // Negative Werte → Two’s Complement
+    const twosComplement = immediate < 0
+        ? ((immediate + (1 << bitWidth)) & mask)
+        : (immediate & mask);
+
+    if (radix === 10) {
+        // Dezimal bleibt normal (negativ erlaubt)
+        numStr = immediate.toString(10);
+    } else {
+        // Binär oder Hex anzeigen, ohne führende Nullen
+        numStr = twosComplement.toString(radix).toUpperCase();
+        numStr = numStr.replace(/^0+(?=\d)/, ""); // Führende Nullen entfernen
+    }
+
+    switch (radix) {
+        case 2:
+            prefix = "0b";
+            break;
+        case 16:
+            prefix = "0x";
+            break;
+    }
+
+    return prefix + numStr;
+}
+
