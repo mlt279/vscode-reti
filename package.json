@@ -251,7 +251,31 @@
         "key": "ctrl+alt+d",
         "when": "resourceLangId == reti"
       }
-    ]
+    ],
+    "configuration": {
+        "title": "ReTI",
+        "properties": {
+          "reti.version": {
+            "type": "string",
+            "enum": [
+              "Basic ReTI (TI)",
+              "Extended ReTI (OS)"
+            ],
+            "default": "Basic ReTI (TI)",
+            "description": "Select which version of the ReTI assembler to use."
+          },
+          "reti.number_style": {
+            "type": "string",
+            "enum": [
+              "Binary",
+              "Decimal",
+              "Hexadecimal"
+            ],
+            "default": "Decimal",
+            "description": "Select the format this extension should use to display numbers."
+          }
+        }
+      }
   },
   "scripts": {
     "vscode:prepublish": "npm run package",

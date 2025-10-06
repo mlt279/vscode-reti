@@ -278,7 +278,15 @@ export function assembleLine(line: string[]): [number, number, string] {
     //#endregion parse the instruction
     let immediateValue = 0;
     try {
-        immediateValue = parseInt(immediate);
+        if (immediate.toLocaleLowerCase().startsWith("0b")) {
+            let tmp = immediate.toLocaleLowerCase().slice(2);
+            immediateValue = parseInt(tmp, 2);
+        } else if (immediate.toLocaleLowerCase().startsWith("0x")) {
+            let tmp = immediate.toLocaleLowerCase().slice(2);
+            immediateValue = parseInt(tmp, 16);
+        } else {
+            immediateValue = parseInt(immediate);
+        }
         immediateValue = immediateValue & generateBitMask(24);
     } 
     catch (error) {

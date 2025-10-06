@@ -7,6 +7,7 @@
 
 # Built Visual Studio Code Extensions
 *.vsix
+
 # Node.js dependencies
 node_modules/
 
@@ -51,3 +52,11 @@ yarn.lock
 .idea/         # IntelliJ or WebStorm settings
 *.env          # Environment files
 *.env.local    # Local environment files
+
+# Ignore all JavaScript and source maps
+*.js
+*.js.map
+
+# Except files in static folder
+!static/**/*.js
+!static/**/*.js.map
