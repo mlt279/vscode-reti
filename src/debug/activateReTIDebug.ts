@@ -1,8 +1,6 @@
-/*---------------------------------------------------------
- * Copyright (C) Microsoft Corporation. All rights reserved.
- *--------------------------------------------------------*/
-/*
- * activateMockDebug.ts containes the shared extension code that can be executed both in node.js and the browser.
+/**
+ * Based on code from vscode-mock-debug by Microsoft Corporation,
+ * Modified by Malte Pullich (c) 2025.
  */
 
 'use strict';

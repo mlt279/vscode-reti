@@ -1,3 +1,8 @@
+/**
+ * Based on code from vscode-mock-debug by Microsoft Corporation,
+ * Modified by Malte Pullich (c) 2025.
+ */
+
 import {
 	Logger, logger,
 	LoggingDebugSession,

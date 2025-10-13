@@ -9,6 +9,10 @@ import { randomInstruction, randomReti } from './util/randomReti';
 import { decodeInstruction } from './reti/ti/disassembler_ti';
 import { binToHex, hexToBin } from './util/retiUtility';
 import { assembleFile, assembleLine } from './reti/ti/assembler_ti';
+
+import * as AsmTI from './reti/ti/assembler_ti';
+import * as AsmOS from './reti/os/assembler_os';
+
 import { stateToString } from './reti/ti/retiStructure_ti';
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient/node';
 import { ReTIConfig } from './config';
