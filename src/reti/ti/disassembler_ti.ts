@@ -1,6 +1,7 @@
-import { opType } from "./retiStructure_ti.js";
-import { generateBitMask } from "../../util/retiUtility.js";
-import { ReTIConfig } from "../../config.js";
+import { opType } from "./retiStructure_ti";
+import { generateBitMask } from "../../util/retiUtility";
+import { ReTIConfig } from "../../config";
+import { IDisassemblerResult } from "../ReTIInterfaces";
 
 const Registers: { [key: number]: string } = {
     0b00: "PC",
@@ -26,6 +27,19 @@ const jumpConditionSymbols: { [key: number]: string } = {
     0b110: "≤",
     0b111: ""
 };
+
+export function disassembleWord(word: number): IDisassemblerResult {
+  const [instr, explanation] = decodeInstruction(word);
+  return { instruction: instr, explanation };
+}
+
+export function disassembleFile(words: number[]): [string, string][] {
+  return words.map(word => {
+    const decoded = disassembleWord(word);
+    // Empty string added for compatibility
+    return [decoded.instruction, ""];
+  });
+}
 
 // @param instruction: The instruction to decode.
 // @returns: A tuple of the instruction string and an explanation of the instruction if succesfull 

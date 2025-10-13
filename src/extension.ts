@@ -6,14 +6,18 @@ import { Emulator } from './reti/ti/emulator_ti';
 import { parseDotReti, parseDotRetiAs } from './util/parser';
 import { showQuizPanel } from './ui/quizPanel';
 import { randomInstruction, randomReti } from './util/randomReti';
-import { decodeInstruction } from './reti/ti/disassembler_ti';
+
 import { binToHex, hexToBin } from './util/retiUtility';
-import { assembleFile, assembleLine } from './reti/ti/assembler_ti';
+
+import { assembleLine } from './reti/ti/assembler_ti';
+import { decodeInstruction } from './reti/ti/disassembler_ti';
+
+import { disassembleWord } from './reti/disassembler';
 
 import * as AsmTI from './reti/ti/assembler_ti';
 import * as AsmOS from './reti/os/assembler_os';
 
-import { stateToString } from './reti/ti/retiStructure_ti';
+import { ReTI, stateToString } from './reti/ti/retiStructure_ti';
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient/node';
 import { ReTIConfig } from './config';
 
@@ -25,7 +29,6 @@ import { platform } from 'process';
 import { ProviderResult } from 'vscode';
 import { ReTIDebugSession } from './debug/retiDebugSession';
 import { activateReTIDebug, workspaceFileAccessor } from './debug/activateReTIDebug';
-
 
 const runMode: 'external' | 'server' | 'namedPipeServer' | 'inline' = 'inline';
 
@@ -204,24 +207,34 @@ export function activate(context: vscode.ExtensionContext) {
 
 	const AssembleCommand = vscode.commands.registerCommand('reti.assemble', async () => {
 		const editor = vscode.window.activeTextEditor;
-		if (editor) {
-			const document = editor.document;
-			let code = [];
-		
-			if (document.languageId === 'reti') {
-				code = parseDotReti(document);
-			}
-			else {
-				vscode.window.showErrorMessage("Unsupported file type. Please use .reti files.");
-				return;
-			}
+		if (!editor) {return;}
 
-			const assembled = await assembleFile(code);
-			const formatted = assembled.map(([instruction, message]) => `${binToHex(instruction)}`).join('\n');
-			const tempFile = await vscode.workspace.openTextDocument({ content: formatted, language: 'retias' });
-			await vscode.window.showTextDocument(tempFile);
+		const document = editor.document;
+		if (document.languageId !== 'reti') {
+			vscode.window.showErrorMessage("Unsupported file type. Please use .reti files.");
+			return;
 		}
+
+		const code = parseDotReti(document);
+
+		const assembler = ReTIConfig.isOS ? AsmOS : AsmTI;
+		const mode = ReTIConfig.isOS ? "Extended ReTI (OS)" : "Basic ReTI (TI)";
+		vscode.window.showInformationMessage(`Assembling using ${mode} assembler`);
+
+		const assembled = await assembler.assembleFile(code);
+
+		const formatted = assembled
+			.map(([instruction]) => `${binToHex(instruction)}`)
+			.join('\n');
+
+		const tempFile = await vscode.workspace.openTextDocument({
+			content: formatted,
+			language: 'retias'
+		});
+
+		await vscode.window.showTextDocument(tempFile);
 	});
+
 
 	const DisassembleCommand = vscode.commands.registerCommand('reti.disassemble', async () => {
 		const editor = vscode.window.activeTextEditor;
@@ -233,13 +246,13 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 			const instructions = parseDotRetiAs(document);
 
-			let content = "";
+			let content = "; " + ReTIConfig.version + " \n";
 			let maxInstructionLength = 0;
 			let code: string[] = [];
 
 			// Extra step needed for formatting. Determines the maximum length of any instruction.
 			for (let i = 0; i < instructions.length; i++) {
-				const instruction = decodeInstruction(instructions[i])[0];
+				const instruction = disassembleWord(instructions[i]).instruction;
 				maxInstructionLength = Math.max(maxInstructionLength, instruction.length);
 				code.push(instruction);
 			}
@@ -254,6 +267,7 @@ export function activate(context: vscode.ExtensionContext) {
 			await vscode.window.showTextDocument(tempFile);
 		}
 	});
+
 
 	context.subscriptions.push(EmulateCommand, QuizCommand, RandomCommand, AssembleCommand, StopEmulationCommand, DisassembleCommand);
 

@@ -20,3 +20,8 @@ export interface IReTIArchitecture {
     assemble?(tokens: string[]): [err: number, word: number, msg: string];
     disassemble?(word: number): string;
 }
+
+export interface IDisassemblerResult {
+  instruction: string;
+  explanation: [string, number, string][];
+}
