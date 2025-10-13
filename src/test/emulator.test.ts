@@ -2,9 +2,9 @@
 
 import * as assert from 'assert';
 import * as vscode from 'vscode';
-import { Emulator } from '../reti/emulator';
-import { assembleLine } from '../reti/assembler';
-import { registerCode, ReTI } from '../reti/retiStructure';
+import { Emulator } from '../reti/emulator_ti';
+import { assembleLine } from '../reti/assembler_ti';
+import { registerCode, ReTI } from '../reti/retiStructure_ti';
 
 //#endregion
 

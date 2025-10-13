@@ -1,8 +1,8 @@
 // #region imports
 import * as assert from 'assert';
 import * as vscode from 'vscode';
-import { decodeInstruction } from '../reti/disassembler';
-import { opType } from '../reti/retiStructure';
+import { decodeInstruction } from '../reti/disassembler_ti';
+import { opType } from '../reti/retiStructure_ti';
 import { generateBitMask } from '../util/retiUtility';
 //#endregion
 

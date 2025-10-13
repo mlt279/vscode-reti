@@ -1,4 +1,4 @@
-import { computeCode, opType, registerCode } from './retiStructure';
+import { computeCode, opType, registerCode } from './retiStructure_ti';
 import { generateBitMask } from '../util/retiUtility';
 
 export async function assembleFile(code: string[][]): Promise<Array<[number, string]>> {

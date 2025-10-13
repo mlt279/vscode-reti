@@ -1,4 +1,4 @@
-import { opType } from "./retiStructure.js";
+import { opType } from "./retiStructure_ti.js";
 import { generateBitMask } from "../util/retiUtility.js";
 import { ReTIConfig } from "../config.js";
 

@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
-import { computeCode, opType, registerCode, ReTI, ReTIState } from './retiStructure';
+import { computeCode, opType, registerCode, ReTI, ReTIState } from './retiStructure_ti';
 import { generateBitMask, immediateAsTwoc, immediateUnsigned } from '../util/retiUtility';
-import { assembleLine } from './assembler';
+import { assembleLine } from './assembler_ti';
 
 export class Emulator{
     private reti: ReTI;
@@ -112,7 +112,7 @@ export class Emulator{
     }
 
     // TODO: What should the real behaviour be when an invalid compute code is given? Abort or NOP?
-    // Idea: 00000 would be the end of code so stop the execution.
+    // Idea: JUMP 0 ends execution
     private executeCompute(instruction: number): number {
         let mi = instruction >> 29 & 0b1;
         let f = instruction >> 26 & 0b111;

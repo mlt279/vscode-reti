@@ -2,18 +2,27 @@ import * as vscode from 'vscode';
 
 export class ReTIConfig {
   static get version(): string {
-    return vscode.workspace.getConfiguration('reti').get<string>('version', 'Basic ReTI (TI)');
+    return vscode.workspace
+      .getConfiguration('reti')
+      .get<string>('version', 'Basic ReTI (TI)');
+  }
+
+  static get isOS(): boolean {
+    return this.version.includes('Extended');
+  }
+
+  static get isTI(): boolean {
+    return this.version.includes('Basic');
   }
 
   static get radix(): number {
-    const format = vscode.workspace.getConfiguration('reti').get<string>('number_style', 'Decimal');
+    const format = vscode.workspace
+      .getConfiguration('reti')
+      .get<string>('number_style', 'Decimal');
     switch (format) {
-      case 'Binary':
-        return 2;
-      case 'Hexadecimal':
-        return 16;
-      default:
-        return 10;
+      case 'Binary': return 2;
+      case 'Hexadecimal': return 16;
+      default: return 10;
     }
   }
 

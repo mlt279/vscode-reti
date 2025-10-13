@@ -2,15 +2,16 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { Emulator } from './reti/emulator';
+import { Emulator } from './reti/emulator_ti';
 import { parseDotReti, parseDotRetiAs } from './util/parser';
 import { showQuizPanel } from './ui/quizPanel';
 import { randomInstruction, randomReti } from './util/randomReti';
-import { decodeInstruction } from './reti/disassembler';
+import { decodeInstruction } from './reti/disassembler_ti';
 import { binToHex, hexToBin } from './util/retiUtility';
-import { assembleFile, assembleLine } from './reti/assembler';
-import { stateToString } from './reti/retiStructure';
+import { assembleFile, assembleLine } from './reti/assembler_ti';
+import { stateToString } from './reti/retiStructure_ti';
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient/node';
+import { ReTIConfig } from './config';
 
 import * as Net from 'net';
 import { randomBytes } from 'crypto';
@@ -27,6 +28,14 @@ const runMode: 'external' | 'server' | 'namedPipeServer' | 'inline' = 'inline';
 let languageClient: LanguageClient | undefined = undefined;
 
 export function activate(context: vscode.ExtensionContext) {	
+
+	const output = vscode.window.createOutputChannel('ReTI');
+	output.appendLine('ReTI extension activated');
+	output.appendLine(`Current ReTI mode: ${ReTIConfig.version}`);
+	output.appendLine(`isTI: ${ReTIConfig.isTI}  isOS: ${ReTIConfig.isOS}`);
+
+	context.subscriptions.push(output);
+
 
 	const serverModule = context.asAbsolutePath(path.join('out', 'language-server', 'server.js'));
 	let debugOptions = { execArgv: ['--nolazy', '--inspect=6009'] };
@@ -265,8 +274,8 @@ export function activate(context: vscode.ExtensionContext) {
 			activateReTIDebug(context);
 			break;
 	}
-
 }
+
 class DebugAdapterExecutableFactory implements vscode.DebugAdapterDescriptorFactory {
 
 	// The following use of a DebugAdapter factory shows how to control what debug adapter executable is used.
