@@ -1,6 +1,6 @@
 import { opType } from "./retiStructure_ti.js";
-import { generateBitMask } from "../util/retiUtility.js";
-import { ReTIConfig } from "../config.js";
+import { generateBitMask } from "../../util/retiUtility.js";
+import { ReTIConfig } from "../../config.js";
 
 const Registers: { [key: number]: string } = {
     0b00: "PC",

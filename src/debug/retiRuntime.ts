@@ -3,10 +3,10 @@
  *--------------------------------------------------------*/
 
 import { EventEmitter } from 'events';
-import { Emulator } from '../reti/emulator_ti';
-import { assembleLine } from '../reti/assembler_ti';
+import { Emulator } from '../reti/ti/emulator_ti';
+import { assembleLine } from '../reti/ti/assembler_ti';
 import { parseString } from '../util/parser';
-import { registerCode } from '../reti/retiStructure_ti';
+import { registerCode } from '../reti/ti/retiStructure_ti';
 import { CancellationTokenSource, CancellationToken } from 'vscode';
 import { generateBitMask, immediateAsTwoc } from '../util/retiUtility';
 

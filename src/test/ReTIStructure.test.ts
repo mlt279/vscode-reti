@@ -1,6 +1,6 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
-import { registerCode, ReTI } from '../reti/retiStructure_ti';
+import { registerCode, ReTI } from '../reti/ti/retiStructure_ti';
 import { generateBitMask } from '../util/retiUtility';
 
 suite ('ReTIStructure Test Suite', async () => {

@@ -2,14 +2,14 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { Emulator } from './reti/emulator_ti';
+import { Emulator } from './reti/ti/emulator_ti';
 import { parseDotReti, parseDotRetiAs } from './util/parser';
 import { showQuizPanel } from './ui/quizPanel';
 import { randomInstruction, randomReti } from './util/randomReti';
-import { decodeInstruction } from './reti/disassembler_ti';
+import { decodeInstruction } from './reti/ti/disassembler_ti';
 import { binToHex, hexToBin } from './util/retiUtility';
-import { assembleFile, assembleLine } from './reti/assembler_ti';
-import { stateToString } from './reti/retiStructure_ti';
+import { assembleFile, assembleLine } from './reti/ti/assembler_ti';
+import { stateToString } from './reti/ti/retiStructure_ti';
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient/node';
 import { ReTIConfig } from './config';
 

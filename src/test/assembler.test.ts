@@ -2,8 +2,8 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
 import { randomInstruction } from '../util/randomReti';
-import { decodeInstruction } from '../reti/disassembler_ti';
-import { assembleLine } from '../reti/assembler_ti';
+import { decodeInstruction } from '../reti/ti/disassembler_ti';
+import { assembleLine } from '../reti/ti/assembler_ti';
 import { binToHex, hexToBin } from '../util/retiUtility';
 
 //#endregion

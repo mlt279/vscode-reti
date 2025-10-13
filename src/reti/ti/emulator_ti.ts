@@ -1,17 +1,43 @@
 import * as vscode from 'vscode';
 import { computeCode, opType, registerCode, ReTI, ReTIState } from './retiStructure_ti';
-import { generateBitMask, immediateAsTwoc, immediateUnsigned } from '../util/retiUtility';
+import { generateBitMask, immediateAsTwoc, immediateUnsigned } from '../../util/retiUtility';
 import { assembleLine } from './assembler_ti';
+import { IReTIArchitecture, IReTIPort } from '../ReTIInterfaces';
+
+class ReTIPort_ti implements IReTIPort {
+  constructor(private ti: ReTI) {}
+
+  getRegister(index: number): number { return this.ti.getRegister(index as any); }
+  setRegister(index: number, value: number): void { this.ti.setRegister(index as any, value); }
+
+  getMem(addr: number): number { return this.ti.getData(addr); }
+  setMem(addr: number, value: number): void { this.ti.setData(addr, value); }
+
+  getCode(addr: number): number { return this.ti.getCode(addr); }
+  codeSize(): number { return this.ti.shadow.codeSize; }
+
+  getPC(): number { return this.ti.getRegister(0 as any); } 
+  setPC(v: number): void { this.ti.setRegister(0 as any, v); }
+}
 
 export class Emulator{
     private reti: ReTI;
     private initial_data: number[];
     private outPutChannel?: vscode.OutputChannel;
 
+    private architecture?: IReTIArchitecture;
+    private retiPort?: IReTIPort;
+
     constructor(code: number[], data: number[], outPutChannel?: vscode.OutputChannel) {
         this.initial_data = data;
         this.reti = new ReTI(code, [...data]);
         this.outPutChannel = outPutChannel;
+
+        this.retiPort = new ReTIPort_ti(this.reti);
+    }
+
+    public setArchitecture(architecture: IReTIArchitecture) {
+        this.architecture = architecture;
     }
 
     public isValidPC(pc: number): boolean {

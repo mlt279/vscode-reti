@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { randomInstruction } from '../util/randomReti';
-import { decodeInstruction } from '../reti/disassembler_ti';
+import { decodeInstruction } from '../reti/ti/disassembler_ti';
 import { binToHex, hexToBin } from '../util/retiUtility';
 import * as fs from 'fs';
 

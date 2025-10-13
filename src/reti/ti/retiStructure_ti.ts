@@ -1,4 +1,4 @@
-import { binToHex, generateBitMask, immediateAsTwoc, immediateUnsigned } from "../util/retiUtility.js";
+import { binToHex, generateBitMask, immediateAsTwoc, immediateUnsigned } from "../../util/retiUtility.js";
 
 const chunkSize = 2**16;
 
