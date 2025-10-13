@@ -1,9 +1,10 @@
 # Change Log
-
-All notable changes to the "reti-tools" extension will be documented in this file.
-
-Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
-
-## [Unreleased]
-
-- Initial release
+## 1.0 (Initial Release)
+## 1.0.1 (feature branch)
+- baseline before adding OS (Betriebssysteme) support and memory view.
+### Added
+- Setting to chose preffered number format
+### Changed
+### Fixed
+- Error in LSP where indentation caused positional errors when hovering over tokens
+- Added aliases for relational operators to LSP.

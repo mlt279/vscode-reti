@@ -139,7 +139,6 @@ export class ReTIRuntime extends EventEmitter {
 	private _breakPointsID = 1;
 	// #endregion
 
-	// Todo: Remove
 	private instructions: Word[] = [];
 	private starts: number[] = [];
 	private ends: number[] = [];
