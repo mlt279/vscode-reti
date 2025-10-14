@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
-import { computeCode, opType, registerCode, ReTI, ReTIState } from './retiStructure_ti';
+import { computeCode, opType, registerCode, ReTI} from './retiStructure_ti';
+import { ReTIState } from '../ReTIInterfaces';
 import { generateBitMask, immediateAsTwoc, immediateUnsigned } from '../../util/retiUtility';
 import { assembleLine } from './assembler_ti';
 import { IReTIArchitecture, IReTIPort } from '../ReTIInterfaces';

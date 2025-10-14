@@ -25,3 +25,17 @@ export interface IDisassemblerResult {
   instruction: string;
   explanation: [string, number, string][];
 }
+
+export interface ReTIState {
+
+
+    registers: number[];
+
+
+    data: Map<number, number>;
+
+
+    endCondition: string;
+
+
+}

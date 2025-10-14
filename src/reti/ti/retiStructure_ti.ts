@@ -1,12 +1,7 @@
 import { binToHex, generateBitMask, immediateAsTwoc, immediateUnsigned } from "../../util/retiUtility.js";
+import { ReTIState } from "../ReTIInterfaces";
 
 const chunkSize = 2**16;
-
-export interface ReTIState {
-    registers: number[];
-    data: Map<number, number>;
-    endCondition: string;
-}
 
 export enum opType {
     COMPUTE = 0b00,
@@ -193,7 +188,7 @@ export class ReTI {
         }
 
         state += "\nData:\n";
-        for (let [address, data] of this.getNoneZeroData()) {
+        for (let [address, data] of this.getNonZeroData()) {
             if (address < this.shadow.codeSize) {
                 continue;
             }
@@ -203,25 +198,27 @@ export class ReTI {
         return state;
     }
 
-    private getRealAdress(chunkKey: number, arrayIndex: number): number {
+    private getRealAddress(chunkKey: number, arrayIndex: number): number {
         return (chunkKey - 1) * chunkSize + arrayIndex + this.shadow.codeSize;
     }
 
-    public getNoneZeroData(): Map<number, number> {
-        let current_address = 0;
-        let noneZero = new Map<number, number>();
-        this.memory.forEach((element, chunkKey) => {
-            for (let i = 0; i < element.length; i++) {
-                current_address = chunkKey === 0 ? i : this.getRealAdress(chunkKey, i);
-                if (element[i] !== 0) {
-                    noneZero.set(current_address, element[i]);
+    public getNonZeroData(): Map<number, number> {
+        const nonZero = new Map<number, number>();
+        this.memory.forEach((chunk, chunkKey) => {
+            for (let i = 0; i < chunk.length; i++) {
+                if (chunkKey === 0) {
+                    continue;
+                }
+                const address = this.getRealAddress(chunkKey, i);
+                if (chunk[i] !== 0) {
+                    nonZero.set(address, chunk[i]);
                 }
             }
         });
-        return noneZero;
+        return nonZero;
     }
 
     public exportState(): ReTIState {
-        return { registers: [...this.registers], data: this.getNoneZeroData(), endCondition: "" };
+        return { registers: [...this.registers], data: this.getNonZeroData(), endCondition: "" };
     }
 }

@@ -61,6 +61,6 @@ suite ('ReTIStructure Test Suite', async () => {
         expectedData.set(1, 0b1111_1100 | generateBitMask(24));
         expectedData.set(2, 22);
         expectedData.set(42, 42);
-        let data = reti.getNoneZeroData();
+        let data = reti.getNonZeroData();
     });
 });
