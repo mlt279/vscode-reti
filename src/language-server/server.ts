@@ -12,12 +12,22 @@ import {
 } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
+let osMode = false;
+
 const connection = createConnection(ProposedFeatures.all);
 const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
 documents.listen(connection);
 
-const validRegisters: { [key: string]: string } = {
+const validRegisters: { [key: string]: string } = osMode? {   
     "ACC": "Accumulator",
+    "PC": "Program Counter",
+    "IN1": "Indexregister 1",
+    "IN2": "Indexregister 2",
+    "SP": "Stack Pointer",
+    "BAF": "Begin Active Frame",
+    "CS": "Begin of Code Segment",
+    "DS": "Begin of Data Segment"}
+    : { "ACC": "Accumulator",
     "PC": "Program Counter",
     "IN1": "Indexregister 1",
     "IN2": "Indexregister 2"
@@ -76,7 +86,7 @@ const validTokens = Object.keys(validRegisters).concat(Object.keys(validInstruct
 const validRegisterPattern = /(?<=(^|\s))(ACC|IN1|IN2|PC)(?!(\w|>|=|≥|<|≠|≤))/i;
 const validNumberPattern = /(?<=^|\s)-?\d+(?!(\w|>|=|≥|<|≠|≤))/i;
 // As soon as HEX/BIN is supported use this instead:
-// const validNumberPattern = (?<=(^|\\s))((0b(0|1)+)|(0x[A-Ga-g0-9]+)|(-?\\d+))(?!(\\w|>|=|≥|<|≠|≤));
+// const validNumberPattern = /(?<=(^|\\s))((0b(0|1)+)|(0x[A-Ga-g0-9]+)|(-?\\d+))(?!(\\w|>|=|≥|<|≠|≤))/i;
 
 connection.onInitialize((params: InitializeParams) => {
     return {
@@ -89,6 +99,11 @@ connection.onInitialize((params: InitializeParams) => {
             hoverProvider: true
         }
     };
+});
+
+connection.onNotification('reti/setMode', (mode: 'OS' | 'TI') => {
+    osMode = (mode === 'OS');
+    connection.console.log(`Language Server: switched to ${mode} mode`);
 });
 
 documents.onDidChangeContent(change => {

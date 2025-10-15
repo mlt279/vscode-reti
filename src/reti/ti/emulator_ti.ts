@@ -4,6 +4,7 @@ import { ReTIState } from '../ReTIInterfaces';
 import { generateBitMask, immediateAsTwoc, immediateUnsigned } from '../../util/retiUtility';
 import { assembleLine } from './assembler_ti';
 import { IReTIArchitecture, IReTIPort } from '../ReTIInterfaces';
+import { IEmulator } from '../emulator';
 
 class ReTIPort_ti implements IReTIPort {
   constructor(private ti: ReTI) {}
@@ -21,7 +22,7 @@ class ReTIPort_ti implements IReTIPort {
   setPC(v: number): void { this.ti.setRegister(0 as any, v); }
 }
 
-export class Emulator{
+export class Emulator implements IEmulator{
     private reti: ReTI;
     private initial_data: number[];
     private outPutChannel?: vscode.OutputChannel;
@@ -47,7 +48,7 @@ export class Emulator{
         return pc < this.reti.shadow.codeSize;
     }
 
-    public async emulate(token: vscode.CancellationToken, breakpoints?: Set<number>): Promise<ReTIState> {
+    public async emulate(token: vscode.CancellationToken, breakpoints?: Set<number>): Promise<string> {
         let end_cnd = "";
         while (true) {
             if (token.isCancellationRequested) {
@@ -93,8 +94,8 @@ export class Emulator{
             }
         }
         this.outPutChannel?.show();
-        let export_state = this.reti.exportState();
-        export_state.endCondition = end_cnd;
+        let export_state = this.reti.dumpState();
+        export_state += "\n" + end_cnd;
         return export_state;
     }
 

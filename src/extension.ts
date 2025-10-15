@@ -2,14 +2,12 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { Emulator } from './reti/ti/emulator_ti';
 import { parseDotReti, parseDotRetiAs } from './util/parser';
 import { showQuizPanel } from './ui/quizPanel';
 import { randomInstruction, randomReti } from './util/randomReti';
 
 import { binToHex, hexToBin } from './util/retiUtility';
 
-import { assembleLine } from './reti/ti/assembler_ti';
 import { decodeInstruction } from './reti/ti/disassembler_ti';
 
 import { disassembleWord } from './reti/disassembler';
@@ -29,6 +27,8 @@ import { platform } from 'process';
 import { ProviderResult } from 'vscode';
 import { ReTIDebugSession } from './debug/retiDebugSession';
 import { activateReTIDebug, workspaceFileAccessor } from './debug/activateReTIDebug';
+import { assembleLine } from './reti/assembler';
+import { createEmulator } from './reti/emulator';
 
 const runMode: 'external' | 'server' | 'namedPipeServer' | 'inline' = 'inline';
 
@@ -59,8 +59,28 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	};
 
-	languageClient = new LanguageClient('ReTI', 'ReTI Language Server', serverOptions, clientOptions);
-	languageClient.start();
+	languageClient = new LanguageClient('ReTI',	'ReTI Language Server',	serverOptions,	clientOptions);
+
+	(async () => {
+		const client = new LanguageClient(
+			'ReTI',
+			'ReTI Language Server',
+			serverOptions,
+			clientOptions
+		);
+
+		await client.start();
+
+		languageClient = client;
+
+		const mode = ReTIConfig.isOS ? 'OS' : 'TI';
+		client.sendNotification('reti/setMode', mode);
+
+		ReTIConfig.onDidChange(() => {
+			const newMode = ReTIConfig.isOS ? 'OS' : 'TI';
+			client.sendNotification('reti/setMode', newMode);
+		});
+	})();
 
 
 	let emulateTokenSource : vscode.CancellationTokenSource | undefined = undefined;
@@ -100,18 +120,18 @@ export function activate(context: vscode.ExtensionContext) {
 
 			emulateTokenSource = new vscode.CancellationTokenSource();
 			const outputChannel = vscode.window.createOutputChannel("ReTI Emulator");
-			let emulator = new Emulator(assembled, [], outputChannel);
+			let emulator = createEmulator(assembled, [], outputChannel);
 			try {
 				vscode.window.showInformationMessage("Emulation started.");
 				const finalState = await emulator.emulate(emulateTokenSource.token);
-				outputChannel.appendLine(`Emulation finished. Final state: ${stateToString(finalState)}`);
+				outputChannel.appendLine(`Emulation finished. Final state: ${finalState}`);
 				if (emulateTokenSource) {
 					emulateTokenSource.cancel();
 					emulateTokenSource.dispose();
 					emulateTokenSource = undefined;
 				}
 				outputChannel.show();
-				vscode.window.showInformationMessage(`Emulation finished. Final state: ${stateToString(finalState)}`);
+				vscode.window.showInformationMessage(`Emulation finished. Final state: ${finalState}`);
 			}
 			catch (e) {
 				// vscode.window.showErrorMessage(`Error when emulating: ${e}`);
