@@ -19,3 +19,4 @@ JUMP<= 10
     SUB ACC 0       ; ACC := n - i
 JUMP -9
 JUMP 0
+STORE 1

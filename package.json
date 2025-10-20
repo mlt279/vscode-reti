@@ -293,7 +293,8 @@
     "test-c": "npm run compile-tests && npm run test",
     "bundle-quiz": "esbuild src/reti.ts --bundle --outfile=static/reti.js --format=esm --sourcemap",
     "compile-web": "tsc --build tsconfig.web.json",
-    "compile-lsp": "tsc ./src/language-server/server.ts --outDir out/language-server"
+    "compile-lsp": "tsc --project tsconfig.lsp.json"
+
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",

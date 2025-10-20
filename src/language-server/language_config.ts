@@ -166,8 +166,12 @@ export class LanguageConfig {
     }
 
     public getValidRegisters():{ [key: string]: string }  {
-        if (this.osMode) {return validRegistersOS;}
-        else {return validRegistersTI;}
+        if (this.osMode) {
+            return validRegistersOS;
+        }
+        else {
+            return validRegistersTI;
+        }
     }
 
     public getValidTokens(){
@@ -194,10 +198,10 @@ export class LanguageConfig {
 
     public getValidRegisterPattern(): RegExp {
         if (this.osMode) {
-            return /(?<=(^|\s))(ACC|IN1|IN2|PC)(?!(\w|>|=|≥|<|≠|≤))/i;
+            return /(?<=(^|\s))(ACC|IN1|IN2|PC|SP|BAF|CS|DS)(?!(\w|>|=|≥|<|≠|≤))/i;
         }
         else {
-            return /(?<=(^|\s))(ACC|IN1|IN2|PC|SP|BAF|CS|DS)(?!(\w|>|=|≥|<|≠|≤))/i;
+            return /(?<=(^|\s))(ACC|IN1|IN2|PC)(?!(\w|>|=|≥|<|≠|≤))/i;
         }
     }
 
@@ -224,7 +228,7 @@ export class LanguageConfig {
     }
 
     public isValidOperand(token: string, type: OperandType): boolean {
-        if (token === "unsigned" || token === "signed") {
+        if (type === "unsigned" || type === "signed") {
             return this.getValidNumberPattern().test(token);
         } else {
             return this.getValidRegisterPattern().test(token);

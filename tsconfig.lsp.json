@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "static/language-server",
+    "rootDir": "src/language-server",
+    "sourceMap": true
+  },
+  "include": [
+    "src/language-server/server.ts",
+    "src/language-server/**/*.ts"
+  ]
+}

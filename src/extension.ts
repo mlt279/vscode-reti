@@ -43,7 +43,7 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(output);
 
 
-	const serverModule = context.asAbsolutePath(path.join('out', 'language-server', 'server.js'));
+	const serverModule = context.asAbsolutePath(path.join('static', 'language-server', 'server.js'));
 	let debugOptions = { execArgv: ['--nolazy', '--inspect=6009'] };
 
 	let serverOptions: ServerOptions = {
