@@ -22,58 +22,6 @@ const connection = createConnection(ProposedFeatures.all);
 const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
 documents.listen(connection);
 
-// TODO: Find a new way for this, because the constants are only changed at the start of the server.
-const validRegisters: { [key: string]: string } = osMode? {   
-    "ACC": "Accumulator",
-    "PC": "Program Counter",
-    "IN1": "Indexregister 1",
-    "IN2": "Indexregister 2",
-    "SP": "Stack Pointer",
-    "BAF": "Begin Active Frame",
-    "CS": "Begin of Code Segment",
-    "DS": "Begin of Data Segment"}
-    : { "ACC": "Accumulator",
-    "PC": "Program Counter",
-    "IN1": "Indexregister 1",
-    "IN2": "Indexregister 2"
-};
-const validInstructionPatterns = [/(?<=(^|\s))MOVE(?!(\w|>|=|≥|<|≠|≤))/i,
-    /(?<=(^|\s))STORE(IN[12])?(?!(\w|>|=|≥|<|≠|≤))/i,
-    /(?<=(^|\s))LOAD(I|IN[12])?(?!(\w|>|=|≥|<|≠|≤))/i,
-    /(?<=(^|\s))JUMP(?:!=|<=|>=|>|=|≥|<|≠|≤|lt|eq|leq|gt|geq|neq)?(?!(\w|>|=|≥|<|≠|≤))/i,
-    /(?<=(^|\s))NOP(?!(\w|>|=|≥|<|≠|≤))/i,
-    /(?<=(^|\s))(ADD|SUB|OPLUS|AND|OR)(?:I)?(?!(\w|>|=|≥|<|≠|≤))/i
-];
-
-const validInstructions: { [key: string]: { documentation: string, usage: string, result: string } } = {
-    "MOVE": { documentation: "Moves content of the first register to the second register.", usage: "MOVE S D", result: "D := S" },
-    "STORE": { documentation: "Stores the value of ACC register into the i-th memory cell.", usage: "STORE i", result: "M(i) := ACC" }, 
-    "STOREIN1": { documentation: "Stores the value of ACC register into the (i+IN1)-th memory cell.", usage: "STOREIN1 i", result: "M(i+IN1) := ACC" }, 
-    "STOREIN2": { documentation: "Stores the value of ACC register into the (i+IN2)-th memory cell.", usage: "STOREIN2 i", result: "M(i+IN2) := ACC" },
-    "LOAD": { documentation: "Loads the value of the i-th memory cell into the destination register.", usage: "LOAD D i", result: "D := M(i)" }, 
-    "LOADI": { documentation: "Loads the value of i into the destination register.", usage: "LOADI D i", result: "D := i" }, 
-    "LOADIN1": { documentation: "Loads the value of the (i+IN1)-th memory cell into the destination register.", usage: "LOADIN1 D i", result: "D := M(IN1+i)" }, 
-    "LOADIN2": { documentation: "Loads the value of the (i+IN2)-th memory cell into the destination register.", usage: "LOADIN2 D i", result: "D := M(IN1+i)" },
-    "JUMP": { documentation: "Increases the program counter by i.", usage: "JUMP i", result: "PC := PC + i" }, 
-    "JUMP>": { documentation: "Increases the program counter by i if ACC > 0.", usage: "JUMP> i", result: "if ACC > 0 then PC := PC + i else PC := PC + 1" }, 
-    "JUMP=": { documentation: "Increases the program counter by i if ACC = 0.", usage: "JUMP= i", result: "if ACC = 0 then PC := PC + i else PC := PC + 1" }, 
-    "JUMP≥": { documentation: "Increases the program counter by i if ACC ≥ 0.", usage: "JUMP≥ i", result: "if ACC ≥ 0 then PC := PC + i else PC := PC + 1" }, 
-    "JUMP<": { documentation: "Increases the program counter by i if ACC < 0.", usage: "JUMP< i", result: "if ACC < 0 then PC := PC + i else PC := PC + 1" }, 
-    "JUMP≠": { documentation: "Increases the program counter by i if ACC ≠ 0.", usage: "JUMP≠ i", result: "if ACC ≠ 0 then PC := PC + i else PC := PC + 1" }, 
-    "JUMP≤": { documentation: "Increases the program counter by i if ACC ≤ 0.", usage: "JUMP≤ i", result: "if ACC ≤ 0 then PC := PC + i else PC := PC + 1" }, 
-    "NOP": { documentation: "Increase the program counter by 1 (does nothing).", usage: "NOP", result: "PC := PC + 1" },
-    "ADD": { documentation: "Adds the value of the i-th memory cell to the value of the destination register.", usage: "ADD D i", result: "D := D + M(i)" }, 
-    "ADDI": { documentation: "Adds the value of i to the value of the destination register.", usage: "ADDI D i", result: "D := D + i" }, 
-    "SUB": { documentation: "Subtracts the value of the i-th memory cell from the value of the destination register.", usage: "SUB D i", result: "D := D - M(i)" }, 
-    "SUBI": { documentation: "Subtracts the value of i from the value of the destination register.", usage: "SUBI D i", result: "D := D - i" }, 
-    "OPLUS": { documentation: "Bitwise XNOR of the value of the i-th memory cell and the value of the destination register.", usage: "OPLUS D i", result: "D := D ⊕ M(i)" }, 
-    "OPLUSI": { documentation: "Bitwise XNOR of the value of i and the value of the destination register.", usage: "OPLUSI D i", result: "D := D ⊕ i" }, 
-    "AND": { documentation: "Bitwise AND of the value of the i-th memory cell and the value of the destination register.", usage: "AND D i", result: "D := D ∧ M(i)" }, 
-    "ANDI": { documentation: "Bitwise AND of the value of i and the value of the destination register.", usage: "ANDI D i", result: "D := D ∧ i" }, 
-    "OR": { documentation: "Bitwise OR of the value of the i-th memory cell and the value of the destination register.", usage: "OR D i", result: "D := D ∨ M(i)" }, 
-    "ORI": { documentation: "Bitwise OR of the value of i and the value of the destination register.", usage: "ORI D i", result: "D := D ∨ i" }
-};
-
 const operatorAliases: {[key: string] : string} = {
     "lt": "<",
     "eq": "=",
@@ -85,13 +33,6 @@ const operatorAliases: {[key: string] : string} = {
     ">=": "≥",
     "!=": "≠"
 };
-
-const validTokens = Object.keys(validRegisters).concat(Object.keys(validInstructions));
-
-const validRegisterPattern = /(?<=(^|\s))(ACC|IN1|IN2|PC)(?!(\w|>|=|≥|<|≠|≤))/i;
-const validNumberPattern = /(?<=^|\s)-?\d+(?!(\w|>|=|≥|<|≠|≤))/i;
-// As soon as HEX/BIN is supported use this instead:
-// const validNumberPattern = /(?<=(^|\\s))((0b(0|1)+)|(0x[A-Ga-g0-9]+)|(-?\\d+))(?!(\\w|>|=|≥|<|≠|≤))/i;
 
 connection.onInitialize((params: InitializeParams) => {
     return {
@@ -110,6 +51,9 @@ connection.onNotification('reti/setMode', (mode: 'OS' | 'TI') => {
     osMode = (mode === 'OS');
     language_config.setOsMode(osMode);
     connection.console.log(`Language Server: switched to ${mode} mode`);
+    for (const document of documents.all()) {
+        validateTextDocument(document);
+    }
 });
 
 documents.onDidChangeContent(change => {
@@ -126,286 +70,109 @@ function validateTextDocument(textDocument: TextDocument) {
         }
         const instruction = line.split(";")[0].trim();
         const tokens = instruction.split(/\s+/);
-        if (tokens.length > 0) {
-            if (tokens.length > 3) {
-                diagnostics.push({
-                    severity: DiagnosticSeverity.Error,
-                    range: {
-                        start: { line: index, character: 0 },
-                        end: { line: index, character: instruction.length }
-                    },
-                    message: `Instruction can have at most 3 tokens, found ${tokens.length}.`,
-                    source: 'reti'
-                });
-            }
+        const instruction_name = language_config.getInstructionName(instruction);
 
-            // MOVE Instruction, should be followed by two registers.
-            // MOVE S D
-            if (/(?<=(^|\s))MOVE(?!(\w|>|=|≥|<|≠|≤))/i.test(tokens[0])) {
-                if (tokens.length < 3) {
-                    diagnostics.push({
-                        severity: DiagnosticSeverity.Error,
-                        range: {
-                            start: { line: index, character: 0 },
-                            end: { line: index, character: instruction.length }
-                        },
-                        message: `MOVE instructions require two operands.`,
-                        source: 'reti'
-                    });   
-                } else {
-                    if (!validRegisterPattern.test(tokens[1])) {
-                        diagnostics.push({
-                            severity: DiagnosticSeverity.Error,
-                            range: {
-                                start: { line: index, character: tokens[0].length + 1 },
-                                end: { line: index, character: tokens[0].length + tokens[1].length + 1  }
-                            },
-                            message: `MOVE should be followed by a register. ${tokens[1]} is not a valid source register.`,
-                            source: 'reti'
-                        });
+        //#region Check for validity of instruction
+        if (!instruction_name) {
+            // Instruction is invalid
+            diagnostics.push({
+                severity: DiagnosticSeverity.Error,
+                range: {
+                    start: { line: index, character: 0},
+                    end: { line: index, character: instruction.length}
+                },
+                message: `Unknown instruction "${tokens[0]}".`,
+                source: 'reti'
+            });
+        } else {
+        //#endregion
+            
+            //#region Check for correct number of tokens.
+            let num_operands = language_config.getNumOperands(instruction_name);
+            if (tokens.length - 1 !== num_operands) {
+            diagnostics.push({
+                severity: DiagnosticSeverity.Error,
+                range: {
+                    start: { line: index, character: 0},
+                    end: { line: index, character: instruction.length}
+                },
+                message: `Instruction of type '${instruction_name}' requires ${num_operands} operands, found ${tokens.length - 1}.`,
+                source: 'reti'
+            });
+            }
+            //#endregion
+
+            //#region Check for validity of operands.
+            let valid = false;
+            let temp_diagnostics: Diagnostic[] = [];
+            const instr_patterns = language_config.getInstructionSet()[instruction_name];
+
+            for (let i = 0; i++; i < instr_patterns.length) {
+                const pattern = instr_patterns[i];
+                let pattern_fulfilled = true;
+                let current_token_start = 0;
+                for (let j = 0; j++; j < pattern.length ){
+                    const type = pattern[j];
+                    current_token_start += tokens[j].length + 1;
+                    if (!language_config.isValidOperand(tokens[j + 1], type)) {
+                        pattern_fulfilled = false;
                     }
 
-                    if (!validRegisterPattern.test(tokens[2])) {
-                        diagnostics.push({
-                            severity: DiagnosticSeverity.Error,
-                            range: {
-                                start: { line: index, character: tokens[0].length + tokens[1].length + 2 },
-                                end: { line: index, character: tokens[0].length + tokens[1].length + tokens[2].length + 2 }
-                            },
-                            message: `${tokens[2]} is not a valid destination register.`,
-                            source: 'reti'
-                        });
-                    }
-                }
-            }
-
-            // STORE Instruction, should be followed by exactly one register.
-            // STORE* I
-            else if (/(?<=(^|\s))STORE(IN[12])?(?!(\w|>|=|≥|<|≠|≤))/i.test(tokens[0])) {
-                if (tokens.length < 2) {
-                    diagnostics.push({
+                    temp_diagnostics.push({
                         severity: DiagnosticSeverity.Error,
                         range: {
-                            start: { line: index, character: 0 },
-                            end: { line: index, character: instruction.length }
+                            start: { line: index, character: current_token_start},
+                            end: { line: index, character: current_token_start + tokens[j + 1].length }
                         },
-                        message: `STORE instructions require one operand.`,
-                        source: 'reti'
-                    });   
-                } else {
-                    if (tokens.length > 2) {
-                        diagnostics.push({
-                            severity: DiagnosticSeverity.Error,
-                            range: {
-                                start: { line: index, character: tokens[0].length + 1 },
-                                end: { line: index, character: tokens[0].length + tokens[1].length + 1 }
-                            },
-                            message: `Too many operands. STORE instruction only takes one operand.`,
-                            source: 'reti'
-                        });
-                    }
-
-                    if (!validNumberPattern.test(tokens[1])) {
-                        diagnostics.push({
-                            severity: DiagnosticSeverity.Error,
-                            range: {
-                                start: { line: index, character: tokens[0].length + 1 },
-                                end: { line: index, character: tokens[0].length + tokens[1].length + 1 }
-                            },
-                            message: `${tokens[1]} is not a valid number.`,
-                            source: 'reti'
-                        });
-                    }
-                    else {
-                        if(tokens[1].startsWith('-')) {
-                            diagnostics.push({
-                                severity: DiagnosticSeverity.Warning,
-                                range: {
-                                    start: { line: index, character: tokens[0].length + 1 },
-                                    end: { line: index, character: tokens[0].length + tokens[1].length + 1 }
-                                },
-                                message: `Immediate will be treated as unsigned. Negative numbers might not behave as expected.`,
-                                source: 'reti'
-                            });
-                        }
-                    }}
-            }
-
-            // LOAD Instruction, should be followed by exactly one register and a number.
-            // LOAD* D I
-            else if (/(?<=(^|\s))LOAD(I|IN[12])?(?!(\w|>|=|≥|<|≠|≤))/i.test(tokens[0])) {
-                if (tokens.length < 3) {
-                    diagnostics.push({
-                        severity: DiagnosticSeverity.Error,
-                        range: {
-                            start: { line: index, character: 0 },
-                            end: { line: index, character: instruction.length }
-                        },
-                        message: `LOAD instructions require two operands.`,
-                        source: 'reti'
-                    });   
-                } else {
-                    if (!validRegisterPattern.test(tokens[1])) {
-                        diagnostics.push({
-                            severity: DiagnosticSeverity.Error,
-                            range: {
-                                start: { line: index, character: tokens[0].length + 1 },
-                                end: { line: index, character: tokens[0].length + tokens[1].length + 1 }
-                            },
-                            message: `${tokens[1]} is not a valid register.`,
-                            source: 'reti'
-                        });
-                    }
-
-                    if (!validNumberPattern.test(tokens[2])) {
-                        diagnostics.push({
-                            severity: DiagnosticSeverity.Error,
-                            range: {
-                                start: { line: index, character: tokens[0].length + tokens[1].length + 2 },
-                                end: { line: index, character: tokens[0].length + tokens[1].length + tokens[2].length + 2 }
-                            },
-                            message: `${tokens[2]} is not a known number.`,
-                            source: 'reti'
-                        });
-
-                        if(tokens[1].startsWith('-') && !(tokens[0]).toLowerCase().endsWith('i')) {
-                            diagnostics.push({
-                                severity: DiagnosticSeverity.Warning,
-                                range: {
-                                    start: { line: index, character: tokens[0].length + tokens[1].length + 2 },
-                                    end: { line: index, character: tokens[0].length + tokens[1].length + tokens[2].length + 3 }
-                                },
-                                message: `Immediate will be treated as unsigned. Negative numbers might not behave as expected.`,
-                                source: 'reti'
-                            });
-                        }
-                    }}
-            }
-
-            // COMPUTE Instructions, should be followed by a valid register and a number.
-            // COMPUTE D I
-            else if (/(?<=(^|\s))(ADD|SUB|OPLUS|AND|OR)(?:I)?(?!(\w|>|=|≥|<|≠|≤))/i.test(tokens[0])) {
-                if (tokens.length < 3) {
-                    diagnostics.push({
-                        severity: DiagnosticSeverity.Error,
-                        range: {
-                            start: { line: index, character: 0 },
-                            end: { line: index, character: instruction.length }
-                        },
-                        message: `COMPUTE instructions require two operands.`,
-                        source: 'reti'
-                    });   
-                } else { 
-                    if (!validRegisterPattern.test(tokens[1])) {
-                        diagnostics.push({
-                            severity: DiagnosticSeverity.Error,
-                            range: {
-                                start: { line: index, character: tokens[0].length + tokens[1].length + 2 },
-                                end: { line: index, character: tokens[0].length + tokens[1].length + tokens[2].length + 2 }
-                            },
-                            message: `${tokens[1]} is not a valid register.`,
-                            source: 'reti'
-                        });
-                    }
-
-                    if (!validNumberPattern.test(tokens[2])) {
-                        diagnostics.push({
-                            severity: DiagnosticSeverity.Error,
-                            range: {
-                                start: { line: index, character: tokens[0].length + tokens[1].length + 2 },
-                                end: { line: index, character: tokens[0].length + tokens[1].length + tokens[2].length + 2 }
-                            },
-                            message: `${tokens[2]} is not a known number.`,
-                            source: 'reti'
-                        });
-
-                        if(tokens[1].startsWith('-') && !(tokens[0]).toLowerCase().endsWith('i')) {
-                            diagnostics.push({
-                                severity: DiagnosticSeverity.Warning,
-                                range: {
-                                    start: { line: index, character: tokens[0].length + tokens[1].length + 2 },
-                                    end: { line: index, character: tokens[0].length + tokens[1].length + tokens[2].length + 3 }
-                                },
-                                message: `Immediate will be treated as unsigned. Negative numbers might not behave as expected.`,
-                                source: 'reti'
-                            });
-                        }
-                    }}
-            }
-
-            else if (/(?<=(^|\s))JUMP(?:!=|<=|>=|>|=|≥|<|≠|≤|lt|eq|leq|gt|geq|neq)?(?!(\w|>|=|≥|<|≠|≤))/i.test(tokens[0])) {
-                if (tokens.length < 2) {
-                    diagnostics.push({
-                        severity: DiagnosticSeverity.Error,
-                        range: {
-                            start: { line: index, character: 0 },
-                            end: { line: index, character: instruction.length }
-                        },
-                        message: `JUMP instructions require one operand.`,
-                        source: 'reti'
-                    });   
-                } else { 
-                    if (!validNumberPattern.test(tokens[1])) {
-                        diagnostics.push({
-                            severity: DiagnosticSeverity.Error,
-                            range: {
-                                start: { line: index, character: tokens[0].length + 1 },
-                                end: { line: index, character: tokens[0].length + tokens[1].length + 1 }
-                            },
-                            message: `${tokens[1]} is not a known number.`,
-                            source: 'reti'
-                        });
-
-                        if(tokens[1].startsWith('-')) {
-                            diagnostics.push({
-                                severity: DiagnosticSeverity.Warning,
-                                range: {
-                                    start: { line: index, character: tokens[0].length + 1 },
-                                    end: { line: index, character: tokens[0].length + tokens[1].length + 1 }
-                                },
-                                message: `If PC should fall < 0 unexpected behaviour might happen.`,
-                                source: 'reti'
-                            });
-                        }
-                    }}
-            }
-
-            else if (/(?<=(^|\s))NOP(?!(\w|>|=|≥|<|≠|≤))/i.test(tokens[0])) {
-                if (tokens.length > 1) {
-                    diagnostics.push({
-                        severity: DiagnosticSeverity.Error,
-                        range: {
-                            start: { line: index, character: tokens[0].length + 1 },
-                            end: { line: index, character: tokens[0].length + tokens[1].length + 1 }
-                        },
-                        message: `NOP instruction does not take any operands.`,
+                        message: `Invalid operand.`,
                         source: 'reti'
                     });
+                    //#region Give warnings for negative numbers when they will be treated as unsigned.
+                    // TODO: Look up in powerpoint and recordings wether the cheatsheet is correct.
+                    // Signed:
+                    //  ti: 
+                    //      loadin
+                    //      loadi
+                    //      storein
+                    //      compi
+                    //      jump
+                    //  os:
+                    //      loadi
+                    //      (Meiner auffassung nach fehlt hier noch storein und loadin, laut cheatsheet sind die aber unsigned)
+                    //      compi
+                    //      jump
+                    //      int (ist das richtig?, laut Tabelle ja, aber würde keinen Sinn ergeben oder?)
+                    if (type === "unsigned" && language_config.getValidNumberPattern().test(tokens[j + 1]) && tokens[j + 1].startsWith("-")){
+                           diagnostics.push({
+                                severity: DiagnosticSeverity.Warning,
+                                range: {
+                                    start: { line: index, character: current_token_start},
+                                    end: { line: index, character: current_token_start + tokens[j + 1].length }
+                                },
+                                message: `Immediate will be treated as unsigned. Negative numbers might not behave as expected.`,
+                                source: 'reti'
+                            });
+                    }
+                    //#endregion
                 }
+
+                // If any of the pattern is fulfilled, the line of code is valid.
+                if (pattern_fulfilled) {valid = true;}
+
             }
 
-            // No valid opcode found at start of the line.
-            else {
-                diagnostics.push({
-                    severity: DiagnosticSeverity.Error,
-                    range: {
-                        start: { line: index, character: 0 },
-                        end: { line: index, character: tokens[0].length }
-                    },
-                    message: `Unknown instruction ${tokens[0]}.`,
-                    source: 'reti'
-                });
+            if (!valid) {
+                diagnostics.push(...temp_diagnostics);
             }
+            //#endregion
         }
     });
     connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
 }
 
-// TODO: Look at how this works and how to implement it in a more intelligent way. Especially if 
-// I want to auto-complete registers after instructions etc.
 connection.onCompletion(
     (_textDocumentPosition: TextDocumentPositionParams): CompletionItem[] => {
-        return validTokens.map(token => ({
+        return language_config.getValidTokens().map(token => ({
             label: token
         }));
     }
@@ -416,9 +183,9 @@ connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
         ...item,
         // Registers don't have a documentation or a result so validInstructions has a different Format.
         // This means it is necessary to check if the item is a register.
-        detail: validRegisters[item.label] ? validRegisters[item.label] : validInstructions[item.label].usage,
-        documentation: validInstructions[item.label] ? validInstructions[item.label].documentation : undefined,
-        kind: validRegisters[item.label] ? CompletionItemKind.Variable : CompletionItemKind.Function
+        detail: language_config.getValidRegisters()[item.label] ? language_config.getValidRegisters()[item.label] : language_config.getDocumentation()[item.label].usage,
+        documentation: language_config.getDocumentation()[item.label] ? language_config.getDocumentation()[item.label].documentation : undefined,
+        kind: language_config.getValidRegisters()[item.label] ? CompletionItemKind.Variable : CompletionItemKind.Function
     };
 });
 
@@ -447,20 +214,20 @@ connection.onHover((textDocumentPosition: TextDocumentPositionParams) => {
 
     if (!tokenUnderCursor) {return null;}
 
-    if (validRegisters[tokenUnderCursor]) {
+    if (language_config.getValidRegisters()[tokenUnderCursor]) {
         return {
             contents: {
                 kind: "markdown",
-                value: `**${tokenUnderCursor}**\n\n${validRegisters[tokenUnderCursor]}`
+                value: `**${tokenUnderCursor}**\n\n${language_config.getValidRegisters()[tokenUnderCursor]}`
             }
         };
     }
 
-    if (validInstructions[tokenUnderCursor]) {
+    if (language_config.getDocumentation()[tokenUnderCursor]) {
         return {
             contents: {
                 kind: "markdown",
-                value: `**${tokenUnderCursor}**\n\nUsage: ${validInstructions[tokenUnderCursor].usage}\n\nResult: ${validInstructions[tokenUnderCursor].result}\n\n${validInstructions[tokenUnderCursor].documentation}`
+                value: `**${tokenUnderCursor}**\n\nUsage: ${language_config.getDocumentation()[tokenUnderCursor].usage}\n\nResult: ${language_config.getDocumentation()[tokenUnderCursor].result}\n\n${language_config.getDocumentation()[tokenUnderCursor].documentation}`
             }
         };
     }

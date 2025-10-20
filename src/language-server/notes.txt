@@ -29,13 +29,70 @@ isValidRegister(register: string) {
                 // Verify tokens
                 valid = false;
                 for i in instructionSet[instructionType] {
-                    for j in i {
-                        if (!isValidOperand(tokens[j + 1], i[j])){
-                            message: Operand nr. {j} should be of type i[j]. tokens[j + 1] is not a valid i[j]).
-                        }
-                        else {
-                            valid = true;
-                        }
-                    }
+                    if type is type of options:
+
                 }
                 if !valid: push diagnostics
+
+                    diagnostics.push({
+                        severity: DiagnosticSeverity.Error,
+                        range: {
+                            start: { line: index, character: 0 },
+                            end: { line: index, character: instruction.length }
+                        },
+                        message: `STORE instructions require one operand.`,
+                        source: 'reti'
+                    });
+       
+    connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
+
+
+                            if(tokens[1].startsWith('-')) {
+                            diagnostics.push({
+                                severity: DiagnosticSeverity.Warning,
+                                range: {
+                                    start: { line: index, character: tokens[0].length + 1 },
+                                    end: { line: index, character: tokens[0].length + tokens[1].length + 1 }
+                                },
+                                message: `Immediate will be treated as unsigned. Negative numbers might not behave as expected.`,
+                                source: 'reti'
+                            });
+                        }
+                    }}
+
+                    // No valid opcode found at start of the line.
+            else {
+                diagnostics.push({
+                    severity: DiagnosticSeverity.Error,
+                    range: {
+                        start: { line: index, character: 0 },
+                        end: { line: index, character: tokens[0].length }
+                    },
+                    message: `Unknown instruction ${tokens[0]}.`,
+                    source: 'reti'
+                });
+            }
+
+
+
+
+_________________
+
+num of tokens
+valid instructions
+valid operands
+warnings for negative when unsigned
+
+
+                           diagnostics.push({
+                                severity: DiagnosticSeverity.Warning,
+                                range: {
+                                    start: { line: index, character: tokens[0].length + 1 },
+                                    end: { line: index, character: tokens[0].length + tokens[1].length + 1 }
+                                },
+                                message: `Immediate will be treated as unsigned. Negative numbers might not behave as expected.`,
+                                source: 'reti'
+                            });
+
+autocompletion
+onHover
