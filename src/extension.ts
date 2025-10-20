@@ -15,7 +15,6 @@ import { disassembleWord } from './reti/disassembler';
 import * as AsmTI from './reti/ti/assembler_ti';
 import * as AsmOS from './reti/os/assembler_os';
 
-import { ReTI, stateToString } from './reti/ti/retiStructure_ti';
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient/node';
 import { ReTIConfig } from './config';
 

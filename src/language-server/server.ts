@@ -12,12 +12,17 @@ import {
 } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
+import { LanguageConfig } from './language_config';
+
 let osMode = false;
+
+let language_config = new LanguageConfig();
 
 const connection = createConnection(ProposedFeatures.all);
 const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
 documents.listen(connection);
 
+// TODO: Find a new way for this, because the constants are only changed at the start of the server.
 const validRegisters: { [key: string]: string } = osMode? {   
     "ACC": "Accumulator",
     "PC": "Program Counter",
@@ -103,6 +108,7 @@ connection.onInitialize((params: InitializeParams) => {
 
 connection.onNotification('reti/setMode', (mode: 'OS' | 'TI') => {
     osMode = (mode === 'OS');
+    language_config.setOsMode(osMode);
     connection.console.log(`Language Server: switched to ${mode} mode`);
 });
 

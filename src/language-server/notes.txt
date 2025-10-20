@@ -1,0 +1,41 @@
+instruction_type
+tokens length
+-> {instruction_type} requires {tokens_length} - 1 operands
+
+dict instruction patterns:
+{instruction: [type, type, type]}
+
+type € ("number", "register")
+
+funktion:
+isValidtype(type:string, value: string): bool {
+    if type === "number" {
+        return isValidNumber(value)
+    }
+    else if type === "register" {
+        return isValidRegister(value)
+    }
+}
+
+isValidRegister(register: string) {
+
+
+}
+
+                // Verify num of operands
+                if tokens.length !== instructionSet[instructionType].length + 1
+                    message: {instructionType} requires instructionSet[instructionType].length operands.
+
+                // Verify tokens
+                valid = false;
+                for i in instructionSet[instructionType] {
+                    for j in i {
+                        if (!isValidOperand(tokens[j + 1], i[j])){
+                            message: Operand nr. {j} should be of type i[j]. tokens[j + 1] is not a valid i[j]).
+                        }
+                        else {
+                            valid = true;
+                        }
+                    }
+                }
+                if !valid: push diagnostics
