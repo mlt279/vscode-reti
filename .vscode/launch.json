@@ -1,0 +1,87 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug Language Server (Attach)",
+            "type": "node",
+            "request": "attach",
+            "port": 6009,
+            "restart": true,
+            "sourceMaps": true,
+            "outFiles": ["${workspaceFolder}/out/**/*.js"],
+            "skipFiles": ["<node_internals>/**"]
+        },
+        {
+            "name": "Extension",
+            "type": "extensionHost",
+            "request": "launch",
+            "args": [
+                "--extensionDevelopmentPath=${workspaceFolder}",
+                "${workspaceFolder}/sampleWorkspace"
+            ],
+            "outFiles": [
+                "${workspaceFolder}/dist/**/*.js"
+            ],
+            "preLaunchTask": "npm: watch"
+        },
+        {
+            "name": "Web Extension",
+            "type": "extensionHost",
+            "debugWebWorkerHost": true,
+            "request": "launch",
+            "args": [
+                "--extensionDevelopmentPath=${workspaceFolder}",
+                "--extensionDevelopmentKind=web",
+                "${workspaceFolder}/sampleWorkspace"
+            ],
+            "outFiles": [
+                "${workspaceFolder}/dist/**/*.js"
+            ],
+            "preLaunchTask": "npm: watch web"
+        },
+        {
+            "name": "Server",
+            "type": "node",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}/src/debug/debugAdapter.ts",
+            "args": [
+                "--server=4711"
+            ],
+            "outFiles": [
+                "${workspaceFolder}/out/**/*.js"
+            ],
+            "preLaunchTask": "npm: compile-tests"
+        },
+        {
+            "name": "Tests",
+            "type": "node",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+            "args": [
+                "-u", "tdd",
+                "--timeout", "999999",
+                "--colors",
+                "./out/tests/"
+            ],
+            "outFiles": [
+                "${workspaceFolder}/out/**/*.js"
+            ],
+            "internalConsoleOptions": "openOnSessionStart",
+            "preLaunchTask": "npm: compile-tests"
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Extension + Language Server Debug",
+            "configurations": [ "Extension", "Debug Language Server (Attach)" ],
+            "stopAll": true
+        },
+        {
+            "name": "Extension + Server",
+            "configurations": [ "Extension", "Server" ],
+			"stopAll": true
+        }
+    ]
+}
