@@ -51,7 +51,7 @@ function validateTextDocument(textDocument) {
         }
         const instruction = line.split(";")[0].trim();
         const tokens = instruction.split(/\s+/);
-        const instruction_name = language_config.getInstructionName(instruction);
+        const instruction_name = language_config.getInstructionName(tokens[0]);
         //#region Check for validity of instruction
         if (!instruction_name) {
             // Instruction is invalid
@@ -79,68 +79,70 @@ function validateTextDocument(textDocument) {
                     message: `Instruction of type '${instruction_name}' requires ${num_operands} operands, found ${tokens.length - 1}.`,
                     source: 'reti'
                 });
+                //#endregion
             }
-            //#endregion
-            //#region Check for validity of operands.
-            let valid = false;
-            let temp_diagnostics = [];
-            const instr_patterns = language_config.getInstructionSet()[instruction_name];
-            for (let i = 0; i++; i < instr_patterns.length) {
-                const pattern = instr_patterns[i];
-                let pattern_fulfilled = true;
-                let current_token_start = 0;
-                for (let j = 0; j++; j < pattern.length) {
-                    const type = pattern[j];
-                    current_token_start += tokens[j].length + 1;
-                    if (!language_config.isValidOperand(tokens[j + 1], type)) {
-                        pattern_fulfilled = false;
-                    }
-                    temp_diagnostics.push({
-                        severity: node_1.DiagnosticSeverity.Error,
-                        range: {
-                            start: { line: index, character: current_token_start },
-                            end: { line: index, character: current_token_start + tokens[j + 1].length }
-                        },
-                        message: `Invalid operand.`,
-                        source: 'reti'
-                    });
-                    //#region Give warnings for negative numbers when they will be treated as unsigned.
-                    // TODO: Look up in powerpoint and recordings wether the cheatsheet is correct.
-                    // Signed:
-                    //  ti: 
-                    //      loadin
-                    //      loadi
-                    //      storein
-                    //      compi
-                    //      jump
-                    //  os:
-                    //      loadi
-                    //      (Meiner auffassung nach fehlt hier noch storein und loadin, laut cheatsheet sind die aber unsigned)
-                    //      compi
-                    //      jump
-                    //      int (ist das richtig?, laut Tabelle ja, aber würde keinen Sinn ergeben oder?)
-                    if (type === "unsigned" && language_config.getValidNumberPattern().test(tokens[j + 1]) && tokens[j + 1].startsWith("-")) {
-                        diagnostics.push({
-                            severity: node_1.DiagnosticSeverity.Warning,
+            else {
+                //#region Check for validity of operands.
+                let valid = false;
+                let temp_diagnostics = [];
+                const instr_patterns = language_config.getInstructionSet()[instruction_name];
+                for (let i = 0; i < instr_patterns.length; i++) {
+                    const pattern = instr_patterns[i];
+                    let pattern_fulfilled = true;
+                    let current_token_start = 0;
+                    for (let j = 0; j < pattern.length; j++) {
+                        const type = pattern[j];
+                        current_token_start += tokens[j].length + 1;
+                        if (!language_config.isValidOperand(tokens[j + 1], type)) {
+                            pattern_fulfilled = false;
+                        }
+                        temp_diagnostics.push({
+                            severity: node_1.DiagnosticSeverity.Error,
                             range: {
                                 start: { line: index, character: current_token_start },
                                 end: { line: index, character: current_token_start + tokens[j + 1].length }
                             },
-                            message: `Immediate will be treated as unsigned. Negative numbers might not behave as expected.`,
+                            message: `Invalid operand.`,
                             source: 'reti'
                         });
+                        //#region Give warnings for negative numbers when they will be treated as unsigned.
+                        // TODO: Look up in powerpoint and recordings wether the cheatsheet is correct.
+                        // Signed:
+                        //  ti: 
+                        //      loadin
+                        //      loadi
+                        //      storein
+                        //      compi
+                        //      jump
+                        //  os:
+                        //      loadi
+                        //      (Meiner auffassung nach fehlt hier noch storein und loadin, laut cheatsheet sind die aber unsigned)
+                        //      compi
+                        //      jump
+                        //      int (ist das richtig?, laut Tabelle ja, aber würde keinen Sinn ergeben oder?)
+                        if (type === "unsigned" && language_config.getValidNumberPattern().test(tokens[j + 1]) && tokens[j + 1].startsWith("-")) {
+                            diagnostics.push({
+                                severity: node_1.DiagnosticSeverity.Warning,
+                                range: {
+                                    start: { line: index, character: current_token_start },
+                                    end: { line: index, character: current_token_start + tokens[j + 1].length }
+                                },
+                                message: `Immediate will be treated as unsigned. Negative numbers might not behave as expected.`,
+                                source: 'reti'
+                            });
+                        }
+                        //#endregion
                     }
-                    //#endregion
+                    // If any of the pattern is fulfilled, the line of code is valid.
+                    if (pattern_fulfilled) {
+                        valid = true;
+                    }
                 }
-                // If any of the pattern is fulfilled, the line of code is valid.
-                if (pattern_fulfilled) {
-                    valid = true;
+                if (!valid) {
+                    diagnostics.push(...temp_diagnostics);
                 }
+                //#endregion
             }
-            if (!valid) {
-                diagnostics.push(...temp_diagnostics);
-            }
-            //#endregion
         }
     });
     connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
