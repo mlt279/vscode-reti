@@ -12,6 +12,15 @@
   "activationEvents": [],
   "main": "./dist/extension.js",
   "contributes": {
+    "views": {
+      "debug": [{
+        "type": "webview",
+        "id": "reti.memoryView",
+        "name": "Memory View"
+        }
+      ]
+    }
+    ,
     "breakpoints": [
       {
         "language": "reti"

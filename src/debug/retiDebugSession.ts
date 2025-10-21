@@ -15,6 +15,7 @@ import { basename } from 'path-browserify';
 import { ReTIRuntime, IRuntimeBreakpoint, FileAccessor, RuntimeVariable } from './retiRuntime'; // timeout, IRuntimeVariableType
 import { parse } from 'path';
 import { CancellationTokenSource, CancellationToken } from 'vscode';
+import * as base64 from 'base64-js';
 
 const { Subject } = require('await-notify');
 
@@ -353,38 +354,89 @@ export class ReTIDebugSession extends LoggingDebugSession {
 	// 	this.sendEvent(new InvalidatedEvent(['variables']));
 	// }
 
+	// protected async readMemoryRequest(
+	// 	response: DebugProtocol.ReadMemoryResponse, 
+	// 	{ offset = 0, count, memoryReference }: DebugProtocol.ReadMemoryArguments)
+	// {
+	// 	// const variable = this._variableHandles.get(Number(memoryReference));
+	// 	// if (typeof variable === 'object' && variable.memory) {
+	// 	// 	const memory = variable.memory.subarray(
+	// 	// 		Math.min(offset, variable.memory.length),
+	// 	// 		Math.min(offset + count, variable.memory.length),
+	// 	// 	);
+
+	// 	// 	response.body = {
+	// 	// 		address: offset.toString(),
+	// 	// 		data: base64.fromByteArray(memory),
+	// 	// 		unreadableBytes: count - memory.length
+	// 	// 	};
+	// 	// } else {
+	// 	// 	response.body = {
+	// 	// 		address: offset.toString(),
+	// 	// 		data: '',
+	// 	// 		unreadableBytes: count
+	// 	// 	};
+	// 	// }
+	// 	// else if (command === 'readMemory') {
+	// 	// 			const {address, count} = args;
+	// 	// 			const data = this._runtime.getMemoryChunk(address, count);
+	// 	// 			response.body = {data: data};
+	// 	// 			this.sendResponse(response);
+	// 	// 		} else if (command === 'writeMemory') {
+	// 	// 			super.customRequest(command, response, args);
+	// 	// 		}
+	// 	const data = this._runtime.getMemoryChunk(offset, count);
+
+	// 	response.body = {
+	// 		address: offset.toString(),
+	// 		data: data.toString(),
+	// 		unreadableBytes: 69
+	// 	};
+
+	// 	this.sendResponse(response);
+	// }
+
 	protected async readMemoryRequest(
-		response: DebugProtocol.ReadMemoryResponse, 
-		{ offset = 0, count, memoryReference }: DebugProtocol.ReadMemoryArguments)
-	{
-		// const variable = this._variableHandles.get(Number(memoryReference));
-		// if (typeof variable === 'object' && variable.memory) {
-		// 	const memory = variable.memory.subarray(
-		// 		Math.min(offset, variable.memory.length),
-		// 		Math.min(offset + count, variable.memory.length),
-		// 	);
+	response: DebugProtocol.ReadMemoryResponse,
+	args: DebugProtocol.ReadMemoryArguments
+	): Promise<void> {
+	try {
+		const address = Number(args.memoryReference); // starting word address
+		const wordCount = args.count ?? 16;           // number of words to read
 
-		// 	response.body = {
-		// 		address: offset.toString(),
-		// 		data: base64.fromByteArray(memory),
-		// 		unreadableBytes: count - memory.length
-		// 	};
-		// } else {
-		// 	response.body = {
-		// 		address: offset.toString(),
-		// 		data: '',
-		// 		unreadableBytes: count
-		// 	};
-		// }
+		// 1. Read 32-bit words from your emulator/runtime
+		const words: number[] = [];
+		for (let i = 0; i < wordCount; i++) {
+		const word = this._runtime.getData(address + i); // returns a 32-bit value
+		words.push(word >>> 0); // ensure unsigned
+		}
 
+		// 2. Flatten to bytes (little endian example)
+		const bytes: number[] = [];
+		for (const word of words) {
+		bytes.push(word & 0xFF);
+		bytes.push((word >> 8) & 0xFF);
+		bytes.push((word >> 16) & 0xFF);
+		bytes.push((word >> 24) & 0xFF);
+		}
+
+		// 3. Encode to base64 (DAP requires this)
+		const base64Data = Buffer.from(Uint8Array.from(bytes)).toString('base64');
+
+		// 4. Send the DAP-compliant response
 		response.body = {
-			address: memoryReference,
-			data: memoryReference,
-			unreadableBytes: count + offset
+		address: `0x${address.toString(16)}`,
+		data: base64Data,
+		unreadableBytes: 0
 		};
-
+		this.sendResponse(response);
+	} catch (err: any) {
+		response.success = false;
+		response.message = `Failed to read memory: ${err.message}`;
 		this.sendResponse(response);
 	}
+	}
+
 
 	protected async variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments, request?: DebugProtocol.Request): Promise<void> {
 

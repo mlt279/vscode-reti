@@ -28,6 +28,7 @@ import { ReTIDebugSession } from './debug/retiDebugSession';
 import { activateReTIDebug, workspaceFileAccessor } from './debug/activateReTIDebug';
 import { assembleLine } from './reti/assembler';
 import { createEmulator } from './reti/emulator';
+import { MemoryViewProvider } from './ui/memoryView_provider';
 
 const runMode: 'external' | 'server' | 'namedPipeServer' | 'inline' = 'inline';
 
@@ -81,7 +82,16 @@ export function activate(context: vscode.ExtensionContext) {
 		});
 	})();
 
+	// #region register Memory View
+	const memoryViewProvider = new MemoryViewProvider(context.extensionUri);
 
+	context.subscriptions.push(
+		vscode.window.registerWebviewViewProvider(MemoryViewProvider.viewType, memoryViewProvider)
+	);
+
+	
+
+	// #endregion
 	let emulateTokenSource : vscode.CancellationTokenSource | undefined = undefined;
 
 	const EmulateCommand = vscode.commands.registerCommand('reti.emulate', async () => {

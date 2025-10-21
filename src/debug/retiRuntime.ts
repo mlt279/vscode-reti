@@ -362,6 +362,18 @@ export class ReTIRuntime extends EventEmitter {
 		});
 	}
 
+	public getMemoryChunk(start: number, count: number): number[] {
+		let memory = [];
+		for (let i = 0; i < count; i++) {
+			memory.push(this._emulator.getData(start + i));
+		}
+		return memory;
+	}
+
+	public getData(address: number): number {
+		return this._emulator.getData(address);
+	}
+
 	public stack(startFrame: number, endFrame: number): IRuntimeStack {
 
 		const line = this.getLine();
