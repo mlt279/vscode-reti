@@ -3,12 +3,12 @@
  *--------------------------------------------------------*/
 
 import { EventEmitter } from 'events';
-import { Emulator } from '../reti/ti/emulator_ti';
-import { assembleLine } from '../reti/ti/assembler_ti';
+import { assembleLine } from '../reti//assembler';
 import { parseString } from '../util/parser';
 import { registerCode } from '../reti/ti/retiStructure_ti';
-import { CancellationTokenSource, CancellationToken } from 'vscode';
+import { CancellationToken } from 'vscode';
 import { generateBitMask, immediateAsTwoc } from '../util/retiUtility';
+import { IEmulator, createEmulator } from '../reti/emulator';
 
 export interface FileAccessor {
 	isWindows: boolean;
@@ -121,7 +121,7 @@ export class ReTIRuntime extends EventEmitter {
 	private _linesToInstructions: number[] = [];
 	private _instrToLines: number[] = [];
 	
-	private _emulator: Emulator = new Emulator([], []);
+	private _emulator: IEmulator = createEmulator([], []);
 
 	private _breakPoints = new Map<string, IRetiBreakpoint[]>;
 	private _returnStack: number[] = [];
@@ -678,7 +678,7 @@ export class ReTIRuntime extends EventEmitter {
 			}
 		}
 		// TODO: Add way to parse data or ReTI-State.
-		this._emulator = new Emulator(instructions, []);
+		this._emulator = createEmulator(instructions, []);
 		return true;
 	}
 

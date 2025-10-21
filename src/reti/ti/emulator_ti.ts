@@ -269,7 +269,7 @@ export class Emulator implements IEmulator{
         return this.reti.getRegister(register);
     }
 
-    public setRegister(register: registerCode, value: number) {
+    public setRegister(register: registerCode, value: number): void {
         this.reti.setRegister(register, value);
     }
 

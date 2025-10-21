@@ -215,12 +215,14 @@ export class LanguageConfig {
 
         if (!name) {return -1};
 
-        if (this.osMode){
-            return instructionSetOS[instruction][0].length;
-        }
-        else {
-            return instructionSetTI[instruction][0].length;
-        }
+        let list = this.getInstructionSet()[name];
+
+        if (!list) return -1;
+
+        if (list.length === 0) return 0;
+
+        return list[0].length;
+
     }
 
     public isValidRegister(register: string): boolean {

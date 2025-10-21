@@ -6,6 +6,20 @@ import { ReTIState } from './ReTIInterfaces';
 
 export interface IEmulator {
     emulate(token: vscode.CancellationToken): Promise<string>;
+
+    getData(address: number): number;
+
+    step(): number ; // XXXXXX
+
+    isValidPC(pc: number): boolean;  // XXXXXX
+
+    getCurrentInstruction(): number;
+
+    getRegister(register: number): number;
+
+    setRegister(register: number, value: number): void;
+
+    getData(address: number): number;
 }
 
 export function createEmulator(code: number[], data: number[], outPutChannel?: vscode.OutputChannel): IEmulator {

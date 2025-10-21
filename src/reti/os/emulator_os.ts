@@ -73,6 +73,12 @@ export class EmulatorOS implements IEmulator{
         return export_state;
     }
 
+    public step() : number {
+        this.fetch();
+        this.execute();
+        return 0;
+    }
+
     public toSimpleNum(num: number) {
         if (num >= Math.pow(2,31)) {
             return num - Math.pow(2,31)
@@ -269,5 +275,9 @@ export class EmulatorOS implements IEmulator{
 
     public getCurrentInstruction(): number {
         return this.reti.getRegister(osRegisterCode.I);
+    }
+
+    public isValidPC(pc: number) : boolean {
+        return pc > 0 && pc < 2**32;
     }
 }
