@@ -567,15 +567,21 @@ export class ReTIRuntime extends EventEmitter {
 	}
 
 	public getLocalVariables(): RuntimeVariable[] {
-		let ACC = new RuntimeVariable(
-			"ACC", this._emulator.getRegister(registerCode.ACC));
-		let IN1 = new RuntimeVariable(
-			"IN1", this._emulator.getRegister(registerCode.IN1));
-		let IN2 = new RuntimeVariable(
-			"IN2", this._emulator.getRegister(registerCode.IN2));
-		let PC = new RuntimeVariable(
-			"PC", this._emulator.getRegister(registerCode.PC));
-		return [ACC, IN1, IN2, PC];
+		let vars = [];
+		for (const register_name in this._emulator.getRegisterCodes())  {
+			const registerCode = this._emulator.getRegisterCodes()[register_name];
+			vars.push(new RuntimeVariable(
+						register_name, this._emulator.getRegister(registerCode)));
+		}
+		// let ACC = new RuntimeVariable(
+		// 	"ACC", this._emulator.getRegister(registerCode.ACC));
+		// let IN1 = new RuntimeVariable(
+		// 	"IN1", this._emulator.getRegister(registerCode.IN1));
+		// let IN2 = new RuntimeVariable(
+		// 	"IN2", this._emulator.getRegister(registerCode.IN2));
+		// let PC = new RuntimeVariable(
+		// 	"PC", this._emulator.getRegister(registerCode.PC));
+		return vars;
 	}
 
 	public setLocalVariables(name: string, value: number): RuntimeVariable | undefined {

@@ -30,6 +30,14 @@ export class Emulator implements IEmulator{
     private architecture?: IReTIArchitecture;
     private retiPort?: IReTIPort;
 
+    public getRegisterCodes(): Record<string, number> {
+        return {
+            "PC": 0,
+            "IN1": 1,
+            "IN2": 2,
+            "ACC": 3
+        }
+    }
     constructor(code: number[], data: number[], outPutChannel?: vscode.OutputChannel) {
         this.initial_data = data;
         this.reti = new ReTI(code, [...data]);

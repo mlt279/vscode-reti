@@ -37,6 +37,20 @@ const EPROM_SIZE = (1 << 8)
 export class EmulatorOS implements IEmulator{
     private reti: ReTI_os;
     private outputChannel?: vscode.OutputChannel;
+    
+    public getRegisterCodes(): Record<string, number> {
+        return {
+            "PC": 0,
+            "IN1": 1,
+            "IN2": 2,
+            "ACC": 3,
+            "SP": 4,
+            "BAF": 5,
+            "CS": 6,
+            "DS": 7,
+            "I": 8
+        }
+    }
 
     constructor(code: number[], data: number[], outPutChannel?: vscode.OutputChannel) {
         this.reti = new ReTI_os();

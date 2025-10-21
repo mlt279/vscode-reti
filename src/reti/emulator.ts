@@ -20,6 +20,8 @@ export interface IEmulator {
     setRegister(register: number, value: number): void;
 
     getData(address: number): number;
+
+    getRegisterCodes(): Record<string, number>;
 }
 
 export function createEmulator(code: number[], data: number[], outPutChannel?: vscode.OutputChannel): IEmulator {
