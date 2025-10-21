@@ -43,6 +43,10 @@ export class EmulatorOS implements IEmulator{
         this.outputChannel = outPutChannel;
 
         this.reti.readProgram(code);
+
+        for (let i = 0; i <= 9; i++) {
+            this.step();
+        }
     }
 
     public async emulate(token: vscode.CancellationToken): Promise<string> {
@@ -57,9 +61,9 @@ export class EmulatorOS implements IEmulator{
             await new Promise((resolve) => setImmediate(resolve, 0));
 
             this.fetch();
-            let old_pc = this.getRegister(osRegisterCode.PC);
+            let old_pc = this.reti.getRegister(osRegisterCode.PC);
             this.execute();
-            let new_pc = this.getRegister(osRegisterCode.PC);
+            let new_pc = this.reti.getRegister(osRegisterCode.PC);
 
             if (old_pc === new_pc) {
                 this.outputChannel?.appendLine("End of Program reached.");
@@ -258,6 +262,12 @@ export class EmulatorOS implements IEmulator{
     }
 
     public getRegister(register: osRegisterCode): number {
+        // TODO: Remove hardcoded fix.
+        if (register === osRegisterCode.PC) {
+            let pc = this.reti.getRegister(register);
+            pc = this.toSimpleNum(pc) - this.reti.process_start;
+            return pc;
+        }
         return this.reti.getRegister(register);
     }
 

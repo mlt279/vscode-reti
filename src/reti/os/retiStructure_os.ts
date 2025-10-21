@@ -19,7 +19,7 @@ const SRAM_SIZE = (1 << 12)
 const EPROM_SIZE = (1 << 8)
 
 export class ReTI_os {
-private process_start: number;
+public process_start: number;
     private data_segment_size: number = 32;
 
     public registers: number[];

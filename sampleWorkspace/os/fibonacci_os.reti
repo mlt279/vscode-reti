@@ -1,24 +1,24 @@
 ; Initialization
     LOADI ACC 5			; Initiate n = 5, Expected result in M<3> = F(5) = 5
-    STORE 0             ; Store n in M<0>
+    STORE ACC 0         ; Store n in M<0>
     LOADI ACC 2         ; Initiate i = 2 since F(0) = 0, F(1) = 1
-    STORE 1             ; Store i in M<1>
+    STORE ACC 1         ; Store i in M<1>
     ; F(n-1) will be stored in M<2>, since its 0 no intialization is needed
     ; F(n) will be stored in M<3>
     LOADI ACC 1
-    STORE 3
+    STORE ACC 3
     LOADI IN2 3         ; IN2 will save the offset for the used variables
 
 ; LOOP
 JUMP<= 12           ; Skip over the loop if n - i <= 0, meaning i > 0
     LOAD IN1 2      ; LOAD F(n-1) into IN1
     LOAD ACC 3      ; LOAD F(n) into IN1
-    STORE 2         ; store F(n) in M<2> since in the next iteration it is F(n-1)
+    STORE ACC 2         ; store F(n) in M<2> since in the next iteration it is F(n-1)
     ADD IN1 3       ; calculate F(n+1)
     MOVE IN1 ACC    ;
-    STORE 3         ; M<3> now holds F(n+1) which in the next iteration will be F(n)
+    STORE ACC 3         ; M<3> now holds F(n+1) which in the next iteration will be F(n)
     ADDI ACC 1      ; increase i
-    STORE 1         ; STORE new value of i in M<1>
+    STORE ACC 1         ; STORE new value of i in M<1>
     ; Check if i < n for JUMP condition
     LOAD ACC 0
     SUB ACC 1       ; ACC = n - M<1> = n - i, will be positive as long as n > i
