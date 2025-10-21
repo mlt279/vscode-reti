@@ -109,8 +109,15 @@ export class MemoryViewProvider implements vscode.WebviewViewProvider {
         //     </html>`;
         return `
             <html>
+            <head>
+				<meta charset="UTF-8">
+				<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+				<link href="${styleResetUri}" rel="stylesheet">
+				<link href="${styleVSCodeUri}" rel="stylesheet">
+				<link href="${styleMainUri}" rel="stylesheet">
+			</head>
             <body style="font-family: sans-serif; padding: 10px;">
-                <h3>ReTI Memory Inspector</h3>
                 <input id="address_input" placeholder="Address (hex or dec)">
                 <input id="count_input" placeholder="Count (hex or dec)">
                 <button id="read">Read</button>
