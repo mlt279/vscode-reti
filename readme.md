@@ -2,7 +2,7 @@
 </p>
 
 <div align="center">
-  <a href="https://github.com/mlt279/ReTI">
+  <a href="https://github.com/mlt279/vscode-reti">
     <img src="./documentation/img/logo_placeholder.png" alt="Logo" height="240px">
   </a>
   <p align="center">
