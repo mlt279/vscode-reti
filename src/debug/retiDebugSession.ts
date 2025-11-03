@@ -175,7 +175,7 @@ export class ReTIDebugSession extends LoggingDebugSession {
 		response.body.supportsInstructionBreakpoints = true;
 
 		// Implement if time
-		// // make VS Code able to read and write variable memory
+		// // // make VS Code able to read and write variable memory
 		response.body.supportsReadMemoryRequest = true;
 		// response.body.supportsWriteMemoryRequest = true;
 
@@ -339,62 +339,40 @@ export class ReTIDebugSession extends LoggingDebugSession {
 		this.sendResponse(response);
 	}
 
-	// TODO: Implement if time
-	// protected async writeMemoryRequest(response: DebugProtocol.WriteMemoryResponse, { data, memoryReference, offset = 0 }: DebugProtocol.WriteMemoryArguments) {
-	// 	const variable = this._variableHandles.get(Number(memoryReference));
-	// 	if (typeof variable === 'object') {
-	// 		const decoded = base64.toByteArray(data);
-	// 		variable.setMemory(decoded, offset);
-	// 		response.body = { bytesWritten: decoded.length };
-	// 	} else {
-	// 		response.body = { bytesWritten: 0 };
-	// 	}
+	protected async writeMemoryRequest(
+		response: DebugProtocol.WriteMemoryResponse,
+		{ data, memoryReference, offset = 0 }: DebugProtocol.WriteMemoryArguments
+	) {
+		try {
+			// Decode the base64 string from the client (webview)
+			const decoded = Buffer.from(data, 'base64');
 
-	// 	this.sendResponse(response);
-	// 	this.sendEvent(new InvalidatedEvent(['variables']));
-	// }
+			// Interpret data as a series of 32-bit little-endian words
+			for (let i = 0; i < decoded.length; i += 4) {
+				if (i + 3 >= decoded.length) break; // safety guard
 
-	// protected async readMemoryRequest(
-	// 	response: DebugProtocol.ReadMemoryResponse, 
-	// 	{ offset = 0, count, memoryReference }: DebugProtocol.ReadMemoryArguments)
-	// {
-	// 	// const variable = this._variableHandles.get(Number(memoryReference));
-	// 	// if (typeof variable === 'object' && variable.memory) {
-	// 	// 	const memory = variable.memory.subarray(
-	// 	// 		Math.min(offset, variable.memory.length),
-	// 	// 		Math.min(offset + count, variable.memory.length),
-	// 	// 	);
+				const value =
+					decoded[i] |
+					(decoded[i + 1] << 8) |
+					(decoded[i + 2] << 16) |
+					(decoded[i + 3] << 24);
 
-	// 	// 	response.body = {
-	// 	// 		address: offset.toString(),
-	// 	// 		data: base64.fromByteArray(memory),
-	// 	// 		unreadableBytes: count - memory.length
-	// 	// 	};
-	// 	// } else {
-	// 	// 	response.body = {
-	// 	// 		address: offset.toString(),
-	// 	// 		data: '',
-	// 	// 		unreadableBytes: count
-	// 	// 	};
-	// 	// }
-	// 	// else if (command === 'readMemory') {
-	// 	// 			const {address, count} = args;
-	// 	// 			const data = this._runtime.getMemoryChunk(address, count);
-	// 	// 			response.body = {data: data};
-	// 	// 			this.sendResponse(response);
-	// 	// 		} else if (command === 'writeMemory') {
-	// 	// 			super.customRequest(command, response, args);
-	// 	// 		}
-	// 	const data = this._runtime.getMemoryChunk(offset, count);
+				const wordAddress = offset + (i / 4);
+				this._runtime.setData(wordAddress, value >>> 0);
+			}
 
-	// 	response.body = {
-	// 		address: offset.toString(),
-	// 		data: data.toString(),
-	// 		unreadableBytes: 69
-	// 	};
+			response.body = { bytesWritten: decoded.length };
+		} catch (e) {
+			console.error("Error in writeMemoryRequest:", e);
+			response.body = { bytesWritten: 0 };
+		}
 
-	// 	this.sendResponse(response);
-	// }
+		this.sendResponse(response);
+
+		// Notify frontend to refresh variable/memory view
+		this.sendEvent(new InvalidatedEvent(['memory']));
+	}
+
 
 	protected async readMemoryRequest(
 	response: DebugProtocol.ReadMemoryResponse,
@@ -641,14 +619,48 @@ export class ReTIDebugSession extends LoggingDebugSession {
 		this.sendResponse(response);
 	}
 
-	protected customRequest(command: string, response: DebugProtocol.Response, args: any) {
+	protected async customRequest(command: string, response: DebugProtocol.Response, args: any) {
 		if (command === 'toggleFormatting') {
 			this._valuesInHex = ! this._valuesInHex;
 			if (this._useInvalidatedEvent) {
 				this.sendEvent(new InvalidatedEvent( ['variables'] ));
 			}
 			this.sendResponse(response);
-		} else {
+		} else if (command === 'retiMemWrite') {
+		try {
+			let data = Number(args.data);
+			let address = Number(args.address);
+			this._runtime.setData(address, data);
+			response.success = true;
+			this.sendResponse(response);
+		} catch (err: any) {
+			response.success = false;
+			response.message = `Failed to write memory: ${err.message}`;
+			this.sendResponse(response);	
+		}
+
+		} else if (command === 'retiMemRead') {
+			try {
+					const words: number[] = [];
+					const address = Number(args.address);
+					const wordCount = Number(args.count) ?? 16;
+					for (let i = 0; i < wordCount; i++) {
+						const word = this._runtime.getData(address + i);
+						words.push(word);
+					}
+					response.body = {
+					address: `0x${address.toString(16)}`,
+					data: words,
+					unreadableBytes: 0
+					};
+					this.sendResponse(response);
+			} catch (err: any) {
+				response.success = false;
+				response.message = `Failed to read memory: ${err.message}`;
+				this.sendResponse(response);
+			}
+		}		
+		else {
 			super.customRequest(command, response, args);
 		}
 	}

@@ -26,28 +26,27 @@ export class MemoryViewProvider implements vscode.WebviewViewProvider {
 
 		webviewView.webview.onDidReceiveMessage(async message => {
 			const session = vscode.debug.activeDebugSession;
-            if (!session) {return;}
+            if (!session || session.type !== "reti" ) {return;}
 
             if (message.command === 'readMemory') {
-                const result = await session.customRequest('readMemory', {
-                memoryReference: '0x0',
+                const result = await session.customRequest('retiMemRead', {
                 count: message.count,
-                offset: message.address
+                address: message.address
                 });
                 
-                const buffer = Buffer.from(result.data, 'base64');
-                const words = [];
-                for (let i = 0; i < buffer.length; i += 4) {
-                    const word =
-                    buffer[i] |
-                    (buffer[i + 1] << 8) |
-                    (buffer[i + 2] << 16) |
-                    (buffer[i + 3] << 24);
-                    words.push(word >>> 0);
-                }
-                webviewView.webview.postMessage({ command: 'updateMemory', data: words, start: message.address, count: message.count });
+                // const buffer = Buffer.from(result.data, 'base64');
+                // const words = [];
+                // for (let i = 0; i < buffer.length; i += 4) {
+                //     const word =
+                //     buffer[i] |
+                //     (buffer[i + 1] << 8) |
+                //     (buffer[i + 2] << 16) |
+                //     (buffer[i + 3] << 24);
+                //     words.push(word >>> 0);
+                // }
+                webviewView.webview.postMessage({ command: 'updateMemory', data: result.data, start: message.address, count: message.count });
             } else if (message.command === 'writeMemory') {
-                await session.customRequest('writeMemory', { address: message.address, data: message.data });
+                const result = await session.customRequest('retiMemWrite', { address: message.address, data: message.data });
             }
 
 		});
@@ -121,12 +120,27 @@ export class MemoryViewProvider implements vscode.WebviewViewProvider {
                 <input id="address_input" placeholder="Address (hex or dec)">
                 <input id="count_input" placeholder="Count (hex or dec)">
                 <button id="read">Read</button>
-                <table id="memTable">
-                <thead>
-                    <tr><th>Address</th><th>Value</th></tr>
-                </thead>
-                <tbody id="memBody"></tbody>
+
+                <table id="writeTable" border="1" cellspacing="0" cellpadding="4">
+                    <thead>
+                        <tr><th>Address</th><th>Value</th><th>Write</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr id="inputRow">
+                            <td><input id="inputAddress" placeholder="0x00000000" style="width: 100%;"></td>
+                            <td><input id="inputValue" placeholder="0x00000000" style="width: 100%;"></td>
+                            <td><button id="write">Write</button></td>
+                        </tr>
+                    </tbody>
                 </table>
+
+                <table id="memTable" border="1" cellspacing="0" cellpadding="4">
+                        <thead>
+                            <tr><th>Address</th><th>Value</th></tr>
+                        </thead>
+                        <tbody id="memBody"></tbody>
+                </table>
+
                 <pre id="output"></pre>
 
                 <script>
@@ -135,6 +149,12 @@ export class MemoryViewProvider implements vscode.WebviewViewProvider {
                     const address = document.getElementById('address_input').value;
                     const count = document.getElementById('count_input').value;
                     vscode.postMessage({ command: 'readMemory', address: address, count: count });
+                };
+
+                document.getElementById('write').onclick = () => {
+                    const address = document.getElementById('inputAddress').value;
+                    const data = document.getElementById('inputValue').value;
+                    vscode.postMessage({ command: 'writeMemory', address: address, data: data });
                 };
 
                 window.addEventListener('message', (event) => {
@@ -156,8 +176,8 @@ export class MemoryViewProvider implements vscode.WebviewViewProvider {
                         const row = document.createElement('tr');
                         let word = data[i];
                         row.innerHTML = \`
-                            <td>0x\${address.toString(16).padStart(8, '0')}</td>
-                            <td>0x\${word.toString(16).padStart(8, '0')}</td>
+                            <td>\${address.toString(10)}</td>
+                            <td>\${word.toString(10)}</td>
                         \`;
                         body.appendChild(row);
                     }

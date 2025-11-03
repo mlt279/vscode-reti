@@ -370,6 +370,10 @@ export class ReTIRuntime extends EventEmitter {
 		return memory;
 	}
 
+	public setData(address: number, data: number) {
+		this._emulator.setData(address, data);
+	}
+
 	public getData(address: number): number {
 		return this._emulator.getData(address);
 	}

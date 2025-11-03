@@ -412,4 +412,6 @@ export function deactivate() {
 		return undefined;
 	}
 	return languageClient.stop();
+
+	// TODO: Add disposing of debugger
 }

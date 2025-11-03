@@ -22,6 +22,8 @@ export interface IEmulator {
     getData(address: number): number;
 
     getRegisterCodes(): Record<string, number>;
+
+    setData(address: number, value: number): void;
 }
 
 export function createEmulator(code: number[], data: number[], outPutChannel?: vscode.OutputChannel): IEmulator {

@@ -293,6 +293,10 @@ export class EmulatorOS implements IEmulator{
         return this.reti.memRead(address, null);
     }
 
+    public setdata(adress: number, value: number) {
+        return this.reti.memWrite(adress, value);
+    }
+
     public setData(address: number, value: number) {
         this.reti.memWrite(address, value);
     }
