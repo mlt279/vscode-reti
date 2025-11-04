@@ -4,6 +4,8 @@
  * Modifications made by [Malte Pullich] (c) 2025.
  */
 
+import { to32Bit } from "../reti/os/retiStructure_os";
+
 export class CompilationError extends Error {
 
     message: string;
@@ -125,7 +127,16 @@ export const compileJump = (args: Array<string>) => {
     } else if (args[0].toLowerCase() === "rti") {
         instruction |= 2 << 25;
         return instruction;
-    }
+    } else if (args[0].toLowerCase() === "ivte"){
+        instruction |= 3 << 25
+        if (args.length !== 2) {
+            throw new CompilationError(`Expected 1 argument, ${args.length - 1} provided.`);
+        }
+        let param = getNumber([args[1]]);
+        let immediate = to32Bit(param);
+        instruction |= immediate;
+        return instruction;
+    } 
 
 
     switch (args[0].toLowerCase()) {
@@ -229,7 +240,7 @@ export const compileSingle = (instruction: string) => {
         return compileLoad(args);
     } else if (command.includes("store") || command.includes("move")) {
         return compileStore(args);
-    } else if(command.includes("jump") || ["nop", "int", "rti"].includes(command.toLowerCase())) {
+    } else if(command.includes("jump") || ["nop", "int", "rti"].includes(command.toLowerCase()) || command.includes("ivte")) {
         return compileJump(args);
     } else {
         return compileCompute(args);

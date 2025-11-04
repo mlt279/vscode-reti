@@ -9,30 +9,38 @@ import { binToHex, generateBitMask, immediateAsTwoc, immediateUnsigned } from ".
 import { ReTIState } from "../ReTIInterfaces";
 
 export enum osRegisterCode {
-  PC = 0, IN1, IN2, ACC, SP, BAF, CS, DS, I
+  PC = 0, IN1, IN2, ACC, SP, BAF, CS, DS, I, IVN
 }
 
 export const osRegisterNames = ["PC", "IN1", "IN2", "ACC", "SP", "BAF", "CS", "DS", "I"];
 
+export const to32Bit = (n: number) => n >>> 0;
+export const toSigned32 = (n: number) => (n << 0) >> 0;
 
 const SRAM_SIZE = (1 << 12)
 const EPROM_SIZE = (1 << 8)
+const IVT_SIZE = 16;
 
 export class ReTI_os {
-public process_start: number;
+    public ivtBase = 0;
+    public process_start: number;
     private data_segment_size: number = 32;
-
+    public numIsrs = 0;
     public registers: number[];
     public uart: number[];
     public sram: number[];
     public eprom: number[];
+
+    public numInstrsISRs: number = 0;
+    public numInstrsProgram: number = 0;
+
 
     private memoryMap: { [key: number]: number[] } 
     public bds: number;
 
     constructor(reti?: ReTI_os) {
         // create deep copy if argument is provided
-        this.process_start = 3
+        this.process_start = 3 + IVT_SIZE;
         this.data_segment_size = 32
         if (reti) {
             this.registers = [...reti.registers]
@@ -46,6 +54,10 @@ public process_start: number;
                 3: this.eprom
             }
             this.bds = reti.bds
+            this.numInstrsISRs = reti.numInstrsISRs;
+            this.numInstrsProgram = reti.numInstrsProgram;
+            this.ivtBase = reti.ivtBase;
+            this.numIsrs = reti.numIsrs;
         } else {
             this.registers = new Array(9).fill(0)
 
@@ -68,26 +80,74 @@ public process_start: number;
         return num >>> 0
     }
 
-    public readProgram(code: number[]) {
-        // load eprom stuff
-        let instrLen = code.length;
-        this.eprom[0] = compileSingle("LOADI DS -2097152")
-        this.eprom[1] = compileSingle("MULI DS 1024")
-        this.eprom[2] = compileSingle("MOVE DS SP")
-        this.eprom[3] = compileSingle("MOVE DS BAF")
-        this.eprom[4] = compileSingle("MOVE DS CS")
-        this.eprom[5] = compileSingle(`ADDI SP ${this.process_start + instrLen + this.data_segment_size - 1}`)
-        this.eprom[6] = compileSingle("ADDI BAF 2")
-        this.eprom[7] = compileSingle(`ADDI CS ${this.process_start}`)
-        this.eprom[8] = compileSingle(`ADDI DS ${this.process_start + instrLen}`)
-        this.eprom[9] = compileSingle("MOVE CS PC")
-        // load sram stuff
-        this.sram[0] = compileSingle("JUMP 0");
-        this.sram[1] = (1 << 31) >>> 0;
-        for (let i = 0; i < code.length; i++) {
-            this.sram[i + this.process_start] = code[i]
+    private loadEPROMStartProgram(){
+        this.eprom[0] = compileSingle("")
+    }
+
+    public readProgram(mainCode: number[], isrCode: number[] = []) {
+        let instrLen = mainCode.length;
+        let isrLen = isrCode.length;
+
+        this.numInstrsISRs = isrCode.length;
+        this.numInstrsProgram = mainCode.length;
+
+
+        this.eprom[0] = compileSingle("LOADI DS -2097152");
+        // let DS = to32Bit(-2097152)
+        // DS = 0xFFE00000
+
+        this.eprom[1] = compileSingle("MULTI DS 1024");
+        // DS = to32Bit(toSigned32(DS) * 1024);
+        // DS = 0x80000000
+
+        this.eprom[2] = compileSingle("MOVE DS SP");
+        this.eprom[3] = compileSingle("MOVE DS BAF");
+        this.eprom[4] = compileSingle("MOVE DS CS");
+        // let SP = DS;
+        // let BAF = DS;
+        // let CS = DS;
+        // SP = BAF = CS = DS = 0x80000000
+
+        this.eprom[5] = compileSingle(`ADDI SP ${this.process_start + instrLen + isrLen + this.data_segment_size - 1}`);
+        // SP = to32Bit(SP + this.process_start + instrLen + isrLen + this.data_segment_size - 1)
+
+        this.eprom[6] = compileSingle("ADDI BAF 2");
+        // BAF = to32Bit(BAF + 2)
+
+        this.eprom[7] = compileSingle(`ADDI CS ${this.process_start + isrLen}`);
+        // CS = to32Bit(CS + this.process_start + isrLen);
+
+        this.eprom[8] = compileSingle(`ADDI DS ${this.process_start + isrLen + instrLen}`);
+        // DS = to32Bit(CS + instrLen);
+
+        this.eprom[9] = compileSingle("MOVE CS PC");
+        // let PC = CS
+
+        // Loading interrupt routines.
+        for (let i = 0; i < isrLen; i++) {
+            let instruction = isrCode[i]
+            let instructionType = instruction >>> 30
+            let condition = (instruction >>> 27) & 0x7
+            let j = (instruction >>> 25) & 0x3
+            let param = toSigned32(instruction & 0x3fffff)
+            // In this case IVTE
+            if (j === 3 && instructionType === 3) {
+                if (!(param >= IVT_SIZE)) {
+                this.sram[param] = i + this.process_start + 1 + 0x80000000;
+                this.numIsrs += 1;
+                }
+            }
+            this.sram[i + this.process_start] = instruction;
+
         }
-        this.bds = code.length + this.process_start
+
+
+        // Loading program.
+        for (let i = 0; i < instrLen; i++) {
+            this.sram[i + this.process_start + isrLen] = mainCode[i];
+        }
+
+        this.bds = this.process_start + isrLen + instrLen;
     }
 
     private loadConstants() {
@@ -191,7 +251,6 @@ public process_start: number;
     public dumpState(): string {
         const SEG_MASK = 0xC0000000;   // bits 31–30
         const BASE_MASK = 0x3FFFFFFF;  // bits 29–0
-
         let state = "Registers:\n";
         for (let i = 0; i < this.registers.length; i++) {
             state += `${osRegisterNames[i]}: ${this.registers[i]}\n`;

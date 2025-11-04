@@ -22,6 +22,8 @@ const { Subject } = require('await-notify');
 interface ILaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
 	/** An absolute path to the "program" to debug. */
 	program: string;
+	/** An optional absolute path to the interupt routines. */
+	isrprogram?: string;
 	/** Automatically stop target after launch. If not specified, target does not stop. */
 	stopOnEntry?: boolean;
 	/** enable logging the Debug Adapter Protocol */
@@ -206,7 +208,7 @@ export class ReTIDebugSession extends LoggingDebugSession {
 	}
 
 	protected async launchRequest(response: DebugProtocol.LaunchResponse, args: ILaunchRequestArguments) {
-
+    	console.log("Launch args:", args);
 		// make sure to 'Stop' the buffered logging if 'trace' is not set
 		logger.setup(args.trace ? Logger.LogLevel.Verbose : Logger.LogLevel.Stop, false);
 
@@ -214,7 +216,13 @@ export class ReTIDebugSession extends LoggingDebugSession {
 		await this._configurationDone.wait(1000);
 
 		// start the program in the runtime
-		if (!await this._runtime.start(args.program, !!args.stopOnEntry, !args.noDebug, this._runtimeCancellationToken)) {
+		if (!await this._runtime.start(
+			args.program, 
+			!!args.stopOnEntry,
+			!args.noDebug, 
+			this._runtimeCancellationToken,
+			args.isrprogram
+		)) {
 			this.sendErrorResponse(response, {
 				id: 1001,
 				format: `assemble error`,
@@ -307,7 +315,10 @@ export class ReTIDebugSession extends LoggingDebugSession {
 
 		response.body = {
 			stackFrames: stk.frames.map((f, ix) => {
-				const sf: DebugProtocol.StackFrame = new StackFrame(f.index, f.name, this.createSource(f.file), this.convertDebuggerLineToClient(f.line));
+				const displayName = f.file === this._runtime._isrFile
+				? basename(f.file) + " (ISR)"
+				: basename(f.file);
+				const sf: DebugProtocol.StackFrame = new StackFrame(f.index, displayName, this.createSource(f.file), this.convertDebuggerLineToClient(f.line));
 				if (typeof f.column === 'number') {
 					sf.column = this.convertDebuggerColumnToClient(f.column);
 				}

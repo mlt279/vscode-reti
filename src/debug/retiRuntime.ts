@@ -107,13 +107,28 @@ export function timeout(ms: number) {
 
 export class ReTIRuntime extends EventEmitter {
 
+	// #region needed for interupts
+	public _isrFile: string | undefined;
+
+	private _sourceLinesISR: string[] = [];
+	private _instrToLinesMain: number[] = []; // existing: _instrToLines (keep as “main”)
+	private _instrToLinesISR: number[] = [];
+	
+	private _instructionsISR: string[][] = [];
+	private _linesToInstructionsISR: number[] = [];
+
+	private _mainInstrs: number[] = [];
+	private _isrInstrs: number[] = [];
+
+	// #endregion
+
 	private cancellationToken: CancellationToken | undefined;
 
 	// the contents (= lines) of the one and only file
 	private sourceLines: string[] = [];
 
 	// #region ReTI
-	private _sourceFile: string = '';
+	public _sourceFile: string = '';
 	public get sourceFile() {
 		return this._sourceFile;
 	}
@@ -174,13 +189,16 @@ export class ReTIRuntime extends EventEmitter {
 	/**
 	 * Start executing the given program.
 	 */
-	public async start(program: string, stopOnEntry: boolean, debug: boolean, cancellationToken: CancellationToken): Promise<boolean> {
+	public async start(program: string, stopOnEntry: boolean, debug: boolean, cancellationToken: CancellationToken, isrprogram?: string): Promise<boolean> {
 
+		if (isrprogram) { isrprogram = this.normalizePathAndCasing(isrprogram)}
+		if (!await this.loadSource(this.normalizePathAndCasing(program), isrprogram)) {return false;}
 		// Emulator is created here.
-		if (await this.loadSource(this.normalizePathAndCasing(program))) {
 			if (debug) {
 				await this.verifyBreakpoints(this._sourceFile);
-
+				if (isrprogram) {
+					await this.verifyBreakpoints(isrprogram);
+				}
 				if (stopOnEntry) {
 					this.findNextStatement('stopOnEntry');
 				} else {
@@ -191,11 +209,6 @@ export class ReTIRuntime extends EventEmitter {
 				this.continue(cancellationToken);
 			}
 			return true;
-		} else {
-			return false;
-		}
-
-
 	}
 
 	/**
@@ -228,8 +241,9 @@ export class ReTIRuntime extends EventEmitter {
 	 * execute code until PC + 1 is reached.
 	 */
 	public async stepOver(cancellationToken: CancellationToken) {
-		if (this.isJumpInstruction()) {
-			let target_pc = this.getTargetPC();
+		let [isCallInstruction, target_pc] = this._emulator.isCallInstruction();
+		
+		if (isCallInstruction) {
 			while (true) {
 				if (cancellationToken.isCancellationRequested) {
 					this.sendEvent('stopOnPause');
@@ -241,8 +255,7 @@ export class ReTIRuntime extends EventEmitter {
 				if (this.executeLine(this.currentLine)) {
 					break;
 				}
-				// FLAG
-				let instrNum = this._linesToInstructions[this.currentLine];
+				let instrNum = this._emulator.inIsr?this._linesToInstructionsISR[this.currentLine]:this._linesToInstructions[this.currentLine];
 				let pc = this.instrNumToPC(instrNum);
 				if (!this._emulator.isValidPC(pc)) {
 					this.sendEvent('end');
@@ -294,19 +307,6 @@ export class ReTIRuntime extends EventEmitter {
 		return this._emulator.getRegister(registerCode.PC) + 1;
 	}
 
-	private isJumpInstruction(): boolean {
-		let line = this.getLine().toLowerCase().split(' ');
-		if (line[0].startsWith('jump')) {
-			return true;
-		}
-		if (line[0].startsWith('move') && line.length > 2) {
-			if (line[2] === 'pc') {
-				return true;
-			}
-		}
-		return false;
-	}
-
 	/**
 	 * "Step out" for Mock debug means: 
 	 * 1. If the stack is empty behaves like normal "continue"
@@ -331,8 +331,8 @@ export class ReTIRuntime extends EventEmitter {
 			}
 			// Needed to allow other events to be processed.
 			await new Promise((resolve) => setImmediate(resolve, 0));
-
-			if (this.instrNumToPC(this._linesToInstructions[this.currentLine]) === returnPc) {
+			const linesToInstructions = this._emulator.inIsr?this._linesToInstructionsISR:this._linesToInstructions;
+			if (this.instrNumToPC(linesToInstructions[this.currentLine]) === returnPc) {
 				this.sendEvent('stopOnStepOut');
 				this._returnStack.pop();
 				break;
@@ -383,37 +383,19 @@ export class ReTIRuntime extends EventEmitter {
 		return this._emulator.getData(address);
 	}
 
-	public stack(startFrame: number, endFrame: number): IRuntimeStack {
+	public stack(startFrame: number, endFrame: number) {
+	const { file, line } = this.getSourceForPC();
 
-		const line = this.getLine();
-		const words = this.getWords(this.currentLine, line);
-		words.push({ name: 'BOTTOM', line: -1, index: -1 });	// add a sentinel so that the stack is never empty...
+	const frames = [{
+		index: 0,
+		name: 'ReTI',
+		file,
+		line,
+		column: 0,
+		instruction: this.instruction
+	}];
 
-		// if the line contains the word 'disassembly' we support to "disassemble" the line by adding an 'instruction' property to the stackframe
-		const instruction = line.indexOf('disassembly') >= 0 ? this.instruction : undefined;
-
-		const column = typeof this.currentColumn === 'number' ? this.currentColumn : undefined;
-
-		const frames: IRuntimeStackFrame[] = [];
-		// every word of the current line becomes a stack frame.
-		for (let i = startFrame; i < Math.min(endFrame, words.length); i++) {
-
-			const stackFrame: IRuntimeStackFrame = {
-				index: i,
-				name: `${words[i].name}(${i})`,	// use a word of the line as the stackframe name
-				file: this._sourceFile,
-				line: this.currentLine,
-				column: column, // words[i].index
-				instruction: instruction ? instruction + i : 0
-			};
-
-			frames.push(stackFrame);
-		}
-
-		return {
-			frames: frames,
-			count: words.length
-		};
+	return { frames, count: 1 };
 	}
 
 	public setRegister(name: string, value: number): RuntimeVariable | undefined {
@@ -440,21 +422,24 @@ export class ReTIRuntime extends EventEmitter {
 
 	public getInstrNum(): number {
 		if (this._emulator instanceof EmulatorOS) {
-			let pc = this._emulator.getRegister(osRegisterCode.PC);
-			pc -= this._emulator.getRegister(osRegisterCode.CS);
-			return pc;
+			let instr = this._emulator.getRegister(osRegisterCode.PC);
+			instr -= this._emulator.getRegister(osRegisterCode.CS);
+			if (this._emulator.inIsr) { instr += this._instrToLinesISR.length}
+			return instr;
 		 }
 		 else {
 			return this._emulator.getRegister(registerCode.PC);
 		 }
 	}
 
-	public instrNumToPC(pc: number): number{
+	public instrNumToPC(instr: number): number{
 		if (this._emulator instanceof EmulatorOS) {
-			return this._emulator.getRegister(osRegisterCode.CS) + pc;
+			let pc = this._emulator.getRegister(osRegisterCode.CS) + instr
+			if (this._emulator.inIsr) { pc += this._instrToLinesISR.length}
+			return pc;
 		}
 		else {
-			return pc;
+			return instr;
 		}
 	}
 
@@ -660,7 +645,8 @@ export class ReTIRuntime extends EventEmitter {
 	// private methods
 
 	private getLine(line?: number): string {
-		return this._sourceLines[line === undefined ? this.currentLine : line].trim();
+		const sourceLines = this._emulator.inIsr ? this._sourceLinesISR : this._sourceLines;
+		return sourceLines[line === undefined ? this.currentLine : line].trim();
 	}
 
 	private getWords(l: number, line: string): Word[] {
@@ -674,16 +660,22 @@ export class ReTIRuntime extends EventEmitter {
 		return words;
 	}
 
-	private async loadSource(file: string): Promise<boolean> {
-		if (this._sourceFile !== file) {
+	private async loadSource(file: string, isrFile?: string): Promise<boolean> {
+		if (this._sourceFile !== file || isrFile !== this._isrFile) {
 			this._sourceFile = this.normalizePathAndCasing(file);
-			return this.initializeContents(await this.fileAccessor.readFile(file));
+			if (isrFile) {
+				this._isrFile = this.normalizePathAndCasing(isrFile);
+				return this.initializeContents(await this.fileAccessor.readFile(file), await this.fileAccessor.readFile(isrFile));
+			} else {
+				this._isrFile = undefined;
+				return this.initializeContents(await this.fileAccessor.readFile(file));
+			}
 		}
 		return true;
 	}
 
-	private initializeContents(memory: Uint8Array): boolean {
-		// ReTI
+	private initializeContents(memory: Uint8Array, isr?: Uint8Array): boolean {
+		// Load Main Program
 		this._instructions = parseString(new TextDecoder().decode(memory));
 		this._sourceLines = new TextDecoder().decode(memory).split(/\r?\n/);
 		if (this._linesToInstructions.length > 0) {
@@ -713,7 +705,38 @@ export class ReTIRuntime extends EventEmitter {
 				return false;
 			}
 		}
-		this._emulator = createEmulator(instructions, []);
+
+		let instructionsISR: number[] = [];
+		let num_instrISR = 0;
+		if (isr) {	// LOAD ISR
+			this._instructionsISR = parseString(new TextDecoder().decode(isr));
+			this._sourceLinesISR = new TextDecoder().decode(isr).split(/\r?\n/);
+			if (this._linesToInstructionsISR.length > 0) {
+				this._linesToInstructionsISR = [];
+			}
+			if (this._instrToLinesISR.length > 0) {
+				this._instrToLinesISR = [];
+			}
+
+			for (let i = 0; i < this._sourceLinesISR.length; i++) {
+				// If its a comment only the line count is updated.
+				if (this._sourceLinesISR[i].trim().startsWith(";") || this._sourceLinesISR[i].length === 0) {
+					this._linesToInstructionsISR.push(-1);
+					continue;
+				}
+				let [err, instr, msg] = assembleLine(this._instructionsISR[num_instrISR]);
+				if (err !== -1) {
+					instructionsISR.push(instr);
+					this._linesToInstructionsISR.push(num_instrISR);
+					// i is the current line.
+					this._instrToLinesISR.push(i);
+					num_instrISR++;
+				}
+				else {
+					return false;
+				}
+			}}
+		this._emulator = createEmulator(instructions, instructionsISR);
 		return true;
 	}
 
@@ -721,9 +744,12 @@ export class ReTIRuntime extends EventEmitter {
 	 * return true on stop
 	 */
 	 private findNextStatement(stepEvent?: string): boolean {
-		for (let ln = this.currentLine; ln < this._sourceLines.length; ln++) {
-
-			const breakpoints = this.breakPoints.get(this._sourceFile);
+		let file = this.getSourceForPC().file;
+		let breakpoints = this.breakPoints.get(file);
+		const source_lineLength = (file === this._isrFile)? this._sourceLinesISR.length:this._sourceLines.length;
+		for (let ln = this.currentLine; ln < source_lineLength; ln++) {
+		    file = this.getSourceForPC().file;
+			breakpoints = this.breakPoints.get(file);
 			if (breakpoints) {
 				const bps = breakpoints.filter(bp => bp.line === ln);
 				if (bps.length > 0) {
@@ -759,35 +785,44 @@ export class ReTIRuntime extends EventEmitter {
 	 */
 	private executeLine(ln: number): boolean {
 		// 1. Map  line to corresponding instruction in emulator.
-		let instr_number = this._linesToInstructions[ln];
+		let file = this.getSourceForPC().file;
+		let lineMap = (file === this._isrFile) ? this._linesToInstructionsISR : this._linesToInstructions;
+		let instrMap = (file === this._isrFile) ? this._instrToLinesISR : this._instrToLines;
+		let instr_number = lineMap[ln];
 		// If it is -1 the line is a comment.
 		if (instr_number === -1) { return false; }
 
-		// Save for Check if it is a jump instruction to push on the return stack.
-		let is_jumpInstruction = this.isJumpInstruction();
-		let target_pc = this.getTargetPC();
+
+		// Save for Check if it is a call instruction to push on the return stack.
+		let [is_callInstruction, target_pc] = this._emulator.isCallInstruction();
 
 		// 2. Execute said line
 		let err_code = this._emulator.step();
 		if (err_code === 1) {
 			return true;
 		}
+
+		
+		file = this.getSourceForPC().file;
+		lineMap = (file === this._isrFile) ? this._linesToInstructionsISR : this._linesToInstructions;
+		instrMap = (file === this._isrFile) ? this._instrToLinesISR : this._instrToLines;
+
 		let new_pc = this._emulator.getRegister(registerCode.PC);
 		let instrNum = this.getInstrNum();
 		// If it is a jump instruction and the new PC is on the return
 		// stack the jump call would just be a step out.
-		if (is_jumpInstruction && this._returnStack[this._returnStack.length - 1] !== new_pc) {
+		if (is_callInstruction && this._returnStack[this._returnStack.length - 1] !== new_pc) {
 			// Only push if the new PC is not already on the return stack as the JUMP calls may be called
 			// multiple times.
 			if (this._returnStack[this._returnStack.length - 1] !== target_pc) {
 				this._returnStack.push(target_pc);
 			}
 		}
-		if (instr_number > this._instrToLines.length - 1) {
+		if (instrNum > instrMap.length - 1) {
 			return true;
 		}
-		this.currentLine = this._instrToLines[instrNum];
-		if (this.currentLine === undefined || !this._emulator.isValidPC(this._linesToInstructions[this.currentLine])) {
+		this.currentLine = instrMap[instrNum];
+		if (this.currentLine === undefined || !this._emulator.isValidPC(lineMap[this.currentLine])) {
 			this.sendEvent('end');
 			return true;
 		}
@@ -796,10 +831,10 @@ export class ReTIRuntime extends EventEmitter {
 	}
 
 	private async verifyBreakpoints(path: string): Promise<void> {
-
 		const bps = this.breakPoints.get(path);
-		if (bps) {
-			await this.loadSource(path);
+		if (!bps) {return;}
+		if (path === this._sourceFile){			
+			// await this.loadSource(path);
 			bps.forEach(bp => {
 				if (!bp.verified && bp.line < this.sourceLines.length) {
 					const srcLine = this.getLine(bp.line);
@@ -816,24 +851,17 @@ export class ReTIRuntime extends EventEmitter {
 					}
 				}
 			});
-		}
-		const breakpoints = this._breakPoints.get(path);
-		if (breakpoints) {
-			await this.loadSource(path);
-			breakpoints.forEach(bp => {
-				if (!bp.verified && bp.line < this.sourceLines.length) {
-					const srcLine = this.getLine(bp.line);
-
-					// if a line is empty or starts with ';' we don't allow to set a breakpoint but move the breakpoint down
-					if (srcLine.length === 0 || srcLine.indexOf(';') === 0) {
-						bp.line++;
-					}
+		} else if (path === this._isrFile) {
+			// await this.loadSource(this._sourceFile, this._isrFile);
+			bps.forEach(bp => {
+				if (!bp.verified && bp.line < this._sourceLinesISR.length) {
+					const srcLine = this._sourceLinesISR[bp.line];
+					if (srcLine.length === 0 || srcLine.startsWith(';')) bp.line++;
 					bp.verified = true;
 					this.sendEvent('breakpointValidated', bp);
 				}
 			});
 		}
-
 	}
 
 	private sendEvent(event: string, ... args: any[]): void {
@@ -849,4 +877,35 @@ export class ReTIRuntime extends EventEmitter {
 			return path.replace(/\\/g, '/');
 		}
 	}
+
+	// #region needed for interrupts
+	public setISRFile(path: string) {
+	this._isrFile = this.normalizePathAndCasing(path);
+	}
+
+	public getSourceForPC(): { file: string; line: number } {
+	const pc = this._emulator.getRegister(registerCode.PC);
+
+	if (this._emulator instanceof EmulatorOS) {
+		const relativePC = this.getInstrNum();
+
+		if (this._emulator.inIsr) {
+		// inside ISR
+		let instrIndex = relativePC;
+		let line = this._instrToLinesISR[instrIndex] ?? 0;
+		return { file: this._isrFile ?? this._sourceFile, line };
+		} else {
+		// inside main ReTI program
+		const mainIndex = relativePC;
+		const line = this._instrToLines[mainIndex] ?? 0;
+		return { file: this._sourceFile, line };
+		}
+	}
+
+	// For TI only return the source file.
+	const instrIndex = this.getInstrNum();
+	const line = this._instrToLines[instrIndex] ?? 0;
+	return { file: this._sourceFile, line };
+	}
+	// #endregion
 }

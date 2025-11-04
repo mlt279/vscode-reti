@@ -3,40 +3,25 @@
  * Original source available under MIT License.
  * Modifications made by [Malte Pullich] (c) 2025.
  */
-import { compileSingle } from "../../third-party-code/reti_compiler";
 import { IEmulator } from "../emulator";
-import { IReTIArchitecture, IReTIPort, ReTIState } from "../ReTIInterfaces";
 import { ReTI_os } from "./retiStructure_os";
 import * as vscode from 'vscode';
 
 export enum osRegisterCode {
-  PC = 0, IN1, IN2, ACC, SP, BAF, CS, DS, I
+  PC = 0, IN1, IN2, ACC, SP, BAF, CS, DS, I, IVN
 }
 
 const SRAM_SIZE = (1 << 12)
 const EPROM_SIZE = (1 << 8)
 
-// class ReTIPort_os implements IReTIPort {
-//     constructor(private os: ReTI_os) {
-
-//     }
-
-//     getRegister(index: number): number { return this.os.getRegister(index as any); }
-//     setRegister(index: number, value: number): void { this.os.setRegister(index as any, value); }
-
-//     getMem(addr: number): number { return this.os.getData(addr); }
-//     setMem(addr: number, value: number): void { this.os.setData(addr, value); }
-
-//     getCode(addr: number): number { return this.os.getCode(addr); }
-//     codeSize(): number { return this.os.shadow.codeSize; }
-
-//     getPC(): number { return this.os.getRegister(0 as any); } 
-//     setPC(v: number): void { this.os.setRegister(0 as any, v); }
-// }
-
 export class EmulatorOS implements IEmulator{
+    public inIsr: boolean = false;
     private reti: ReTI_os;
     private outputChannel?: vscode.OutputChannel;
+
+    public getIsrLen() {
+        return this.reti.numInstrsISRs;
+    }
     
     public getRegisterCodes(): Record<string, number> {
         return {
@@ -52,11 +37,11 @@ export class EmulatorOS implements IEmulator{
         }
     }
 
-    constructor(code: number[], data: number[], outPutChannel?: vscode.OutputChannel) {
+    constructor(code: number[], isrs: number[], outPutChannel?: vscode.OutputChannel) {
         this.reti = new ReTI_os();
         this.outputChannel = outPutChannel;
 
-        this.reti.readProgram(code);
+        this.reti.readProgram(code, isrs);
 
         for (let i = 0; i <= 9; i++) {
             this.step();
@@ -205,14 +190,32 @@ export class EmulatorOS implements IEmulator{
             accRegister <= 0,
             true,
         ]
-        // INT i & RTI
-        if (j === 1) {
-            // TODO
-            // statusText(true, "info", `<strong>OUTPUT</strong> ${this.registers[param]}`)
+        // INT i
+        if (j === 1) 
+        {
+            this.inIsr = true;
+            const isrIndex = param & 0xFF;
+            const sp = osRegisterCode.SP;
+            
+            this.reti.registers[sp]--;
+            // Return adress is the statement following the interrupt call.
+            this.reti.memWrite(this.reti.registers[sp], this.reti.registers[osRegisterCode.PC] + 1);
+            this.reti.registers[sp]--;
+            this.reti.memWrite(this.reti.registers[sp], this.reti.registers[osRegisterCode.I]);
+            const isrAddr = this.reti.sram[isrIndex];
+            this.reti.registers[osRegisterCode.PC] = isrAddr;
+            return;
         }
-        // TODO
+        // RTI
         if (j === 2) {
-            throw new Error("Not yet implemented")
+            this.inIsr = false;
+            const sp = osRegisterCode.SP;
+
+            this.reti.registers[osRegisterCode.I] = this.reti.memRead(this.reti.registers[sp], null);
+            this.reti.registers[sp]++;
+            this.reti.registers[osRegisterCode.PC] = this.reti.memRead(this.reti.registers[sp], null);
+            this.reti.registers[sp]++;
+            return;
         }
 
         if (conditionMap[condition]) {
@@ -273,6 +276,36 @@ export class EmulatorOS implements IEmulator{
     }
     public exportState(): string {
         return this.reti.dumpState();
+    }
+
+    // Interrupts are call instructions in this emulator.
+    // If the instruction is an emulator this function will return: 
+    // [true, current_pc + 1], since the resolved PC after an RTI will be
+    // pc before INT + 1
+    // else it will return [false, current_pc + 1]
+    public isCallInstruction(): [boolean, number] {        
+        let instruction = 0;
+        let pc = this.reti.getRegister(osRegisterCode.PC);
+        if (pc >= Math.pow(2,31)) {
+            instruction = this.reti.sram[pc - Math.pow(2,31)]
+        } else if (pc >= Math.pow(2,30)) {
+            instruction = this.reti.uart[pc - Math.pow(2,30)]
+        } else {
+            instruction = this.reti.eprom[pc]
+        }
+        let instructionType = instruction >>> 30;
+
+        let condition = (instruction >>> 27) & 0x7
+        let j = (instruction >>> 25) & 0x3
+        let param = this.toSigned(instruction & 0x3fffff)
+
+        if (instructionType === 3) {
+            let j = (instruction >>> 25) & 0x3;
+            if (j === 1) {
+                return [true, this.reti.registers[osRegisterCode.PC] + 1]
+            }
+        }
+        return [false, this.reti.registers[osRegisterCode.PC] + 1]
     }
 
     public getRegister(register: osRegisterCode): number {

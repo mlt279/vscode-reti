@@ -23,6 +23,8 @@ class ReTIPort_ti implements IReTIPort {
 }
 
 export class Emulator implements IEmulator{
+    
+    public inIsr: boolean = false;
     private reti: ReTI;
     private initial_data: number[];
     private outPutChannel?: vscode.OutputChannel;
@@ -269,6 +271,23 @@ export class Emulator implements IEmulator{
         return 0;
     }
 
+    // Returns tuple of [is of call type, target_pc]
+    // Call types for this Emulator all jump instructions.
+    // Returns true for the first value if the current instruction is a jump instruction.
+    // Returns the PC the reti will have after this instruction.
+    public isCallInstruction(): [boolean, number] {
+        const instruction = this.reti.getCode(this.reti.getRegister(registerCode.PC));
+        
+        let operation = instruction >> 30 & 0b11;
+        let f = instruction >> 26 & 0b111;
+        let immediate = immediateAsTwoc(instruction & generateBitMask(24));
+        if (f === opType.JUMP) {
+            return [true, this.reti.getRegister(registerCode.PC) + immediate];
+        }
+        else {
+            return [false, this.reti.getRegister(registerCode.PC) + 1];
+        }
+    }
     public exportState(): string {
         return this.reti.dumpState();
     }

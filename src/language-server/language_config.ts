@@ -107,6 +107,8 @@ const documentationOS: { [key: string]: { documentation: string, usage: string, 
     usage: "MODI D i", result: "D:= D % i" },
     "DIVI": { documentation: "Division of the value of i and the destination register.",
     usage: "MODI D i", result: "D:= D % i" },
+    "IVTE": { documentation: "No effect in emulator. Keyword for ISR-file parsing. Saves address routine i to IVT. IMPORTANT: Only use in ISR-file.",
+    usage: "IVTE i", result: "SRAM(i) = Adress of IVT i" },
     
 };
 
@@ -133,7 +135,8 @@ const instructionSetOS: Record<string, OperandPatternList> = {
     "compute": [["register", "unsigned"], ["register", "register"]],
     "compute immediate": [["register", "signed"]],
     "jump": [["signed"]],
-    "int": [["signed"]],
+    "int": [["unsigned"]],
+    "ivte": [["unsigned"]],
     "nop": [],
     "rti": [],
 };
@@ -162,7 +165,8 @@ const instructionPatternsOS: Array<[RegExp, string]> = [
   [/(?<=(^|\s))(JUMP(?:!=|<=|>=|>|=|≥|<|≠|≤|lt|eq|leq|gt|geq|neq)?)(?!(\w|>|=|≥|<|≠|≤))/i, "jump"],
   [/(?<=(^|\s))INT(?!(\w|>|=|≥|<|≠|≤))/i,"int"],
   [/(?<=(^|\s))nop(?!(\w|>|=|≥|<|≠|≤))/i,"nop"],
-  [/(?<=(^|\s))rti(?!(\w|>|=|≥|<|≠|≤))/i,"rti"]
+  [/(?<=(^|\s))rti(?!(\w|>|=|≥|<|≠|≤))/i,"rti"],
+  [/(?<=(^|\s))IVTE(?!(\w|>|=|≥|<|≠|≤))/i,"ivte"]
 ];
 
 export class LanguageConfig {

@@ -1,0 +1,10 @@
+LOADI ACC 5
+LOADI IN2 6
+LOADI IN1 7
+INT 0
+; Expected registers after int 1: 
+; ACC = 5, IN1 = 6, IN1 = 7
+INT 1
+; Expected registers after int 2: 
+; ACC = 1, IN1 = 2, IN1 = 3
+JUMP 0

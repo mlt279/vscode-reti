@@ -105,7 +105,17 @@ function validateTextDocument(textDocument: TextDocument) {
                 let valid = false;
                 let temp_diagnostics: Diagnostic[] = [];
                 const instr_patterns = language_config.getInstructionSet()[instruction_name];
-
+                if (instruction_name.toLowerCase() === "ivte"){
+                    diagnostics.push({
+                            severity: DiagnosticSeverity.Warning,
+                            range: {
+                                start: { line: index, character: 0},
+                                end: { line: index, character: instruction_name.length }
+                            },
+                            message: `IVTE command is only intended for use in isr files.`,
+                            source: 'reti'
+                        });
+                }
                 for (let i = 0; i < instr_patterns.length;  i++) {
                     const pattern = instr_patterns[i];
                     let pattern_fulfilled = true;

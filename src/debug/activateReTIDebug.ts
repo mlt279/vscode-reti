@@ -23,7 +23,7 @@ export function activateReTIDebug(context: vscode.ExtensionContext, factory?: vs
 					type: 'reti',
 					name: 'Run File',
 					request: 'launch',
-					program: targetResource.fsPath
+					program: targetResource.fsPath,
 				},
 					{ noDebug: true }
 				);

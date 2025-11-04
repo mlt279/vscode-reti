@@ -46,6 +46,10 @@
                 "description": "Absolute path to a text file.",
                 "default": "${workspaceFolder}/${command:AskForProgramName}"
               },
+              "isrprogram": {
+                "type": "string",
+                "description": "Optional path to a isr file (use for reti os only)."
+              },
               "stopOnEntry": {
                 "type": "boolean",
                 "description": "Automatically stop after launch.",

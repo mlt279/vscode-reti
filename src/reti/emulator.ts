@@ -5,13 +5,14 @@ import * as EmOS from "./os/emulator_os";
 import { ReTIState } from './ReTIInterfaces';
 
 export interface IEmulator {
+    inIsr:boolean;
     emulate(token: vscode.CancellationToken): Promise<string>;
 
     getData(address: number): number;
 
-    step(): number ; // XXXXXX
+    step(): number ;
 
-    isValidPC(pc: number): boolean;  // XXXXXX
+    isValidPC(pc: number): boolean;
 
     getCurrentInstruction(): number;
 
@@ -24,13 +25,21 @@ export interface IEmulator {
     getRegisterCodes(): Record<string, number>;
 
     setData(address: number, value: number): void;
+
+    isCallInstruction(): [boolean, number];
 }
 
-export function createEmulator(code: number[], data: number[], outPutChannel?: vscode.OutputChannel): IEmulator {
-    if (ReTIConfig.isOS) {
-        return new EmOS.EmulatorOS(code, data, outPutChannel);
+export function createEmulator(code: number[], isrs: number[], outPutChannel?: vscode.OutputChannel): IEmulator {
+    try {
+        if (ReTIConfig.isOS) {
+            return new EmOS.EmulatorOS(code, isrs, outPutChannel);
+        }
+        else {
+            return new EmTI.Emulator(code, isrs, outPutChannel);
+        }
+    } catch(err) {
+        console.error("Emulator creation failed." , err);
+        throw err;
     }
-    else {
-        return new EmTI.Emulator(code, data, outPutChannel);
-    }
+
 }
