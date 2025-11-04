@@ -80,7 +80,7 @@ function decompileCompute (instruction: number) {
     let funcs = [
         "ADD",
         "SUB",
-        "MUL",
+        "MULT",
         "DIV",
         "MOD",
         "OPLUS",
