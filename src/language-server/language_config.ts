@@ -94,7 +94,20 @@ const documentationOS: { [key: string]: { documentation: string, usage: string, 
     "OR": { documentation: "Bitwise OR of the value of i and the value of the destination register.", 
         usage: "OR D i || OR D S", result: "D := D ∨ M(i) || D := D ∨ S" }, 
     "ORI": { documentation: "Bitwise OR of the value of i and the value of the destination register.", 
-        usage: "ORI D i", result: "D := D ∨ i" }
+        usage: "ORI D i", result: "D := D ∨ i" },
+    "MOD": { documentation: "Modulo operation of the value of the i-th memory cell and the destination register or of the value in S with the value in D.",
+    usage: "MOD D i || MOD D S", result: "D:= D % M(i) ||D := D % S" },
+    "MODI": { documentation: "Modulo operation of the value of and the destination register.",
+    usage: "MODI D i", result: "D:= D % i" },
+    "MULT": { documentation:  "Multiplies the value of the i-th memory cell with the value of the destination register or if two registers given multiplies the value of S with D.",
+    usage: "MODI D i", result: "D:= D % i" },
+    "MULTI": { documentation: "Multiplication of the value of i and the destination register.",
+    usage: "MODI D i", result: "D:= D % i" },
+    "DIV": { documentation:  "Divides the value of the i-th memory cell with the value of the destination register or if two registers given divides the value of S with D.",
+    usage: "MODI D i", result: "D:= D % i" },
+    "DIVI": { documentation: "Division of the value of i and the destination register.",
+    usage: "MODI D i", result: "D:= D % i" },
+    
 };
 
 const instructionSetTI: Record<string, OperandPatternList> = {
@@ -144,8 +157,8 @@ const instructionPatternsOS: Array<[RegExp, string]> = [
   [/(?<=(^|\s))LOAD(?!(\w|>|=|≥|<|≠|≤))/i, "load"],
   [/(?<=(^|\s))LOADI(?!(\w|>|=|≥|<|≠|≤))/i, "loadi"],
   [/(?<=(^|\s))LOADIN?(?!(\w|>|=|≥|<|≠|≤))/i, "loadin"],
-  [/(?<=(^|\s))(ADD|SUB|OPLUS|AND|OR)(?!(\w|>|=|≥|<|≠|≤))/i, "compute"],
-  [/(?<=(^|\s))(ADDI|SUBI|OPLUSI|ANDI|ORI)(?!(\w|>|=|≥|<|≠|≤))/i, "compute immediate"],
+  [/(?<=(^|\s))(ADD|SUB|OPLUS|AND|OR|MULT|DIV|MOD)(?!(\w|>|=|≥|<|≠|≤))/i, "compute"],
+  [/(?<=(^|\s))(ADDI|SUBI|OPLUSI|ANDI|ORI|MULTI|DIVI|MODI)(?!(\w|>|=|≥|<|≠|≤))/i, "compute immediate"],
   [/(?<=(^|\s))(JUMP(?:!=|<=|>=|>|=|≥|<|≠|≤|lt|eq|leq|gt|geq|neq)?)(?!(\w|>|=|≥|<|≠|≤))/i, "jump"],
   [/(?<=(^|\s))INT(?!(\w|>|=|≥|<|≠|≤))/i,"int"],
   [/(?<=(^|\s))nop(?!(\w|>|=|≥|<|≠|≤))/i,"nop"],
