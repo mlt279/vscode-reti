@@ -9,6 +9,8 @@ import { registerCode } from '../reti/ti/retiStructure_ti';
 import { CancellationToken } from 'vscode';
 import { generateBitMask, immediateAsTwoc } from '../util/retiUtility';
 import { IEmulator, createEmulator } from '../reti/emulator';
+import { EmulatorOS, osRegisterCode } from '../reti/os/emulator_os';
+import { Emulator } from '../reti/ti/emulator_ti';
 
 export interface FileAccessor {
 	isWindows: boolean;
@@ -239,7 +241,10 @@ export class ReTIRuntime extends EventEmitter {
 				if (this.executeLine(this.currentLine)) {
 					break;
 				}
-				if (!this._emulator.isValidPC(this._linesToInstructions[this.currentLine])) {
+				// FLAG
+				let instrNum = this._linesToInstructions[this.currentLine];
+				let pc = this.instrNumToPC(instrNum);
+				if (!this._emulator.isValidPC(pc)) {
 					this.sendEvent('end');
 					break;
 				}
@@ -327,7 +332,7 @@ export class ReTIRuntime extends EventEmitter {
 			// Needed to allow other events to be processed.
 			await new Promise((resolve) => setImmediate(resolve, 0));
 
-			if (this._linesToInstructions[this.currentLine] === returnPc) {
+			if (this.instrNumToPC(this._linesToInstructions[this.currentLine]) === returnPc) {
 				this.sendEvent('stopOnStepOut');
 				this._returnStack.pop();
 				break;
@@ -424,13 +429,33 @@ export class ReTIRuntime extends EventEmitter {
 				break;
 			case 'pc':
 				this._emulator.setRegister(registerCode.PC, value);
-				this.currentLine = this._instrToLines[this._emulator.getRegister(registerCode.PC)];
+				this.currentLine = this._instrToLines[this.getInstrNum()];
 				this.sendEvent('stopOnStep');
 				break;
 			default:
 				return undefined;
 		}
 		return new RuntimeVariable(name, value);
+	}
+
+	public getInstrNum(): number {
+		if (this._emulator instanceof EmulatorOS) {
+			let pc = this._emulator.getRegister(osRegisterCode.PC);
+			pc -= this._emulator.getRegister(osRegisterCode.CS);
+			return pc;
+		 }
+		 else {
+			return this._emulator.getRegister(registerCode.PC);
+		 }
+	}
+
+	public instrNumToPC(pc: number): number{
+		if (this._emulator instanceof EmulatorOS) {
+			return this._emulator.getRegister(osRegisterCode.CS) + pc;
+		}
+		else {
+			return pc;
+		}
 	}
 
 	public evaluate(expression: string): RuntimeVariable | undefined {
@@ -680,6 +705,7 @@ export class ReTIRuntime extends EventEmitter {
 			if (err !== -1) {
 				instructions.push(instr);
 				this._linesToInstructions.push(num_instr);
+				// i is the current line.
 				this._instrToLines.push(i);
 				num_instr++;
 			}
@@ -687,7 +713,6 @@ export class ReTIRuntime extends EventEmitter {
 				return false;
 			}
 		}
-		// TODO: Add way to parse data or ReTI-State.
 		this._emulator = createEmulator(instructions, []);
 		return true;
 	}
@@ -748,7 +773,7 @@ export class ReTIRuntime extends EventEmitter {
 			return true;
 		}
 		let new_pc = this._emulator.getRegister(registerCode.PC);
-
+		let instrNum = this.getInstrNum();
 		// If it is a jump instruction and the new PC is on the return
 		// stack the jump call would just be a step out.
 		if (is_jumpInstruction && this._returnStack[this._returnStack.length - 1] !== new_pc) {
@@ -761,7 +786,7 @@ export class ReTIRuntime extends EventEmitter {
 		if (instr_number > this._instrToLines.length - 1) {
 			return true;
 		}
-		this.currentLine = this._instrToLines[new_pc];
+		this.currentLine = this._instrToLines[instrNum];
 		if (this.currentLine === undefined || !this._emulator.isValidPC(this._linesToInstructions[this.currentLine])) {
 			this.sendEvent('end');
 			return true;
@@ -792,8 +817,6 @@ export class ReTIRuntime extends EventEmitter {
 				}
 			});
 		}
-
-		// Todo: Add ReTI logic
 		const breakpoints = this._breakPoints.get(path);
 		if (breakpoints) {
 			await this.loadSource(path);

@@ -276,12 +276,6 @@ export class EmulatorOS implements IEmulator{
     }
 
     public getRegister(register: osRegisterCode): number {
-        // TODO: Remove hardcoded fix.
-        if (register === osRegisterCode.PC) {
-            let pc = this.reti.getRegister(register);
-            pc = this.toSimpleNum(pc) - this.reti.process_start;
-            return pc;
-        }
         return this.reti.getRegister(register);
     }
 

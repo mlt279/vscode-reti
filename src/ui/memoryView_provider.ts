@@ -33,17 +33,7 @@ export class MemoryViewProvider implements vscode.WebviewViewProvider {
                 count: message.count,
                 address: message.address
                 });
-                
-                // const buffer = Buffer.from(result.data, 'base64');
-                // const words = [];
-                // for (let i = 0; i < buffer.length; i += 4) {
-                //     const word =
-                //     buffer[i] |
-                //     (buffer[i + 1] << 8) |
-                //     (buffer[i + 2] << 16) |
-                //     (buffer[i + 3] << 24);
-                //     words.push(word >>> 0);
-                // }
+
                 webviewView.webview.postMessage({ command: 'updateMemory', data: result.data, start: message.address, count: message.count });
             } else if (message.command === 'writeMemory') {
                 const result = await session.customRequest('retiMemWrite', { address: message.address, data: message.data });
@@ -52,18 +42,6 @@ export class MemoryViewProvider implements vscode.WebviewViewProvider {
 		});
 	}
 
-    public addColor() {
-        if (this._view) {
-            this._view.show?.(true); // `show` is not implemented in 1.49 but is for 1.50 insiders
-            this._view.webview.postMessage({ type: 'addColor' });
-        }
-    }
-
-    public clearColors() {
-        if (this._view) {
-            this._view.webview.postMessage({ type: 'clearColors' });
-        }
-    }
     private _getHtmlForWebview(webview: vscode.Webview) {
         // Get the local path to main script run in the webview, then convert it to a uri we can use in the webview.
         const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'main.js'));
@@ -75,37 +53,6 @@ export class MemoryViewProvider implements vscode.WebviewViewProvider {
 
         // Use a nonce to only allow a specific script to be run.
         const nonce = getNonce();
-
-        // return `<!DOCTYPE html>
-        //     <html lang="en">
-        //     <head>
-        //         <meta charset="UTF-8">
-
-        //         <!--
-        //             Use a content security policy to only allow loading styles from our extension directory,
-        //             and only allow scripts that have a specific nonce.
-        //             (See the 'webview-sample' extension sample for img-src content security policy examples)
-        //         -->
-        //         <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
-
-        //         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-        //         <link href="${styleResetUri}" rel="stylesheet">
-        //         <link href="${styleVSCodeUri}" rel="stylesheet">
-        //         <link href="${styleMainUri}" rel="stylesheet">
-
-        //         <title>Cat Colors</title>
-        //     </head>
-        //     <body>
-        //         <ul class="color-list">
-        //         </ul>
-
-        //         <button class="read-button">Add Color</button>
-        //         <button class="write-button">Add Color</button>
-
-        //         <script nonce="${nonce}" src="${scriptUri}"></script>
-        //     </body>
-        //     </html>`;
         return `
             <html>
             <head>
