@@ -179,7 +179,7 @@ export const compileCompute = (args: Array<string>) => {
         case "sub":
             instruction = 1 << 25;
             break;
-        case "mul":
+        case "mult":
             instruction = 2 << 25;
             break;
         case "div":
