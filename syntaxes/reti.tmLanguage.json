@@ -24,19 +24,19 @@
 				},
 				{
 					"name": "keyword.control.store",
-					"match": "(?i)(?<=(^|\\s))STORE(IN[12])?(?!(\\w|>|=|≥|<|≠|≤))"
+					"match": "(?i)(?<=(^|\\s))STORE(IN|IN|IN1|IN2)?(?!(\\w|>|=|≥|<|≠|≤))"
 				},
 				{
 					"name": "keyword.control.load",
-					"match": "(?i)(?<=(^|\\s))LOAD(I|IN[12])?(?!(\\w|>|=|≥|<|≠|≤))"
+					"match": "(?i)(?<=(^|\\s))LOAD(I|IN|IN1|IN2)?(?!(\\w|>|=|≥|<|≠|≤))"
 				},
 				{
 					"name": "keyword.control.jump",
 					"match": "(?i)(?<=(^|\\s))JUMP(?:!=|<=|>=|>|=|≥|<|≠|≤|lt|eq|leq|gt|geq|neq)?(?!(\\w|>|=|≥|<|≠|≤))"
 				},
 				{
-					"name": "keyword.control.nop",
-					"match": "(?i)(?<=(^|\\s))NOP(?!(\\w|>|=|≥|<|≠|≤))"
+					"name": "keyword.control.single",
+					"match": "(?i)(?<=(^|\\s))(NOP|RTI|INT)(?!(\\w|>|=|≥|<|≠|≤))"
 				},
 				{
 					"name": "keyword.control.compute",
@@ -48,7 +48,7 @@
 			"patterns": [
 				{
 					"name": "registers.reti",
-					"match": "(?i)(?<=(^|\\s))(ACC|IN1|IN2|PC)(?!(\\w|>|=|≥|<|≠|≤))"
+					"match": "(?i)(?<=(^|\\s))(ACC|IN1|IN2|PC|SP|CS|DS|BAF)(?!(\\w|>|=|≥|<|≠|≤))"
 				}
 			]
 		},
